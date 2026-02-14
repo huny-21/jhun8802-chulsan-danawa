@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>출산 혜택 다나와</title>
+    <link rel="stylesheet" href="style.css?v=7">
+    <!-- Google Fonts: Noto Sans KR (Weights 400, 500, 700, 900) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 헤더 섹션 -->
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">출산 혜택 다나와</h1>
+            <p>우리 아이를 위한 행복한 첫 시작, 혜택을 한눈에 확인하세요</p>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="container main-content">
+        <!-- 1. 지역 및 일정 선택 섹션 -->
+        <section class="search-section card">
+            <h2>우리동네 혜택 찾기</h2>
+            <form id="benefitForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="citySelect">시/도</label>
+                        <select id="citySelect" required>
+                            <option value="">시/도 선택</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="districtSelect">시/군/구</label>
+                        <select id="districtSelect" disabled required>
+                            <option value="">먼저 시/도를 선택하세요</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dueDate">출산 예정일</label>
+                        <input type="date" id="dueDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="childOrder">출산 예정 아이 (몇째?)</label>
+                        <select id="childOrder" required>
+                            <option value="1">첫째</option>
+                            <option value="2">둘째</option>
+                            <option value="3">셋째</option>
+                            <option value="4">넷째</option>
+                            <option value="5">다섯째 이상</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">혜택 조회하기</button>
+            </form>
+        </section>
+
+        <!-- 로딩 스피너 -->
+        <div id="loadingSpinner" class="spinner-container hidden">
+            <div class="spinner"></div>
+            <p>전국 데이터 조회 중...</p>
+        </div>
+
+        <!-- 2. 결과 섹션 -->
+        <section id="resultSection" class="result-section hidden">
+            
+            <!-- 전국 비교 요약 섹션 (신규) -->
+            <div id="comparisonSection" class="comparison-card card hidden">
+                <!-- JS로 내용 주입 -->
+            </div>
+
+            <!-- 체크리스트 섹션 (D-Day 포함) -->
+            <div id="checklistSection" class="checklist-card card hidden">
+                <div class="checklist-header">
+                    <h3>📅 아기 만나는 날 <span id="dDayDisplay" class="d-day-badge">D-Day</span></h3>
+                </div>
+                <p id="dDayMessage" class="d-day-message"></p>
+                <ul id="checklistItems" class="checklist-items">
+                    <!-- JS로 리스트 아이템 생성 -->
+                </ul>
+            </div>
+
+            <!-- 탭 메뉴 -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="all"> ✨ 전체 혜택</button>
+                <button class="tab-btn" data-tab="government">🏛️ 정부 공통 혜택</button>
+                <button class="tab-btn" data-tab="local">🏡 지자체 특화 혜택</button>
+            </div>
+
+            <!-- 탭 콘텐츠: 정부 혜택 -->
+            <div id="government" class="tab-content active">
+                <div class="info-banner">
+                    <p>ℹ️ 거주지와 상관없이 <strong>대한민국 국민 누구나</strong> 받을 수 있는 혜택입니다.</p>
+                </div>
+                <div class="card-list" id="govBenefitList"></div>
+            </div>
+
+            <!-- 탭 콘텐츠: 지자체 혜택 -->
+            <div id="local" class="tab-content">
+                <div class="info-banner">
+                    <p>ℹ️ 선택하신 <strong id="selectedRegionName">지역</strong> 주민에게만 제공되는 특별 혜택입니다.</p>
+                </div>
+                <div class="card-list" id="localBenefitList"></div>
+            </div>
+
+            <!-- 종합 리포트 (총액 정리) -->
+            <div id="totalSummarySection" class="summary-card hidden">
+                <h3>💰 우리 가족 예상 지원금 총액</h3>
+                <div id="summaryContent" class="summary-content">
+                    <!-- 자바스크립트로 내역 생성 -->
+                </div>
+            </div>
+
+            <!-- 공식 포털 바로가기 (신규 추가) -->
+            <div class="official-link-section">
+                <p class="official-guide-text">⚠️ 지자체 정책은 수시로 변경될 수 있습니다.<br>가장 정확한 최신 정보는 <strong>정부 공식 포털</strong>에서 확인하세요!</p>
+                <a href="https://www.childcare.go.kr/?menuno=279" target="_blank" class="btn-official">
+                    🏛️ 아이사랑 포털에서 내 지역 혜택 확인하기
+                </a>
+            </div>
+            
+            <!-- 하단 면책 조항 -->
+            <div class="disclaimer-section">
+                <p class="disclaimer">※ 본 서비스의 데이터는 2026년 2월 기준 웹 검색 정보를 바탕으로 추정된 내용입니다.</p>
+                <p class="disclaimer">※ 실제 지급 여부와 정확한 금액은 <strong>반드시 관할 주민센터 및 위 공식 포털</strong>을 통해 최종 확인하시기 바랍니다.</p>
+                <p class="disclaimer">※ 잘못된 정보가 있다면 <a href="mailto:support@babybenefit.kr" style="color: inherit; text-decoration: underline;">제보해주세요</a>.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>행복한 육아를 응원합니다 💖</p>
+            <p>&copy; 2026 Baby Benefit Map. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- type="module" 지정 필수 -->
+    <script type="module" src="script.js?v=5"></script>
+</body>
+</html>

@@ -1,0 +1,485 @@
+/* ==========================================================================
+   Trustworthy & Simple Design System (Professional Blue & Gray)
+   ========================================================================== */
+
+:root {
+    /* Brand Colors - Professional & Trustworthy */
+    --brand-primary: #0F172A;       /* Slate 900 - Headings, Main Text */
+    --brand-accent: #2563EB;        /* Royal Blue - Actions, Links */
+    --brand-accent-hover: #1D4ED8;  /* Darker Blue */
+    --brand-highlight: #EFF6FF;     /* Light Blue - Backgrounds */
+
+    /* Neutral Scale - Clean */
+    --neutral-bg: #F8F9FA;          /* Page Background */
+    --neutral-surface: #FFFFFF;     /* Card Background */
+    --neutral-border: #E2E8F0;      /* Subtle Borders */
+    --neutral-text: #475569;        /* Body Text */
+    --neutral-muted: #94A3B8;       /* Muted Text */
+
+    /* Functional Colors */
+    --success: #059669;             /* Emerald 600 */
+    --warning: #D97706;             /* Amber 600 */
+
+    /* Dimensions */
+    --container-width: 720px;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+}
+
+/* Reset & Typography */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    background-color: var(--neutral-bg);
+    color: var(--brand-primary);
+    line-height: 1.5;
+    word-break: keep-all;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Layout */
+.container {
+    max-width: var(--container-width);
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* Header - Simple & Clean */
+.header {
+    background-color: var(--neutral-surface);
+    border-bottom: 1px solid var(--neutral-border);
+    padding: 32px 0;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.header .logo {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--brand-primary);
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+}
+
+.header p {
+    font-size: 0.95rem;
+    color: var(--neutral-text);
+    font-weight: 400;
+}
+
+/* Main Content */
+.main-content {
+    padding-bottom: 80px;
+}
+
+/* Card Component - Minimalist */
+.card {
+    background: var(--neutral-surface);
+    border: 1px solid var(--neutral-border);
+    border-radius: var(--radius-md);
+    padding: 32px;
+    margin-bottom: 24px;
+}
+
+.card h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--brand-primary);
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--brand-primary); /* Strong underline */
+}
+
+/* Form Styles */
+.form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--brand-primary);
+}
+
+select, input {
+    width: 100%;
+    padding: 12px;
+    font-size: 1rem;
+    color: var(--brand-primary);
+    border: 1px solid var(--neutral-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--neutral-surface);
+    transition: border-color 0.2s;
+}
+
+select:focus, input:focus {
+    outline: none;
+    border-color: var(--brand-accent);
+}
+
+select:disabled {
+    background-color: var(--neutral-bg);
+    color: var(--neutral-muted);
+}
+
+/* Button - Professional */
+.btn-primary {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    background-color: var(--brand-accent);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: var(--brand-accent-hover);
+}
+
+/* Comparison Section */
+.comparison-card {
+    background-color: var(--brand-highlight);
+    border: 1px solid #BFDBFE;
+}
+
+.comparison-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--brand-accent);
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.comparison-box {
+    display: flex;
+    justify-content: space-between; /* Side by side on desktop */
+    gap: 20px;
+}
+
+.rank-item {
+    flex: 1;
+    background: var(--neutral-surface);
+    padding: 20px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--neutral-border);
+    text-align: center;
+}
+
+.rank-label {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 99px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+
+.rank-item.max .rank-label {
+    background-color: #FEF3C7;
+    color: #B45309;
+}
+
+.rank-item.min .rank-label {
+    background-color: #F3F4F6;
+    color: #6B7280;
+}
+
+.rank-name {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.rank-amount {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--brand-accent);
+}
+
+/* Checklist Section */
+.checklist-card {
+    border-left: 4px solid var(--success);
+}
+
+.checklist-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--success);
+    margin-bottom: 16px;
+}
+
+.d-day-badge {
+    background-color: var(--success);
+    color: white;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    margin-left: 8px;
+}
+
+.d-day-message {
+    font-size: 0.95rem;
+    background-color: #ECFDF5;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    color: #065F46;
+    margin-bottom: 16px;
+}
+
+.checklist-items li {
+    list-style: none;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--neutral-border);
+    font-size: 0.95rem;
+    color: var(--neutral-text);
+}
+
+.checklist-items li::before {
+    content: "•";
+    color: var(--success);
+    margin-right: 8px;
+    font-weight: bold;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    border-bottom: 2px solid var(--neutral-border);
+    margin-bottom: 24px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 14px;
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--neutral-muted);
+    cursor: pointer;
+}
+
+.tab-btn.active {
+    color: var(--brand-primary);
+    font-weight: 700;
+    border-bottom: 2px solid var(--brand-primary);
+    margin-bottom: -2px;
+}
+
+/* Benefit List */
+.info-banner {
+    font-size: 0.9rem;
+    color: var(--neutral-text);
+    background-color: var(--neutral-bg);
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 20px;
+}
+
+.benefit-card {
+    background-color: var(--neutral-surface);
+    border: 1px solid var(--neutral-border);
+    border-radius: var(--radius-sm);
+    padding: 24px;
+    margin-bottom: 16px;
+}
+
+.benefit-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.benefit-amount {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--brand-accent);
+    margin-bottom: 16px;
+}
+
+.benefit-detail {
+    font-size: 0.9rem;
+    color: var(--neutral-text);
+    margin-bottom: 4px;
+    display: flex;
+}
+
+.benefit-detail strong {
+    min-width: 60px;
+    color: var(--neutral-muted);
+    font-weight: 500;
+}
+
+/* Summary Section - Receipt Style Refined */
+.summary-card {
+    background-color: #FFFFFF;
+    border: 1px solid var(--neutral-border);
+    padding: 40px;
+    margin-top: 40px;
+}
+
+.summary-card h3 {
+    color: var(--brand-primary);
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--brand-primary);
+    text-align: center;
+}
+
+.summary-section {
+    margin-bottom: 32px;
+}
+
+.summary-header {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--neutral-muted);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--neutral-bg);
+    font-size: 1rem;
+}
+
+.summary-row span:first-child {
+    color: var(--neutral-text);
+}
+
+.summary-row span:last-child {
+    font-weight: 600;
+    color: var(--brand-primary);
+}
+
+.total-amount-row {
+    margin-top: 40px;
+    padding: 32px;
+    background-color: var(--brand-highlight);
+    border-radius: var(--radius-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #BFDBFE;
+}
+
+.total-amount-row span:first-child {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--brand-accent);
+}
+
+.total-amount-row span:last-child {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--brand-accent);
+    letter-spacing: -0.02em;
+}
+
+.note-text {
+    font-size: 0.85rem;
+    color: var(--neutral-muted);
+    margin-top: 20px;
+    text-align: right;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 40px 0;
+    color: var(--neutral-muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--neutral-border);
+    margin-top: 60px;
+}
+
+.btn-official {
+    display: block;
+    text-align: center;
+    background-color: var(--brand-primary);
+    color: white;
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 24px;
+}
+
+.disclaimer-section {
+    margin-top: 32px;
+    padding: 20px;
+    background-color: var(--neutral-bg);
+    border-radius: var(--radius-sm);
+}
+
+.disclaimer {
+    font-size: 0.8rem;
+    color: var(--neutral-muted);
+    margin-bottom: 4px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .comparison-box {
+        flex-direction: column;
+    }
+}
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 5px solid var(--brand-highlight);
+  border-bottom-color: var(--brand-primary);
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.hidden {
+  display: none;
+}
