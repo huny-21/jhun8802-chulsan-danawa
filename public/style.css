@@ -96,6 +96,41 @@ body {
     border-bottom: 2px solid var(--brand-primary); /* Strong underline */
 }
 
+.service-tabs-wrap {
+    margin-bottom: 16px;
+}
+
+.service-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.service-tab {
+    border: 1px solid var(--neutral-border);
+    background: #fff;
+    color: var(--neutral-text);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.service-tab.active {
+    background: var(--brand-primary);
+    color: #fff;
+    border-color: var(--brand-primary);
+}
+
+.service-panel {
+    display: none;
+}
+
+.service-panel.active {
+    display: block;
+}
+
 /* Form Styles */
 .form-row {
     display: flex;
@@ -116,7 +151,8 @@ body {
     color: var(--brand-primary);
 }
 
-select, input {
+select,
+input:not([type="checkbox"]) {
     width: 100%;
     padding: 12px;
     font-size: 1rem;
@@ -127,9 +163,18 @@ select, input {
     transition: border-color 0.2s;
 }
 
-select:focus, input:focus {
+select:focus,
+input:not([type="checkbox"]):focus {
     outline: none;
     border-color: var(--brand-accent);
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--brand-accent);
+    outline-offset: 2px;
 }
 
 select:disabled {
@@ -154,6 +199,90 @@ select:disabled {
 
 .btn-primary:hover {
     background-color: var(--brand-accent-hover);
+}
+
+.btn-primary:disabled {
+    background-color: #93C5FD;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    border: 1px solid var(--neutral-border);
+    background: #fff;
+    color: var(--brand-primary);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-secondary.active {
+    background-color: var(--brand-primary);
+    color: #fff;
+    border-color: var(--brand-primary);
+}
+
+.btn-icon-toggle.active {
+    background-color: var(--brand-highlight);
+    color: var(--brand-accent);
+    border-color: #93C5FD;
+}
+
+.btn-danger {
+    border: none;
+    background: #EF4444;
+    color: #fff;
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    cursor: pointer;
+}
+
+.btn-danger:disabled {
+    background: #CBD5E1;
+    cursor: not-allowed;
+}
+
+.form-error {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid #FECACA;
+    background-color: #FEF2F2;
+    color: #B91C1C;
+    font-size: 0.9rem;
+}
+
+.check-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--neutral-border);
+    border-radius: var(--radius-sm);
+    background: #fff;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--brand-primary);
+}
+
+.check-option:hover {
+    border-color: #93C5FD;
+    background: #F8FAFC;
+}
+
+.check-option input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--brand-accent);
+    flex-shrink: 0;
+    margin: 0;
+}
+
+.check-option:has(input[type="checkbox"]:checked) {
+    border-color: var(--brand-accent);
+    background: var(--brand-highlight);
 }
 
 /* Comparison Section */
@@ -215,6 +344,28 @@ select:disabled {
     font-size: 1.25rem;
     font-weight: 800;
     color: var(--brand-accent);
+}
+
+.rank-detail {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: var(--neutral-text);
+}
+
+.vs-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--neutral-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.comparison-note {
+    margin-top: 14px;
+    font-size: 0.85rem;
+    color: var(--neutral-muted);
 }
 
 /* Checklist Section */
@@ -287,6 +438,689 @@ select:disabled {
     margin-bottom: -2px;
 }
 
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.segment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 8px 0 12px;
+}
+
+.segment-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-subsection {
+    margin-bottom: 16px;
+    padding: 16px;
+    border: 1px solid var(--neutral-border);
+    border-radius: var(--radius-sm);
+    background: #F8FAFC;
+}
+
+.planner-section {
+    margin-bottom: 18px;
+    padding-bottom: 6px;
+}
+
+.section-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--brand-primary);
+    margin-bottom: 12px;
+}
+
+.readonly-hint {
+    margin-top: 4px;
+    font-size: 0.76rem;
+    color: var(--neutral-muted);
+}
+
+input[readonly] {
+    background: #F8FAFC;
+    color: var(--neutral-text);
+}
+
+.help-tooltip {
+    display: inline-flex;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    margin-left: 6px;
+    background: #E2E8F0;
+    color: #334155;
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: help;
+    border: none;
+}
+
+.help-tooltip[aria-expanded="true"] {
+    background: #DBEAFE;
+    color: #1E3A8A;
+}
+
+.help-tooltip-text {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: #1F2937;
+    background: #F8FAFC;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.preset-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 8px;
+}
+
+.preset-range-control {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 72px 120px auto;
+    gap: 8px;
+    align-items: center;
+}
+
+.preset-range-control label {
+    font-size: 0.82rem;
+    color: var(--neutral-text);
+    font-weight: 600;
+}
+
+.preset-range-control input[type="number"] {
+    width: 100%;
+}
+
+.preset-range-control strong {
+    min-width: 52px;
+    font-size: 0.86rem;
+    color: var(--brand-primary);
+}
+
+.segment-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.segment-row {
+    display: grid;
+    grid-template-columns: 64px 1fr 24px 1fr 60px;
+    align-items: center;
+    gap: 8px;
+}
+
+.planner-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 16px;
+}
+
+.planner-badge {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--brand-highlight);
+    color: var(--brand-accent);
+    font-size: 0.82rem;
+    font-weight: 700;
+    border: 1px solid #BFDBFE;
+}
+
+.planner-badge.muted {
+    background: #F8FAFC;
+    color: var(--neutral-text);
+    border-color: var(--neutral-border);
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+.payment-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
+
+.payment-table th,
+.payment-table td {
+    border-bottom: 1px solid var(--neutral-border);
+    padding: 10px 8px;
+    text-align: left;
+    font-size: 0.82rem;
+    vertical-align: top;
+    white-space: nowrap;
+}
+
+.payment-table th {
+    color: var(--neutral-text);
+    background: #F8FAFC;
+}
+
+.payment-mobile-cards {
+    display: none;
+}
+
+.payment-mobile-card {
+    border: 1px solid var(--neutral-border);
+    border-radius: 10px;
+    padding: 12px;
+    background: #fff;
+    margin-bottom: 10px;
+}
+
+.payment-mobile-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.payment-mobile-card-month {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--brand-primary);
+}
+
+.payment-mobile-card-total {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--brand-accent);
+}
+
+.payment-mobile-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 3px 0;
+    font-size: 0.82rem;
+    color: var(--neutral-text);
+}
+
+.payment-mobile-card-row span:first-child {
+    color: var(--neutral-muted);
+    font-weight: 600;
+}
+
+.holiday-status {
+    margin-bottom: 10px;
+    font-size: 0.82rem;
+    color: #1E3A8A;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.holiday-status.is-error {
+    color: #B45309;
+    background: #FFFBEB;
+    border-color: #FCD34D;
+}
+
+.empty-table {
+    color: var(--neutral-muted);
+    text-align: center;
+}
+
+.payment-chart-section {
+    margin-top: 16px;
+    border: 1px solid var(--neutral-border);
+    border-radius: var(--radius-md);
+    padding: 12px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+}
+
+.payment-chart-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.payment-chart-toolbar strong {
+    font-size: 0.92rem;
+    color: var(--neutral-text);
+}
+
+.payment-chart-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.payment-chart-toggles .btn-secondary {
+    padding: 6px 10px;
+    font-size: 0.76rem;
+}
+
+.payment-chart-toggles .btn-secondary.active {
+    background: #DBEAFE;
+    border-color: #93C5FD;
+    color: #1E3A8A;
+}
+
+.payment-chart-wrap {
+    position: relative;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+}
+
+#paymentChartSvg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.payment-chart-tooltip {
+    position: absolute;
+    z-index: 20;
+    min-width: 172px;
+    max-width: 220px;
+    pointer-events: none;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #BFDBFE;
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+    font-size: 0.74rem;
+    color: #1F2937;
+}
+
+.payment-chart-tooltip strong {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.payment-chart-tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.payment-chart-totals {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.payment-chart-totals > div {
+    border: 1px solid var(--neutral-border);
+    border-radius: 10px;
+    padding: 10px;
+    background: #fff;
+}
+
+.payment-chart-totals span {
+    display: block;
+    font-size: 0.74rem;
+    color: var(--neutral-text);
+}
+
+.payment-chart-totals strong {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.92rem;
+    color: var(--brand-primary);
+}
+
+.calendar-help {
+    color: var(--neutral-text);
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+}
+
+.calendar-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 12px;
+    gap: 12px;
+}
+
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.calendar-edit-toolbar {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    margin-bottom: 12px;
+}
+
+.calendar-edit-block {
+    border: 1px solid var(--neutral-border);
+    border-radius: 10px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+    padding: 12px;
+}
+
+.calendar-edit-block strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.84rem;
+    color: var(--neutral-text);
+}
+
+.calendar-input-grid {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 10px;
+    align-items: center;
+}
+
+.calendar-input-grid label {
+    font-size: 0.78rem;
+    color: var(--neutral-text);
+    font-weight: 600;
+}
+
+.calendar-input-grid .btn-secondary {
+    width: fit-content;
+}
+
+.calendar-actor-tabs {
+    display: inline-flex;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.calendar-actor-tabs .btn-secondary {
+    padding: 5px 10px;
+    font-size: 0.76rem;
+}
+
+.calendar-actor-tabs .btn-secondary.active {
+    background: #DBEAFE;
+    border-color: #93C5FD;
+    color: #1E3A8A;
+}
+
+#calendarChildcareRemainingInfo {
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+#calendarChildbirthInfo {
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+.calendar-action-row {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.calendar-days-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.calendar-days-row input[type="number"] {
+    width: 100%;
+}
+
+.calendar-inline-hint {
+    font-size: 0.74rem;
+    color: var(--neutral-text);
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    border-radius: 999px;
+    padding: 3px 8px;
+    white-space: nowrap;
+}
+
+.calendar-nav-inline {
+    margin: 6px 0 10px;
+    justify-content: space-between;
+}
+
+.calendar-nav-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.calendar-nav-meta {
+    font-size: 0.84rem;
+    color: var(--neutral-text);
+    font-weight: 700;
+    background: #F8FAFC;
+    border: 1px solid var(--neutral-border);
+    border-radius: 999px;
+    padding: 4px 10px;
+}
+
+.planner-calendar-grid {
+    border: 1px solid var(--neutral-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.calendar-header,
+.calendar-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-header div {
+    background: #F8FAFC;
+    border-bottom: 1px solid var(--neutral-border);
+    padding: 8px 6px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--neutral-text);
+    font-weight: 700;
+}
+
+.calendar-day {
+    min-height: 76px;
+    border-right: 1px solid var(--neutral-border);
+    border-bottom: 1px solid var(--neutral-border);
+    padding: 6px;
+    background: #fff;
+    cursor: default;
+}
+
+.calendar-row .calendar-day:last-child,
+.calendar-header div:last-child {
+    border-right: none;
+}
+
+.calendar-day.other-month {
+    background:
+        repeating-linear-gradient(
+            -45deg,
+            #F8FAFC,
+            #F8FAFC 6px,
+            #F1F5F9 6px,
+            #F1F5F9 12px
+        );
+    color: #94A3B8;
+    opacity: 0.78;
+}
+
+.calendar-day.weekend {
+    background: #FFFBEB;
+}
+
+.calendar-day.today {
+    box-shadow: inset 0 0 0 2px #60A5FA;
+}
+
+.calendar-day.drag-preview {
+    background: #DBEAFE;
+}
+
+.calendar-day-top {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 6px;
+    min-width: 0;
+}
+
+.calendar-holiday-row {
+    margin-top: 1px;
+    min-height: 0.72rem;
+}
+
+.day-num {
+    font-size: 0.8rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.holiday-label {
+    font-size: clamp(0.5rem, 1.35vw, 0.62rem);
+    color: #DC2626;
+    display: block;
+    width: 100%;
+    text-align: left;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.day-marks {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 6px;
+}
+
+.day-mark {
+    font-size: 0.58rem;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 1px 4px;
+    display: block;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.day-mark.is-split {
+    white-space: normal;
+    overflow: hidden;
+    line-height: 1.05;
+}
+
+.day-mark.is-split .mark-main,
+.day-mark.is-split .mark-sub {
+    display: block;
+}
+
+.day-mark.is-split .mark-sub {
+    margin-top: 1px;
+}
+
+.day-mark.connect-prev {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.day-mark.connect-next {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.day-mark.childbirth {
+    background: #FECACA;
+    color: #991B1B;
+}
+
+.day-mark.childcare {
+    background: #DBEAFE;
+    color: #1E3A8A;
+}
+
+.day-mark.return {
+    background: #D1FAE5;
+    color: #065F46;
+}
+
+.calendar-message {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: var(--neutral-text);
+}
+
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+    font-size: 0.82rem;
+    color: var(--neutral-text);
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.legend-dot.childbirth { background: #FCA5A5; }
+.legend-dot.childcare { background: #60A5FA; }
+.legend-dot.return { background: #34D399; }
+.legend-dot.holiday { background: #EF4444; }
+
+@media (max-width: 920px) {
+    .calendar-edit-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .calendar-nav-inline {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+}
+
 /* Benefit List */
 .info-banner {
     font-size: 0.9rem;
@@ -311,6 +1145,18 @@ select:disabled {
     margin-bottom: 8px;
 }
 
+.badge-child {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #1E3A8A;
+    background-color: #DBEAFE;
+    vertical-align: middle;
+}
+
 .benefit-amount {
     font-size: 1.25rem;
     font-weight: 700;
@@ -329,6 +1175,14 @@ select:disabled {
     min-width: 60px;
     color: var(--neutral-muted);
     font-weight: 500;
+}
+
+.no-data {
+    border: 1px dashed var(--neutral-border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    color: var(--neutral-text);
+    background-color: var(--neutral-bg);
 }
 
 /* Summary Section - Receipt Style Refined */
@@ -432,6 +1286,19 @@ select:disabled {
     margin-top: 24px;
 }
 
+.btn-official:hover {
+    background-color: #1E293B;
+}
+
+.official-link-section {
+    margin-top: 32px;
+}
+
+.official-guide-text {
+    color: var(--neutral-text);
+    line-height: 1.6;
+}
+
 .disclaimer-section {
     margin-top: 32px;
     padding: 20px;
@@ -447,12 +1314,100 @@ select:disabled {
 
 /* Responsive */
 @media (max-width: 600px) {
+    .container {
+        padding: 0 16px;
+    }
+
+    .card,
+    .summary-card {
+        padding: 20px;
+    }
+
     .form-row {
         flex-direction: column;
+    }
+
+    .service-tabs {
+        grid-template-columns: 1fr;
+    }
+
+    .segment-row {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+
+    .segment-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .calendar-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .payment-chart-totals {
+        grid-template-columns: 1fr;
+    }
+
+    .table-wrap {
+        display: none;
+    }
+
+    .payment-mobile-cards {
+        display: block;
+    }
+
+    .calendar-day {
+        min-height: 80px;
+    }
+
+    .day-num {
+        font-size: 0.68rem;
+    }
+
+    .holiday-label {
+        font-size: clamp(0.42rem, 1.25vw, 0.52rem);
+    }
+
+    .day-mark {
+        font-size: 0.5rem;
+        padding: 1px 3px;
+    }
+
+    .day-mark.is-split {
+        line-height: 1;
+    }
+
+    .checklist-header h3 {
+        font-size: 0.96rem;
+    }
+
+    .d-day-badge {
+        font-size: 0.66rem;
+        padding: 2px 6px;
+        margin-left: 6px;
+    }
+
+    .d-day-message {
+        font-size: 0.82rem;
+        padding: 10px;
     }
     
     .comparison-box {
         flex-direction: column;
+    }
+
+    .total-amount-row {
+        padding: 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .total-amount-row span:last-child {
+        font-size: 1.5rem;
     }
 }
 .spinner-container {

@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "chulsan-danawa",
     "public": "public",
     "ignore": [
       "firebase.json",

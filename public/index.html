@@ -4,7 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>출산 혜택 다나와</title>
-    <link rel="stylesheet" href="style.css?v=7">
+    <meta name="description" content="우리동네 출산·육아 혜택 조회, 육아휴직 급여 계산기, 육아휴직 달력을 한 번에 확인하세요.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="출산 혜택 다나와">
+    <meta property="og:title" content="출산 혜택 다나와">
+    <meta property="og:description" content="우리동네 출산·육아 혜택 조회, 육아휴직 급여 계산기, 육아휴직 달력을 한 번에 확인하세요.">
+    <meta property="og:url" content="https://chulsan-danawa.web.app/">
+    <meta property="og:image" content="https://chulsan-danawa.web.app/favicon.svg?v=3">
+    <meta property="og:locale" content="ko_KR">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="출산 혜택 다나와">
+    <meta name="twitter:description" content="우리동네 출산·육아 혜택 조회, 육아휴직 급여 계산기, 육아휴직 달력을 한 번에 확인하세요.">
+    <meta name="twitter:image" content="https://chulsan-danawa.web.app/favicon.svg?v=3">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=3">
+    <link rel="shortcut icon" href="favicon.svg?v=3">
+    <link rel="stylesheet" href="style.css?v=24">
     <!-- Google Fonts: Noto Sans KR (Weights 400, 500, 700, 900) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,125 +35,372 @@
 
     <!-- 메인 콘텐츠 -->
     <main class="container main-content">
-        <!-- 1. 지역 및 일정 선택 섹션 -->
-        <section class="search-section card">
-            <h2>우리동네 혜택 찾기</h2>
-            <form id="benefitForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="citySelect">시/도</label>
-                        <select id="citySelect" required>
-                            <option value="">시/도 선택</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="districtSelect">시/군/구</label>
-                        <select id="districtSelect" disabled required>
-                            <option value="">먼저 시/도를 선택하세요</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="dueDate">출산 예정일</label>
-                        <input type="date" id="dueDate" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="childOrder">출산 예정 아이 (몇째?)</label>
-                        <select id="childOrder" required>
-                            <option value="1">첫째</option>
-                            <option value="2">둘째</option>
-                            <option value="3">셋째</option>
-                            <option value="4">넷째</option>
-                            <option value="5">다섯째 이상</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="submit" class="btn-primary">혜택 조회하기</button>
-            </form>
+        <section class="service-tabs-wrap card">
+            <h2>서비스 선택</h2>
+            <div id="serviceTabs" class="service-tabs" role="tablist" aria-label="메인 서비스">
+                <button id="service-tab-benefit" class="service-tab active" type="button" role="tab" aria-selected="true" aria-controls="benefitServicePanel" tabindex="0" data-service-tab="benefit">우리동네 혜택찾기</button>
+                <button id="service-tab-calculator" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="calculatorServicePanel" tabindex="-1" data-service-tab="calculator">육아휴직 급여 계산기</button>
+                <button id="service-tab-calendar" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="calendarServicePanel" tabindex="-1" data-service-tab="calendar">육아휴직 달력</button>
+            </div>
         </section>
 
-        <!-- 로딩 스피너 -->
-        <div id="loadingSpinner" class="spinner-container hidden">
-            <div class="spinner"></div>
-            <p>전국 데이터 조회 중...</p>
-        </div>
+        <section id="benefitServicePanel" class="service-panel active" role="tabpanel" aria-labelledby="service-tab-benefit">
+            <section class="search-section card">
+                <h2>우리동네 혜택 찾기</h2>
+                <form id="benefitForm" novalidate>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="citySelect">시/도</label>
+                            <select id="citySelect" aria-describedby="formError" required>
+                                <option value="">시/도 선택</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="districtSelect">시/군/구</label>
+                            <select id="districtSelect" aria-describedby="formError" disabled required>
+                                <option value="">먼저 시/도를 선택하세요</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="dueDate">출산 예정일</label>
+                            <input type="date" id="dueDate" aria-describedby="formError" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="childOrder">출산 예정 아이 (몇째?)</label>
+                            <select id="childOrder" aria-describedby="formError" required>
+                                <option value="1">첫째</option>
+                                <option value="2">둘째</option>
+                                <option value="3">셋째</option>
+                                <option value="4">넷째</option>
+                                <option value="5">다섯째 이상</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">혜택 조회하기</button>
+                    <p id="formError" class="form-error hidden" role="alert" aria-live="assertive"></p>
+                </form>
+            </section>
 
-        <!-- 2. 결과 섹션 -->
-        <section id="resultSection" class="result-section hidden">
-            
-            <!-- 전국 비교 요약 섹션 (신규) -->
-            <div id="comparisonSection" class="comparison-card card hidden">
-                <!-- JS로 내용 주입 -->
+            <div id="loadingSpinner" class="spinner-container hidden" role="status" aria-live="polite" aria-hidden="true">
+                <div class="spinner"></div>
+                <p>전국 데이터 조회 중...</p>
             </div>
 
-            <!-- 체크리스트 섹션 (D-Day 포함) -->
-            <div id="checklistSection" class="checklist-card card hidden">
-                <div class="checklist-header">
-                    <h3>📅 아기 만나는 날 <span id="dDayDisplay" class="d-day-badge">D-Day</span></h3>
+            <section id="resultSection" class="result-section hidden" tabindex="-1" aria-live="polite">
+                <div id="comparisonSection" class="comparison-card card hidden"></div>
+
+                <div id="checklistSection" class="checklist-card card hidden">
+                    <div class="checklist-header">
+                        <h3>📅 아기 만나는 날 <span id="dDayDisplay" class="d-day-badge">D-Day</span></h3>
+                    </div>
+                    <p id="dDayMessage" class="d-day-message"></p>
+                    <ul id="checklistItems" class="checklist-items"></ul>
                 </div>
-                <p id="dDayMessage" class="d-day-message"></p>
-                <ul id="checklistItems" class="checklist-items">
-                    <!-- JS로 리스트 아이템 생성 -->
-                </ul>
-            </div>
 
-            <!-- 탭 메뉴 -->
-            <div class="tabs">
-                <button class="tab-btn active" data-tab="all"> ✨ 전체 혜택</button>
-                <button class="tab-btn" data-tab="government">🏛️ 정부 공통 혜택</button>
-                <button class="tab-btn" data-tab="local">🏡 지자체 특화 혜택</button>
-            </div>
-
-            <!-- 탭 콘텐츠: 정부 혜택 -->
-            <div id="government" class="tab-content active">
-                <div class="info-banner">
-                    <p>ℹ️ 거주지와 상관없이 <strong>대한민국 국민 누구나</strong> 받을 수 있는 혜택입니다.</p>
+                <div class="tabs" role="toolbar" aria-label="혜택 분류 필터">
+                    <button id="tab-all" class="tab-btn active" data-tab="all" type="button" aria-pressed="true">✨ 전체 혜택</button>
+                    <button id="tab-government" class="tab-btn" data-tab="government" type="button" aria-pressed="false">🏛️ 정부 공통 혜택</button>
+                    <button id="tab-local" class="tab-btn" data-tab="local" type="button" aria-pressed="false">🏡 지자체 특화 혜택</button>
                 </div>
-                <div class="card-list" id="govBenefitList"></div>
-            </div>
 
-            <!-- 탭 콘텐츠: 지자체 혜택 -->
-            <div id="local" class="tab-content">
-                <div class="info-banner">
-                    <p>ℹ️ 선택하신 <strong id="selectedRegionName">지역</strong> 주민에게만 제공되는 특별 혜택입니다.</p>
+                <div id="government" class="tab-content active" role="region" aria-label="정부 공통 혜택 목록">
+                    <div class="info-banner">
+                        <p>ℹ️ 거주지와 상관없이 <strong>대한민국 국민 누구나</strong> 받을 수 있는 혜택입니다.</p>
+                    </div>
+                    <div class="card-list" id="govBenefitList"></div>
                 </div>
-                <div class="card-list" id="localBenefitList"></div>
-            </div>
 
-            <!-- 종합 리포트 (총액 정리) -->
-            <div id="totalSummarySection" class="summary-card hidden">
-                <h3>💰 우리 가족 예상 지원금 총액</h3>
-                <div id="summaryContent" class="summary-content">
-                    <!-- 자바스크립트로 내역 생성 -->
+                <div id="local" class="tab-content" role="region" aria-label="지자체 특화 혜택 목록" hidden>
+                    <div class="info-banner">
+                        <p>ℹ️ 선택하신 <strong id="selectedRegionName">지역</strong> 주민에게만 제공되는 특별 혜택입니다.</p>
+                    </div>
+                    <div class="card-list" id="localBenefitList"></div>
                 </div>
-            </div>
 
-            <!-- 공식 포털 바로가기 (신규 추가) -->
-            <div class="official-link-section">
-                <p class="official-guide-text">⚠️ 지자체 정책은 수시로 변경될 수 있습니다.<br>가장 정확한 최신 정보는 <strong>정부 공식 포털</strong>에서 확인하세요!</p>
-                <a href="https://www.childcare.go.kr/?menuno=279" target="_blank" class="btn-official">
-                    🏛️ 아이사랑 포털에서 내 지역 혜택 확인하기
-                </a>
-            </div>
-            
-            <!-- 하단 면책 조항 -->
-            <div class="disclaimer-section">
-                <p class="disclaimer">※ 본 서비스의 데이터는 2026년 2월 기준 웹 검색 정보를 바탕으로 추정된 내용입니다.</p>
-                <p class="disclaimer">※ 실제 지급 여부와 정확한 금액은 <strong>반드시 관할 주민센터 및 위 공식 포털</strong>을 통해 최종 확인하시기 바랍니다.</p>
-                <p class="disclaimer">※ 잘못된 정보가 있다면 <a href="mailto:support@babybenefit.kr" style="color: inherit; text-decoration: underline;">제보해주세요</a>.</p>
-            </div>
+                <div id="totalSummarySection" class="summary-card hidden">
+                    <h3>💰 우리 가족 예상 지원금 총액</h3>
+                    <div id="summaryContent" class="summary-content"></div>
+                </div>
+
+                <div class="official-link-section">
+                    <p class="official-guide-text">⚠️ 지자체 정책은 수시로 변경될 수 있습니다.<br>가장 정확한 최신 정보는 <strong>정부 공식 포털</strong>에서 확인하세요!</p>
+                    <a href="https://www.childcare.go.kr/?menuno=279" target="_blank" rel="noopener noreferrer" class="btn-official">
+                        🏛️ 아이사랑 포털에서 내 지역 혜택 확인하기
+                    </a>
+                </div>
+                
+                <div class="disclaimer-section">
+                    <p class="disclaimer">※ 본 서비스의 데이터는 2026년 2월 기준 웹 검색 정보를 바탕으로 추정된 내용입니다.</p>
+                    <p class="disclaimer">※ 실제 지급 여부와 정확한 금액은 반드시 관할 주민센터 및 위 공식 포털을 통해 최종 확인하시기 바랍니다.</p>
+                    <p class="disclaimer">※ 잘못된 정보가 있다면 제보해주세요.</p>
+                </div>
+            </section>
+        </section>
+
+        <section id="calculatorServicePanel" class="service-panel" role="tabpanel" aria-labelledby="service-tab-calculator" hidden>
+            <section class="card">
+                <h2>육아휴직 급여 계산기</h2>
+                <form id="leavePlannerForm" novalidate>
+                    <div class="planner-section">
+                        <h3 class="section-title">본인 기본정보</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="plannerUserType">가정 유형</label>
+                                <select id="plannerUserType">
+                                    <option value="MOTHER">엄마</option>
+                                    <option value="FATHER">아빠</option>
+                                    <option value="SINGLE_PARENT">한부모</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="plannerWage">
+                                    본인 월 통상임금 (세전, 원)
+                                    <button
+                                        type="button"
+                                        id="plannerWageHelpBtn"
+                                        class="help-tooltip"
+                                        aria-label="통상임금 설명 열기"
+                                        aria-expanded="false"
+                                        aria-controls="plannerWageHelpText"
+                                    >?</button>
+                                </label>
+                                <span id="plannerWageHelpText" class="help-tooltip-text hidden">통상임금은 정기적·일률적·고정적으로 지급되는 임금을 의미합니다. 기본급, 직책수당 등 포함 여부는 회사 규정을 확인하세요.</span>
+                                <input type="text" inputmode="numeric" id="plannerWage" placeholder="예: 3,500,000">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="childbirthStart">본인 출산전후휴가 시작일</label>
+                                <input type="date" id="childbirthStart">
+                            </div>
+                            <div class="form-group">
+                                <label for="childbirthEnd">본인 출산전후휴가 종료일 (자동 90일)</label>
+                                <input type="date" id="childbirthEnd" readonly>
+                                <small class="readonly-hint">시작일 입력 시 자동 계산됩니다.</small>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="check-option" for="plannerMultipleBirth">
+                                    <input type="checkbox" id="plannerMultipleBirth">
+                                    <span>다태아</span>
+                                </label>
+                            </div>
+                            <div class="form-group">
+                                <label class="check-option" for="plannerPremature">
+                                    <input type="checkbox" id="plannerPremature">
+                                    <span>미숙아</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="priorityCompany">회사 우선지원대상기업 여부</label>
+                                <select id="priorityCompany">
+                                    <option value="">모름(추정 모드)</option>
+                                    <option value="true">예</option>
+                                    <option value="false">아니오</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="spouseMonths">배우자 육아휴직 사용 개월</label>
+                                <input type="number" id="spouseMonths" min="0" max="18" step="1" placeholder="예: 3">
+                            </div>
+                        </div>
+                        <div class="segment-header">
+                            <h3>본인 육아휴직 구간 (분할 가능)</h3>
+                            <div class="segment-actions">
+                                <button type="button" id="monthlyPresetToggle" class="btn-secondary btn-icon-toggle" aria-expanded="false" aria-controls="monthlyPresetOptions">🗓 육아휴직 기간</button>
+                                <button type="button" id="addSegmentBtn" class="btn-secondary">+ 구간 추가</button>
+                            </div>
+                        </div>
+                        <div id="monthlyPresetOptions" class="preset-options hidden">
+                            <div class="preset-range-control">
+                                <label for="motherPresetRange">기간(개월)</label>
+                                <input type="number" id="motherPresetRange" min="1" max="18" step="1" value="12">
+                                <strong id="motherPresetValue">12개월</strong>
+                            </div>
+                        </div>
+                        <p class="readonly-hint">위 육아휴직 기간 버튼으로 기간을 선택한 뒤, 아래 날짜 입력에서 세부 일정을 조정할 수 있습니다.</p>
+                        <p id="childcareQuotaInfo" class="readonly-hint">사용 0일 · 남은 548일(약 18.0개월) / 총 18개월(약 547.9일) · 분할 1/4</p>
+                        <div id="segmentList" class="segment-list"></div>
+                    </div>
+
+                    <div class="planner-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="check-option" for="includeFather">
+                                    <input type="checkbox" id="includeFather">
+                                    <span>배우자도 함께 계산하기</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div id="fatherInputSection" class="card-subsection hidden">
+                            <h3>배우자 육아휴직 입력</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="fatherWage">배우자 월 통상임금 (세전, 원)</label>
+                                    <input type="text" inputmode="numeric" id="fatherWage" placeholder="예: 3,500,000">
+                                </div>
+                            </div>
+                            <div class="segment-header">
+                                <h3>배우자 육아휴직 구간 (분할 가능)</h3>
+                                <div class="segment-actions">
+                                    <button type="button" id="fatherMonthlyPresetToggle" class="btn-secondary btn-icon-toggle" aria-expanded="false" aria-controls="fatherMonthlyPresetOptions">🗓 육아휴직 기간</button>
+                                    <button type="button" id="addFatherSegmentBtn" class="btn-secondary">+ 구간 추가</button>
+                                </div>
+                            </div>
+                            <div id="fatherMonthlyPresetOptions" class="preset-options hidden">
+                                <div class="preset-range-control">
+                                    <label for="fatherPresetRange">기간(개월)</label>
+                                    <input type="number" id="fatherPresetRange" min="1" max="18" step="1" value="12">
+                                    <strong id="fatherPresetValue">12개월</strong>
+                                </div>
+                            </div>
+                            <div id="fatherSegmentList" class="segment-list"></div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary">월별 급여 계산하기</button>
+                    <p id="plannerFormMessage" class="form-error hidden" role="alert" aria-live="assertive"></p>
+                </form>
+            </section>
+
+            <section class="card">
+                <h3>월별 예상 수령액 (출산휴가 + 육아휴직)</h3>
+                <div id="plannerBadges" class="planner-badges"></div>
+                <div class="table-wrap">
+                    <table class="payment-table">
+                        <thead>
+                            <tr>
+                                <th>월</th>
+                                <th>출산휴가(정부)</th>
+                                <th>출산휴가(회사)</th>
+                                <th id="primaryChildcareHeader">육아휴직(본인)</th>
+                                <th id="fatherChildcareHeader">육아휴직(배우자)</th>
+                                <th>월 합계</th>
+                                <th>비고</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentTableBody">
+                            <tr><td colspan="7" class="empty-table">입력 후 계산하면 월별 예상 수령액이 표시됩니다.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="paymentMobileCards" class="payment-mobile-cards hidden" aria-live="polite"></div>
+                <section id="paymentChartSection" class="payment-chart-section hidden" aria-live="polite">
+                    <div class="payment-chart-toolbar">
+                        <strong>육아휴직 급여 비교 그래프</strong>
+                        <div id="paymentChartToggles" class="payment-chart-toggles">
+                            <button type="button" class="btn-secondary active" data-series-toggle="self">본인</button>
+                            <button type="button" class="btn-secondary active" data-series-toggle="spouse">배우자</button>
+                            <button type="button" class="btn-secondary active" data-series-toggle="total">합산</button>
+                        </div>
+                    </div>
+                    <div class="payment-chart-wrap">
+                        <svg id="paymentChartSvg" viewBox="0 0 920 360" role="img" aria-label="월별 육아휴직 급여 그래프"></svg>
+                        <div id="paymentChartTooltip" class="payment-chart-tooltip hidden"></div>
+                    </div>
+                    <p class="readonly-hint">※ ◐ 표시는 해당 월 급여가 일할 계산(부분월 계산)으로 반영되었음을 의미합니다.</p>
+                    <div class="payment-chart-totals">
+                        <div><span>본인 총 수령액</span><strong id="chartSelfTotal">0원</strong></div>
+                        <div><span>배우자 총 수령액</span><strong id="chartSpouseTotal">0원</strong></div>
+                        <div><span>합산 총액</span><strong id="chartCombinedTotal">0원</strong></div>
+                    </div>
+                </section>
+                <div class="disclaimer-section">
+                    <p class="disclaimer">※ 본 계산 결과는 입력값을 기반으로 한 예상치이며, 법적·행정적 효력을 갖지 않습니다.</p>
+                    <p class="disclaimer">※ 실제 지급액, 지급시점, 소급 적용 여부는 고용센터·사업장 및 관계 기관 심사 결과에 따라 달라질 수 있으므로 반드시 최종 확인하시기 바랍니다.</p>
+                </div>
+            </section>
+        </section>
+
+        <section id="calendarServicePanel" class="service-panel" role="tabpanel" aria-labelledby="service-tab-calendar" hidden>
+            <section class="card">
+                <h2>육아휴직 달력</h2>
+                <p class="calendar-help">아래에서 출산휴가/육아휴직 날짜를 선택하면 달력에 즉시 반영됩니다. 계산기 입력값도 기본으로 자동 적용됩니다.</p>
+                <p id="holidayStatusMessage" class="holiday-status hidden" role="status" aria-live="polite"></p>
+                <div class="calendar-toolbar">
+                    <div class="calendar-view-toggle">
+                        <button type="button" id="viewMonthBtn" class="btn-secondary active">월</button>
+                        <button type="button" id="viewWeekBtn" class="btn-secondary">주</button>
+                    </div>
+                </div>
+                <div class="calendar-edit-toolbar">
+                    <div class="calendar-edit-block">
+                        <strong>출산휴가</strong>
+                        <div class="calendar-input-grid">
+                            <label for="calendarChildbirthStart">시작일</label>
+                            <input type="date" id="calendarChildbirthStart">
+                            <label for="calendarChildbirthEnd">종료일</label>
+                            <input type="date" id="calendarChildbirthEnd">
+                            <p id="calendarChildbirthInfo" class="readonly-hint">기간 정보: -</p>
+                            <div class="calendar-action-row">
+                                <button type="button" id="applyCalendarChildbirthBtn" class="btn-secondary">출산휴가 반영</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="calendar-edit-block">
+                        <strong>육아휴직</strong>
+                        <div class="calendar-actor-tabs" id="calendarActorTabs" role="group" aria-label="육아휴직 입력 대상">
+                            <button type="button" class="btn-secondary active" data-calendar-actor="self" aria-pressed="true">본인</button>
+                            <button type="button" class="btn-secondary" data-calendar-actor="spouse" aria-pressed="false">배우자</button>
+                        </div>
+                        <div class="calendar-input-grid">
+                            <label for="calendarChildcareSegmentIndex">구간</label>
+                            <select id="calendarChildcareSegmentIndex"></select>
+                            <label for="calendarChildcareStart">시작일</label>
+                            <input type="date" id="calendarChildcareStart">
+                            <label for="calendarChildcareDays">사용일</label>
+                            <div class="calendar-days-row">
+                                <input type="number" id="calendarChildcareDays" min="1" step="1" placeholder="예: 30">
+                                <span id="calendarChildcareResidualHint" class="calendar-inline-hint">잔여예정 -일</span>
+                            </div>
+                            <label for="calendarChildcareEnd">종료일</label>
+                            <input type="date" id="calendarChildcareEnd">
+                            <p id="calendarChildcareRemainingInfo" class="readonly-hint">남은 휴직일: 548일(약 18.0개월)</p>
+                            <div class="calendar-action-row">
+                                <button type="button" id="addCalendarChildcareSegmentBtn" class="btn-secondary">+ 구간 추가</button>
+                                <button type="button" id="applyCalendarChildcareBtn" class="btn-secondary">육아휴직 반영</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="calendarBadges" class="planner-badges"></div>
+                <div class="calendar-nav calendar-nav-inline">
+                    <div class="calendar-nav-left">
+                        <button type="button" id="calendarPrevBtn" class="btn-secondary">◀ 이전</button>
+                        <strong id="calendarCurrentLabel">-</strong>
+                        <button type="button" id="calendarNextBtn" class="btn-secondary">다음 ▶</button>
+                    </div>
+                    <span id="calendarNavMeta" class="calendar-nav-meta">💰 당월 예상 수령액 합계 0원</span>
+                </div>
+                <div id="plannerCalendarGrid" class="planner-calendar-grid"></div>
+                <p id="calendarMessage" class="calendar-message"></p>
+                <div class="calendar-legend">
+                    <span class="legend-item"><i class="legend-dot childbirth"></i>출산휴가</span>
+                    <span class="legend-item"><i class="legend-dot childcare"></i>육아휴직</span>
+                    <span class="legend-item"><i class="legend-dot return"></i>복직(예정)</span>
+                    <span class="legend-item"><i class="legend-dot holiday"></i>공휴일</span>
+                </div>
+                <div class="disclaimer-section">
+                    <p class="disclaimer">※ 본 달력은 일정 계획을 위한 참고 화면이며, 법적 증빙 또는 신청 근거 자료로 사용할 수 없습니다.</p>
+                    <p class="disclaimer">※ 실제 휴가 인정 기간 및 급여 산정은 회사 인사 규정과 관계 기관의 최종 판단을 우선합니다.</p>
+                </div>
+            </section>
         </section>
     </main>
 
     <footer class="footer">
         <div class="container">
             <p>행복한 육아를 응원합니다 💖</p>
-            <p>&copy; 2026 Baby Benefit Map. All rights reserved.</p>
+            <p>&copy; 2026 출산 혜택 다나와. All rights reserved.</p>
         </div>
     </footer>
 
     <!-- type="module" 지정 필수 -->
-    <script type="module" src="script.js?v=5"></script>
+    <script type="module" src="script.js?v=28"></script>
 </body>
 </html>
