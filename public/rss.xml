@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>출산 혜택 다나와</title>
+    <link>https://chulsan-danawa.com/</link>
+    <description>출산·육아 혜택, 육아휴직 급여 계산기, 관련 제도 안내</description>
+    <language>ko-kr</language>
+    <lastBuildDate>Mon, 16 Feb 2026 14:50:00 +0000</lastBuildDate>
+    <item>
+      <title>출산 혜택 다나와 홈</title>
+      <link>https://chulsan-danawa.com/</link>
+      <guid>https://chulsan-danawa.com/</guid>
+      <pubDate>Mon, 16 Feb 2026 14:50:00 +0000</pubDate>
+      <description>출산·육아 혜택 조회와 계산기를 한 번에 제공합니다.</description>
+    </item>
+    <item>
+      <title>서비스 소개</title>
+      <link>https://chulsan-danawa.com/about</link>
+      <guid>https://chulsan-danawa.com/about</guid>
+      <pubDate>Mon, 16 Feb 2026 14:50:00 +0000</pubDate>
+      <description>서비스 목적, 운영 원칙, 데이터 출처를 안내합니다.</description>
+    </item>
+    <item>
+      <title>사용 가이드</title>
+      <link>https://chulsan-danawa.com/guide/how-to-use</link>
+      <guid>https://chulsan-danawa.com/guide/how-to-use</guid>
+      <pubDate>Mon, 16 Feb 2026 14:50:00 +0000</pubDate>
+      <description>입력 방법, 계산 기준, 결과 해석 방법을 제공합니다.</description>
+    </item>
+    <item>
+      <title>관련 제도</title>
+      <link>https://chulsan-danawa.com/policy</link>
+      <guid>https://chulsan-danawa.com/policy</guid>
+      <pubDate>Mon, 16 Feb 2026 14:50:00 +0000</pubDate>
+      <description>출산전후휴가, 육아휴직, 6+6 제도 정보를 정리했습니다.</description>
+    </item>
+    <item>
+      <title>문의 및 제보</title>
+      <link>https://chulsan-danawa.com/contact</link>
+      <guid>https://chulsan-danawa.com/contact</guid>
+      <pubDate>Mon, 16 Feb 2026 14:50:00 +0000</pubDate>
+      <description>오류 제보와 문의 접수 채널을 안내합니다.</description>
+    </item>
+    <item>
+      <title>개인정보처리방침</title>
+      <link>https://chulsan-danawa.com/privacy</link>
+      <guid>https://chulsan-danawa.com/privacy</guid>
+      <pubDate>Mon, 16 Feb 2026 14:50:00 +0000</pubDate>
+      <description>수집 항목, 수집 목적, 보관 기간, 문의 이메일을 안내합니다.</description>
+    </item>
+  </channel>
+</rss>
