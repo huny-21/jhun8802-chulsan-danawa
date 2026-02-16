@@ -63,6 +63,7 @@ const paymentTableBody = document.getElementById('paymentTableBody');
 const paymentMobileCards = document.getElementById('paymentMobileCards');
 const primaryChildcareHeader = document.getElementById('primaryChildcareHeader');
 const fatherChildcareHeader = document.getElementById('fatherChildcareHeader');
+const benefitHeader = document.getElementById('benefitHeader');
 const plannerBadges = document.getElementById('plannerBadges');
 const paymentChartSection = document.getElementById('paymentChartSection');
 const paymentChartSvg = document.getElementById('paymentChartSvg');
@@ -1823,25 +1824,32 @@ function resolvePolicyRule(state, monthIndex) {
 }
 
 function renderPaymentTable(rows) {
+    const showSpouse = plannerState.includeFather;
+    const showBenefit = plannerState.includeGovBenefits;
+    const visibleColCount = 5 + (showSpouse ? 1 : 0) + (showBenefit ? 1 : 0);
+    if (fatherChildcareHeader) fatherChildcareHeader.hidden = !showSpouse;
+    if (benefitHeader) benefitHeader.hidden = !showBenefit;
+
     if (!rows.length) {
-        paymentTableBody.innerHTML = '<tr><td colspan="8" class="empty-table">입력값을 확인해주세요.</td></tr>';
+        paymentTableBody.innerHTML = `<tr><td colspan="${visibleColCount}" class="empty-table">입력값을 확인해주세요.</td></tr>`;
         renderPaymentMobileCards([]);
         renderPaymentChart([]);
         return;
     }
 
     paymentTableBody.innerHTML = rows.map((row) => {
-        const companyText = row.companyUnknown ? '추정 필요' : formatCurrency(row.childbirthCompany);
-        const fatherText = plannerState.includeFather ? formatCurrency(row.childcareFather) : '-';
-        const govBenefitText = plannerState.includeGovBenefits ? formatCurrency(row.govBenefit) : '-';
+        const childbirthTotalText = row.companyUnknown
+            ? `${formatCurrency(row.childbirthGov)} + 회사 추정 필요`
+            : formatCurrency(row.childbirthGov + row.childbirthCompany);
+        const spouseCell = showSpouse ? `<td>${formatCurrency(row.childcareFather)}</td>` : '';
+        const benefitCell = showBenefit ? `<td>${formatCurrency(row.govBenefit)}</td>` : '';
         return `
             <tr>
                 <td>${row.yearMonth}</td>
-                <td>${formatCurrency(row.childbirthGov)}</td>
-                <td>${companyText}</td>
+                <td>${childbirthTotalText}</td>
                 <td>${formatCurrency(row.childcarePrimary)}</td>
-                <td>${fatherText}</td>
-                <td>${govBenefitText}</td>
+                ${spouseCell}
+                ${benefitCell}
                 <td><strong>${formatCurrency(row.total)}</strong></td>
                 <td>${row.notes.join(', ') || '-'}</td>
             </tr>
@@ -1861,20 +1869,25 @@ function renderPaymentMobileCards(rows) {
 
     paymentMobileCards.classList.remove('hidden');
     paymentMobileCards.innerHTML = rows.map((row) => {
-        const companyText = row.companyUnknown ? '추정 필요' : formatCurrency(row.childbirthCompany);
-        const fatherText = plannerState.includeFather ? formatCurrency(row.childcareFather) : '-';
-        const govBenefitText = plannerState.includeGovBenefits ? formatCurrency(row.govBenefit) : '-';
+        const childbirthTotalText = row.companyUnknown
+            ? `${formatCurrency(row.childbirthGov)} + 회사 추정 필요`
+            : formatCurrency(row.childbirthGov + row.childbirthCompany);
+        const spouseRow = plannerState.includeFather
+            ? `<div class="payment-mobile-card-row"><span>육아휴직(배우자)</span><span>${formatCurrency(row.childcareFather)}</span></div>`
+            : '';
+        const benefitRow = plannerState.includeGovBenefits
+            ? `<div class="payment-mobile-card-row"><span>출산혜택</span><span>${formatCurrency(row.govBenefit)}</span></div>`
+            : '';
         return `
             <article class="payment-mobile-card">
                 <div class="payment-mobile-card-head">
                     <strong class="payment-mobile-card-month">${row.yearMonth}</strong>
                     <strong class="payment-mobile-card-total">${formatCurrency(row.total)}</strong>
                 </div>
-                <div class="payment-mobile-card-row"><span>출산휴가(정부)</span><span>${formatCurrency(row.childbirthGov)}</span></div>
-                <div class="payment-mobile-card-row"><span>출산휴가(회사)</span><span>${companyText}</span></div>
+                <div class="payment-mobile-card-row"><span>출산휴가</span><span>${childbirthTotalText}</span></div>
                 <div class="payment-mobile-card-row"><span>육아휴직(본인)</span><span>${formatCurrency(row.childcarePrimary)}</span></div>
-                <div class="payment-mobile-card-row"><span>육아휴직(배우자)</span><span>${fatherText}</span></div>
-                <div class="payment-mobile-card-row"><span>출산혜택</span><span>${govBenefitText}</span></div>
+                ${spouseRow}
+                ${benefitRow}
                 <div class="payment-mobile-card-row"><span>비고</span><span>${row.notes.join(', ') || '-'}</span></div>
             </article>
         `;
