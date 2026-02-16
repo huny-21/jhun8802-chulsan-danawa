@@ -87,39 +87,29 @@ body {
 .site-nav {
     margin-top: 14px;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: center;
     gap: 10px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.site-nav::-webkit-scrollbar {
+    display: none;
 }
 
 .site-nav a {
-    position: relative;
     text-decoration: none;
     color: var(--brand-accent);
     border: 1px solid var(--neutral-border);
     border-radius: 999px;
-    padding: 6px 12px 6px 30px;
+    padding: 6px 12px;
     font-size: 0.88rem;
     background: #fff;
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
-
-.site-nav a::before {
-    position: absolute;
-    left: 11px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.8rem;
-    opacity: 0.8;
-    transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.site-nav a:nth-child(1)::before { content: "⌂"; }
-.site-nav a:nth-child(2)::before { content: "i"; font-weight: 700; }
-.site-nav a:nth-child(3)::before { content: "✓"; }
-.site-nav a:nth-child(4)::before { content: "§"; font-weight: 700; }
-.site-nav a:nth-child(5)::before { content: "?"; font-weight: 700; }
-.site-nav a:nth-child(6)::before { content: "@"; }
 
 .site-nav a:hover {
     border-color: #bfd4ea;
@@ -131,12 +121,6 @@ body {
     background: var(--brand-accent);
     border-color: var(--brand-accent);
     color: #fff;
-}
-
-.site-nav a.active::before,
-.site-nav a[aria-current="page"]::before {
-    opacity: 1;
-    transform: translateY(-50%) scale(1.16);
 }
 
 /* Main Content */
@@ -1478,6 +1462,7 @@ input[readonly] {
 
     .site-nav {
         justify-content: flex-start;
+        gap: 8px;
     }
 
     .quick-link-grid {

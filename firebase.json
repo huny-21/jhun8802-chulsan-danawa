@@ -3,6 +3,13 @@
     "site": "chulsan-danawa",
     "public": "public",
     "cleanUrls": true,
+    "redirects": [
+      {
+        "source": "/policy/",
+        "destination": "/policy",
+        "type": 301
+      }
+    ],
     "ignore": [
       "firebase.json",
       "**/.*",
