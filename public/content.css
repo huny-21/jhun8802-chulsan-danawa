@@ -1,0 +1,142 @@
+:root {
+  --bg: #f7fafc;
+  --surface: #ffffff;
+  --text: #10233d;
+  --muted: #52657e;
+  --line: #d9e2ec;
+  --brand: #1f4f8a;
+  --brand-weak: #eaf2fb;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+}
+
+.container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.site-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 24px 0;
+}
+
+.site-title {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.site-subtitle {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.site-nav {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.site-nav a {
+  text-decoration: none;
+  color: var(--brand);
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 0.9rem;
+}
+
+main { padding: 28px 0 56px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 26px;
+  margin-bottom: 20px;
+}
+
+h1 { margin: 0 0 10px; font-size: 1.6rem; }
+h2 { margin-top: 28px; font-size: 1.2rem; }
+
+.meta-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.table-wrap { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 14px;
+  min-width: 560px;
+}
+
+th, td {
+  border: 1px solid var(--line);
+  padding: 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: var(--brand-weak);
+  font-weight: 700;
+}
+
+.notice {
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #bfd4ea;
+  background: #f1f7ff;
+  margin-top: 16px;
+}
+
+.faq-item {
+  border-top: 1px solid var(--line);
+  padding: 14px 0;
+}
+
+.faq-item:first-of-type { border-top: none; }
+
+.site-footer {
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  padding: 24px 0 36px;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.footer-links a { color: var(--brand); }
+
+.footer-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .card { padding: 18px; }
+  .site-nav a { font-size: 0.82rem; }
+}
