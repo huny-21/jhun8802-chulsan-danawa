@@ -75,6 +75,13 @@ body {
   background: #f4f8fd;
 }
 
+.site-nav a.active,
+.site-nav a[aria-current="page"] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
 main { padding: 28px 0 56px; }
 
 .card {

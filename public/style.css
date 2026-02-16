@@ -108,6 +108,13 @@ body {
     background: var(--brand-highlight);
 }
 
+.site-nav a.active,
+.site-nav a[aria-current="page"] {
+    background: var(--brand-accent);
+    border-color: var(--brand-accent);
+    color: #fff;
+}
+
 /* Main Content */
 .main-content {
     padding-bottom: 80px;
