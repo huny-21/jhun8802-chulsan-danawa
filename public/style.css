@@ -62,11 +62,12 @@ body {
 }
 
 .header .logo {
-    font-size: 1.5rem;
+    font-size: clamp(1.9rem, 3.3vw, 2.35rem);
     font-weight: 800;
     color: var(--brand-primary);
     letter-spacing: -0.02em;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    line-height: 1.15;
 }
 
 .logo-link {
@@ -76,6 +77,11 @@ body {
 
 .logo-link:hover {
     color: var(--brand-accent);
+}
+
+.logo-link {
+    display: inline-block;
+    text-shadow: 0 1px 0 rgba(37, 99, 235, 0.08);
 }
 
 .header p {
