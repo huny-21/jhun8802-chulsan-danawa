@@ -1312,6 +1312,21 @@ input[readonly] {
     margin-bottom: 4px;
 }
 
+.adsense-wrap {
+    padding: 20px;
+}
+
+.adsense-label {
+    font-size: 0.75rem;
+    color: var(--neutral-muted);
+    margin-bottom: 10px;
+}
+
+.adsense-unit {
+    width: 100%;
+    min-height: 100px;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .container {
@@ -1408,6 +1423,10 @@ input[readonly] {
 
     .total-amount-row span:last-child {
         font-size: 1.5rem;
+    }
+
+    .adsense-wrap {
+        padding: 16px;
     }
 }
 .spinner-container {

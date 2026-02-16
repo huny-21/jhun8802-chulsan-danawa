@@ -18,7 +18,7 @@
     <meta name="twitter:image" content="https://chulsan-danawa.web.app/favicon.svg?v=3">
     <link rel="icon" type="image/svg+xml" href="favicon.svg?v=3">
     <link rel="shortcut icon" href="favicon.svg?v=3">
-    <link rel="stylesheet" href="style.css?v=24">
+    <link rel="stylesheet" href="style.css?v=25">
     <!-- Google Fonts: Noto Sans KR (Weights 400, 500, 700, 900) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,6 +35,11 @@
 
     <!-- 메인 콘텐츠 -->
     <main class="container main-content">
+        <section class="adsense-wrap card" data-adsense-slot="top" aria-label="광고 영역">
+            <p class="adsense-label">광고</p>
+            <ins class="adsbygoogle adsense-unit" data-adsense-unit="top"></ins>
+        </section>
+
         <section class="service-tabs-wrap card">
             <h2>서비스 선택</h2>
             <div id="serviceTabs" class="service-tabs" role="tablist" aria-label="메인 서비스">
@@ -391,6 +396,11 @@
                 </div>
             </section>
         </section>
+
+        <section class="adsense-wrap card" data-adsense-slot="bottom" aria-label="광고 영역">
+            <p class="adsense-label">광고</p>
+            <ins class="adsbygoogle adsense-unit" data-adsense-unit="bottom"></ins>
+        </section>
     </main>
 
     <footer class="footer">
@@ -400,7 +410,19 @@
         </div>
     </footer>
 
+    <script>
+        // Replace with your AdSense IDs, then set enabled to true.
+        window.ADSENSE_CONFIG = {
+            enabled: false,
+            client: "ca-pub-XXXXXXXXXXXXXXXX",
+            slots: {
+                top: "",
+                bottom: ""
+            }
+        };
+    </script>
+    <script src="ads.js?v=1"></script>
     <!-- type="module" 지정 필수 -->
-    <script type="module" src="script.js?v=28"></script>
+    <script type="module" src="script.js?v=29"></script>
 </body>
 </html>
