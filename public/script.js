@@ -50,6 +50,7 @@ const fatherMonthlyPresetOptions = document.getElementById('fatherMonthlyPresetO
 const fatherPresetRange = document.getElementById('fatherPresetRange');
 const fatherPresetValue = document.getElementById('fatherPresetValue');
 const includeFatherInput = document.getElementById('includeFather');
+const includeGovBenefitsInput = document.getElementById('includeGovBenefits');
 const fatherInputSection = document.getElementById('fatherInputSection');
 const fatherWageInput = document.getElementById('fatherWage');
 const addFatherSegmentBtn = document.getElementById('addFatherSegmentBtn');
@@ -69,6 +70,7 @@ const paymentChartTooltip = document.getElementById('paymentChartTooltip');
 const paymentChartToggles = document.getElementById('paymentChartToggles');
 const chartSelfTotal = document.getElementById('chartSelfTotal');
 const chartSpouseTotal = document.getElementById('chartSpouseTotal');
+const chartGovBenefitTotal = document.getElementById('chartGovBenefitTotal');
 const chartCombinedTotal = document.getElementById('chartCombinedTotal');
 const calendarChildbirthStartInput = document.getElementById('calendarChildbirthStart');
 const calendarChildbirthEndInput = document.getElementById('calendarChildbirthEnd');
@@ -748,6 +750,7 @@ const plannerState = {
     selectedPresetMonths: 0,
     lastSuggestedChildcareStart: '',
     includeFather: false,
+    includeGovBenefits: false,
     father: {
         userType: 'FATHER',
         wage: 0,
@@ -769,6 +772,7 @@ const failedHolidayYears = new Set();
 const paymentChartState = {
     showSelf: true,
     showSpouse: true,
+    showBenefit: true,
     showTotal: true
 };
 
@@ -833,9 +837,11 @@ function initLeavePlanner() {
                 const key = btn.dataset.seriesToggle;
                 if (key === 'self') paymentChartState.showSelf = !paymentChartState.showSelf;
                 if (key === 'spouse') paymentChartState.showSpouse = !paymentChartState.showSpouse;
+                if (key === 'benefit') paymentChartState.showBenefit = !paymentChartState.showBenefit;
                 if (key === 'total') paymentChartState.showTotal = !paymentChartState.showTotal;
                 btn.classList.toggle('active', (key === 'self' && paymentChartState.showSelf)
                     || (key === 'spouse' && paymentChartState.showSpouse)
+                    || (key === 'benefit' && paymentChartState.showBenefit)
                     || (key === 'total' && paymentChartState.showTotal));
                 renderPaymentChart(plannerState.monthlyRows);
             });
@@ -877,6 +883,7 @@ function initLeavePlanner() {
         priorityCompany,
         spouseMonthsInput,
         includeFatherInput,
+        includeGovBenefitsInput,
         fatherWageInput
     ].forEach((field) => {
         field.addEventListener('change', () => {
@@ -1087,6 +1094,7 @@ function renderPlannerForm() {
     spouseMonthsInput.value = plannerState.spouseMonths || '';
     priorityCompany.value = plannerState.isPriorityCompany === null ? '' : String(plannerState.isPriorityCompany);
     includeFatherInput.checked = plannerState.includeFather;
+    if (includeGovBenefitsInput) includeGovBenefitsInput.checked = plannerState.includeGovBenefits;
     fatherWageInput.value = formatNumberInput(plannerState.father.wage);
     fatherInputSection.classList.toggle('hidden', !plannerState.includeFather);
     viewMonthBtn.classList.toggle('active', plannerState.calendarView === 'month');
@@ -1361,6 +1369,7 @@ function collectPlannerForm() {
     plannerState.spouseMonths = normalizeMonthCount(spouseMonthsInput.value, { min: 0, max: 18, fallback: 0 });
     spouseMonthsInput.value = plannerState.spouseMonths === 0 ? '' : String(plannerState.spouseMonths);
     plannerState.includeFather = includeFatherInput.checked;
+    plannerState.includeGovBenefits = !!includeGovBenefitsInput?.checked;
     plannerState.father.wage = parseCurrencyInput(fatherWageInput.value);
     fatherInputSection.classList.toggle('hidden', !plannerState.includeFather);
     updatePaymentHeaders();
@@ -1591,6 +1600,7 @@ function getPlannerSnapshot() {
         selectedPresetMonths: plannerState.selectedPresetMonths,
         lastSuggestedChildcareStart: plannerState.lastSuggestedChildcareStart,
         includeFather: plannerState.includeFather,
+        includeGovBenefits: plannerState.includeGovBenefits,
         father: {
             wage: plannerState.father.wage,
             childcareSegments: cloneSegmentList(plannerState.father.childcareSegments),
@@ -1635,6 +1645,7 @@ function restorePlannerSettings() {
         plannerState.selectedPresetMonths = normalizeMonthCount(saved.selectedPresetMonths, { min: 0, max: 18, fallback: 0 });
         plannerState.lastSuggestedChildcareStart = saved.lastSuggestedChildcareStart || plannerState.lastSuggestedChildcareStart;
         plannerState.includeFather = !!saved.includeFather;
+        plannerState.includeGovBenefits = !!saved.includeGovBenefits;
 
         plannerState.father.wage = Number(saved.father?.wage) || plannerState.father.wage;
         const fatherSegments = cloneSegmentList(saved.father?.childcareSegments);
@@ -1648,6 +1659,25 @@ function restorePlannerSettings() {
     } catch (err) {
         // Ignore invalid data and continue with defaults
     }
+}
+
+function getPlannerChildOrder() {
+    const childOrderEl = document.getElementById('childOrder');
+    const parsed = Number(childOrderEl?.value || '1');
+    if (!Number.isFinite(parsed) || parsed < 1) return 1;
+    if (parsed >= 5) return 5;
+    return Math.floor(parsed);
+}
+
+function calculateGovBenefitByMonth(monthIndex, childOrder = 1) {
+    const recurring = monthIndex <= 12 ? 1100000
+        : monthIndex <= 24 ? 600000
+            : monthIndex <= 96 ? 100000
+                : 0;
+    const firstMeeting = childOrder >= 2 ? 3000000 : 2000000;
+    const medicalSupport = 1000000;
+    const oneTime = monthIndex === 1 ? (firstMeeting + medicalSupport) : 0;
+    return recurring + oneTime;
 }
 
 function calculatePlannerRows(state) {
@@ -1725,25 +1755,44 @@ function calculatePlannerRows(state) {
         }
     }
 
-    const sortedRows = Array.from(rows.entries())
+    let sortedRows = Array.from(rows.entries())
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([yearMonth, row]) => {
             const childbirthGov = roundFinalAmount(row.childbirthGov);
             const childbirthCompany = roundFinalAmount(row.childbirthCompany);
             const childcarePrimary = roundFinalAmount(row.childcarePrimary);
             const childcareFather = roundFinalAmount(row.childcareFather);
-            const total = childbirthGov + childbirthCompany + childcarePrimary + childcareFather;
+            const govBenefit = 0;
+            const total = childbirthGov + childbirthCompany + childcarePrimary + childcareFather + govBenefit;
             return {
                 yearMonth,
                 childbirthGov,
                 childbirthCompany,
                 childcarePrimary,
                 childcareFather,
+                govBenefit,
                 total,
                 companyUnknown: row.companyUnknown,
                 notes: Array.from(notesByMonth.get(yearMonth) || [])
             };
         });
+
+    if (state.includeGovBenefits) {
+        const childOrder = getPlannerChildOrder();
+        sortedRows = sortedRows.map((row, idx) => {
+            const govBenefit = calculateGovBenefitByMonth(idx + 1, childOrder);
+            const notes = [...row.notes];
+            if (idx === 0 && govBenefit > 0) {
+                notes.push('정부공통 혜택 포함(일시금+월지급)');
+            }
+            return {
+                ...row,
+                govBenefit,
+                total: row.total + govBenefit,
+                notes
+            };
+        });
+    }
 
     if (!state.returnDate) {
         const lastPrimary = primaryDays[primaryDays.length - 1];
@@ -1775,7 +1824,7 @@ function resolvePolicyRule(state, monthIndex) {
 
 function renderPaymentTable(rows) {
     if (!rows.length) {
-        paymentTableBody.innerHTML = '<tr><td colspan="7" class="empty-table">입력값을 확인해주세요.</td></tr>';
+        paymentTableBody.innerHTML = '<tr><td colspan="8" class="empty-table">입력값을 확인해주세요.</td></tr>';
         renderPaymentMobileCards([]);
         renderPaymentChart([]);
         return;
@@ -1784,6 +1833,7 @@ function renderPaymentTable(rows) {
     paymentTableBody.innerHTML = rows.map((row) => {
         const companyText = row.companyUnknown ? '추정 필요' : formatCurrency(row.childbirthCompany);
         const fatherText = plannerState.includeFather ? formatCurrency(row.childcareFather) : '-';
+        const govBenefitText = plannerState.includeGovBenefits ? formatCurrency(row.govBenefit) : '-';
         return `
             <tr>
                 <td>${row.yearMonth}</td>
@@ -1791,6 +1841,7 @@ function renderPaymentTable(rows) {
                 <td>${companyText}</td>
                 <td>${formatCurrency(row.childcarePrimary)}</td>
                 <td>${fatherText}</td>
+                <td>${govBenefitText}</td>
                 <td><strong>${formatCurrency(row.total)}</strong></td>
                 <td>${row.notes.join(', ') || '-'}</td>
             </tr>
@@ -1812,6 +1863,7 @@ function renderPaymentMobileCards(rows) {
     paymentMobileCards.innerHTML = rows.map((row) => {
         const companyText = row.companyUnknown ? '추정 필요' : formatCurrency(row.childbirthCompany);
         const fatherText = plannerState.includeFather ? formatCurrency(row.childcareFather) : '-';
+        const govBenefitText = plannerState.includeGovBenefits ? formatCurrency(row.govBenefit) : '-';
         return `
             <article class="payment-mobile-card">
                 <div class="payment-mobile-card-head">
@@ -1822,6 +1874,7 @@ function renderPaymentMobileCards(rows) {
                 <div class="payment-mobile-card-row"><span>출산휴가(회사)</span><span>${companyText}</span></div>
                 <div class="payment-mobile-card-row"><span>육아휴직(본인)</span><span>${formatCurrency(row.childcarePrimary)}</span></div>
                 <div class="payment-mobile-card-row"><span>육아휴직(배우자)</span><span>${fatherText}</span></div>
+                <div class="payment-mobile-card-row"><span>출산혜택</span><span>${govBenefitText}</span></div>
                 <div class="payment-mobile-card-row"><span>비고</span><span>${row.notes.join(', ') || '-'}</span></div>
             </article>
         `;
@@ -1834,7 +1887,7 @@ function renderPaymentChart(rows) {
         paymentChartSection.classList.add('hidden');
         paymentChartSvg.innerHTML = '';
         paymentChartTooltip.classList.add('hidden');
-        updateChartTotals(0, 0, 0);
+        updateChartTotals(0, 0, 0, 0);
         return;
     }
 
@@ -1854,7 +1907,9 @@ function renderPaymentChart(rows) {
     const chartRows = rows.map((row, idx) => {
         const self = row.childcarePrimary || 0;
         const spouse = plannerState.includeFather ? (row.childcareFather || 0) : 0;
+        const benefit = plannerState.includeGovBenefits ? (row.govBenefit || 0) : 0;
         const total = self + spouse;
+        const totalWithBenefit = total + benefit;
         const monthIndexInfo = parseMonthIndexesFromNotes(row.notes || []);
         const sixPlus = (monthIndexInfo.self > 0 && plannerState.userType !== 'SINGLE_PARENT' && primarySpouseMonths > 0 && monthIndexInfo.self <= 6)
             || (monthIndexInfo.spouse > 0 && fatherSpouseMonths > 0 && monthIndexInfo.spouse <= 6);
@@ -1864,7 +1919,9 @@ function renderPaymentChart(rows) {
             yearMonth: row.yearMonth,
             self,
             spouse,
+            benefit,
             total,
+            totalWithBenefit,
             proratedSelf: (selfUsageMap.get(row.yearMonth) || 0) > 0 && (selfUsageMap.get(row.yearMonth) || 0) < 1,
             proratedSpouse: (spouseUsageMap.get(row.yearMonth) || 0) > 0 && (spouseUsageMap.get(row.yearMonth) || 0) < 1,
             sixPlus
@@ -1875,7 +1932,8 @@ function renderPaymentChart(rows) {
         1,
         ...chartRows.map((row) => (paymentChartState.showSelf ? row.self : 0)),
         ...chartRows.map((row) => (paymentChartState.showSpouse ? row.spouse : 0)),
-        ...chartRows.map((row) => (paymentChartState.showTotal ? row.total : 0))
+        ...chartRows.map((row) => (paymentChartState.showTotal ? row.total : 0)),
+        ...chartRows.map((row) => (paymentChartState.showBenefit ? row.totalWithBenefit : 0))
     );
     const yMax = Math.ceil(maxValue / 100000) * 100000;
 
@@ -1941,6 +1999,16 @@ function renderPaymentChart(rows) {
     const totalArea = paymentChartState.showTotal
         ? `<path d="${totalLinePath}" fill="rgba(55,65,81,0.12)" />`
         : '';
+    const benefitBandArea = paymentChartState.showBenefit
+        ? (() => {
+            const top = chartRows.map((row, idx) => `${idx === 0 ? 'M' : 'L'} ${xCenter(row.idx)} ${yPos(row.totalWithBenefit)}`).join(' ');
+            const base = chartRows.slice().reverse().map((row, idx) => `${idx === 0 ? 'L' : 'L'} ${xCenter(row.idx)} ${yPos(row.total)}`).join(' ');
+            return `<path d="${top} ${base} Z" fill="rgba(245,158,11,0.30)" />`;
+        })()
+        : '';
+    const benefitTopLine = paymentChartState.showBenefit
+        ? `<path d="${chartRows.map((row, idx) => `${idx === 0 ? 'M' : 'L'} ${xCenter(row.idx)} ${yPos(row.totalWithBenefit)}`).join(' ')}" fill="none" stroke="#F59E0B" stroke-width="2.2" />`
+        : '';
 
     const xLabels = chartRows.map((row) => {
         const hasProrated = row.proratedSelf || row.proratedSpouse;
@@ -1961,16 +2029,19 @@ function renderPaymentChart(rows) {
         ${gridLines}
         <line x1="${margin.left}" y1="${margin.top + plotH}" x2="${W - margin.right}" y2="${margin.top + plotH}" stroke="#94A3B8" stroke-width="1.2" />
         ${totalArea}
+        ${benefitBandArea}
         ${selfBars}
         ${spouseBars}
         ${totalLine}
+        ${benefitTopLine}
         ${xLabels}
         ${hitAreas}
     `;
 
     const selfTotal = chartRows.reduce((sum, row) => sum + row.self, 0);
     const spouseTotal = chartRows.reduce((sum, row) => sum + row.spouse, 0);
-    updateChartTotals(selfTotal, spouseTotal, selfTotal + spouseTotal);
+    const govBenefitTotal = chartRows.reduce((sum, row) => sum + row.benefit, 0);
+    updateChartTotals(selfTotal, spouseTotal, govBenefitTotal, selfTotal + spouseTotal + govBenefitTotal);
     bindPaymentChartTooltip(chartRows);
 }
 
@@ -1992,6 +2063,8 @@ function bindPaymentChartTooltip(chartRows) {
             <div class="payment-chart-tooltip-row"><span>본인</span><span>${formatCurrency(row.self)}</span></div>
             <div class="payment-chart-tooltip-row"><span>배우자</span><span>${formatCurrency(row.spouse)}</span></div>
             <div class="payment-chart-tooltip-row"><span>합산</span><span>${formatCurrency(row.total)}</span></div>
+            ${plannerState.includeGovBenefits ? `<div class="payment-chart-tooltip-row"><span>출산혜택</span><span>${formatCurrency(row.benefit)}</span></div>` : ''}
+            ${plannerState.includeGovBenefits ? `<div class="payment-chart-tooltip-row"><span>누적합산</span><span>${formatCurrency(row.totalWithBenefit)}</span></div>` : ''}
             ${(row.proratedSelf || row.proratedSpouse) ? `<div class="payment-chart-tooltip-row"><span>일할</span><span>◐ 적용</span></div>${showProratedHelp ? '<div class="payment-chart-tooltip-row"><span>안내</span><span>월 일부 기간만 사용되어 일할 계산됨</span></div>' : ''}` : ''}
         `;
         paymentChartTooltip.classList.remove('hidden');
@@ -2039,9 +2112,10 @@ function formatShortWon(amount) {
     return Number(amount).toLocaleString('ko-KR');
 }
 
-function updateChartTotals(selfTotal, spouseTotal, combinedTotal) {
+function updateChartTotals(selfTotal, spouseTotal, govBenefitTotal, combinedTotal) {
     animateAmountCounter(chartSelfTotal, selfTotal);
     animateAmountCounter(chartSpouseTotal, spouseTotal);
+    animateAmountCounter(chartGovBenefitTotal, govBenefitTotal);
     animateAmountCounter(chartCombinedTotal, combinedTotal);
 }
 

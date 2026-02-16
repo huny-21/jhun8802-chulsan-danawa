@@ -285,6 +285,13 @@
             <section class="card">
                 <h3>월별 예상 수령액 (출산휴가 + 육아휴직)</h3>
                 <div id="plannerBadges" class="planner-badges"></div>
+                <div class="planner-option-row">
+                    <label class="check-option" for="includeGovBenefits">
+                        <input type="checkbox" id="includeGovBenefits">
+                        <span>출산 혜택 포함(정부 공통)</span>
+                    </label>
+                    <p class="readonly-hint">※ 첫째 기준: 첫만남·진료비(일시금) + 부모급여/아동수당(월별)을 월별 수령액에 반영</p>
+                </div>
                 <div class="table-wrap">
                     <table class="payment-table">
                         <thead>
@@ -294,12 +301,13 @@
                                 <th>출산휴가(회사)</th>
                                 <th id="primaryChildcareHeader">육아휴직(본인)</th>
                                 <th id="fatherChildcareHeader">육아휴직(배우자)</th>
+                                <th>출산혜택</th>
                                 <th>월 합계</th>
                                 <th>비고</th>
                             </tr>
                         </thead>
                         <tbody id="paymentTableBody">
-                            <tr><td colspan="7" class="empty-table">입력 후 계산하면 월별 예상 수령액이 표시됩니다.</td></tr>
+                            <tr><td colspan="8" class="empty-table">입력 후 계산하면 월별 예상 수령액이 표시됩니다.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -310,18 +318,20 @@
                         <div id="paymentChartToggles" class="payment-chart-toggles">
                             <button type="button" class="btn-secondary active" data-series-toggle="self">본인</button>
                             <button type="button" class="btn-secondary active" data-series-toggle="spouse">배우자</button>
+                            <button type="button" class="btn-secondary active" data-series-toggle="benefit">출산혜택</button>
                             <button type="button" class="btn-secondary active" data-series-toggle="total">합산</button>
                         </div>
                     </div>
                     <div class="payment-chart-wrap">
-                        <svg id="paymentChartSvg" viewBox="0 0 920 360" role="img" aria-label="월별 육아휴직 급여 그래프"></svg>
+                        <svg id="paymentChartSvg" viewBox="0 0 920 360" role="img" aria-label="월별 수령액 그래프"></svg>
                         <div id="paymentChartTooltip" class="payment-chart-tooltip hidden"></div>
                     </div>
                     <p class="readonly-hint">※ ◐ 표시는 해당 월 급여가 일할 계산(부분월 계산)으로 반영되었음을 의미합니다.</p>
                     <div class="payment-chart-totals">
                         <div><span>본인 총 수령액</span><strong id="chartSelfTotal">0원</strong></div>
                         <div><span>배우자 총 수령액</span><strong id="chartSpouseTotal">0원</strong></div>
-                        <div><span>합산 총액</span><strong id="chartCombinedTotal">0원</strong></div>
+                        <div><span>출산혜택 총액</span><strong id="chartGovBenefitTotal">0원</strong></div>
+                        <div><span>누적 합산 총액</span><strong id="chartCombinedTotal">0원</strong></div>
                     </div>
                 </section>
                 <div class="disclaimer-section">

@@ -127,7 +127,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 14px;
-  min-width: 560px;
+  min-width: 520px;
 }
 
 th, td {
@@ -434,4 +434,20 @@ td, th {
   }
   .guide-tab-link { font-size: 0.8rem; padding: 7px 11px; }
   td, th { font-size: 0.9rem; }
+  .table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+  }
+  .table-wrap table {
+    min-width: 460px;
+    margin-top: 0;
+  }
+  .table-wrap th,
+  .table-wrap td {
+    padding: 8px;
+    line-height: 1.45;
+  }
 }
