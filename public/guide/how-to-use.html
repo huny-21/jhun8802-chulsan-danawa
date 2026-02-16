@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>사이트 사용 방법 | 출산 혜택 다나와</title>
+  <title>출산 혜택 다나와</title>
   <meta name="description" content="출산 혜택 다나와 입력값 의미, 예시 시나리오, 결과 해석 방법">
   <link rel="canonical" href="https://chulsan-danawa.web.app/guide/how-to-use">
   <meta property="og:type" content="article">
-  <meta property="og:title" content="사이트 사용 방법 | 출산 혜택 다나와">
+  <meta property="og:title" content="출산 혜택 다나와">
   <meta property="og:description" content="입력값 의미, 예시, 결과 해석법 정리">
   <meta property="og:url" content="https://chulsan-danawa.web.app/guide/how-to-use">
   <meta property="og:image" content="https://chulsan-danawa.web.app/og-image.png">
@@ -28,22 +28,45 @@
     <a class="guide-tab-link" href="/guide/parental-leave-pay">육아휴직</a>
     <a class="guide-tab-link" href="/guide/disclaimer">면책/추정치</a>
   </nav>
-  <p>이 사이트는 세 가지 기능이 한 화면에 있습니다. 첫 번째는 지역별 혜택 찾기, 두 번째는 육아휴직 급여 계산기, 세 번째는 육아휴직 달력입니다. 처음 이용하는 경우에는 지역 혜택부터 확인한 뒤 급여 계산으로 넘어가고, 마지막에 달력으로 일정 충돌 여부를 확인하면 가장 효율적입니다. 입력값의 의미를 모호하게 두면 결과 해석이 어려워지므로, 월 통상임금/가정 유형/배우자 사용개월을 먼저 정리해 두는 것이 좋습니다.</p>
-  <p>예시 시나리오: 본인 월 통상임금 350만원, 배우자 320만원, 본인은 출산휴가 후 8개월 사용, 배우자는 4개월 분할 사용. 이 경우 월별 수령액 그래프에서 부분월이 발생하는 달을 확인해 생활비 계획을 세울 수 있습니다. 지역 혜택에서는 시/군/구와 아이 순위를 정확히 입력해 지원금 총액을 비교해 보세요.</p>
+  <p>이 문서는 사이트 기능 소개가 아니라, 실제 입력 시 어떤 값을 넣어야 하고 결과를 어떻게 읽어야 하는지에 집중한 사용 안내입니다. 계산기와 달력은 같은 기준 데이터를 사용하므로, 아래 순서대로 입력하면 오류 없이 결과를 비교할 수 있습니다.</p>
+
+  <h2>1) 기능별 입력값</h2>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>단계</th><th>무엇을 입력하나</th><th>결과 해석 포인트</th></tr></thead>
+      <thead><tr><th>기능</th><th>필수 입력</th><th>입력 기준</th><th>결과에서 볼 것</th></tr></thead>
       <tbody>
-        <tr><td>1. 혜택 조회</td><td>지역, 출산예정일, 아이 순위</td><td>정부 공통 + 지자체 특화 항목 분리 확인</td></tr>
-        <tr><td>2. 급여 계산</td><td>임금, 가족유형, 구간, 회사 정보</td><td>총액보다 월별 변동/부분월 표시 확인</td></tr>
-        <tr><td>3. 달력 계획</td><td>휴가 시작·종료일</td><td>공휴일/복직 예정일 포함 일정 충돌 점검</td></tr>
+        <tr><td>우리동네 혜택</td><td>시/도, 시/군/구, 출산(예정)일, 아이 순위</td><td>출산일은 최근 3년~향후 2년 범위, 아이 순위는 첫째/둘째/셋째 이상 기준으로 선택</td><td>정부 공통/지자체 특화 분리, 총 예상 지원금</td></tr>
+        <tr><td>육아휴직 계산기</td><td>월 통상임금, 출산전후휴가 시작일, 육아휴직 구간</td><td>통상임금은 세전 기준, 구간은 실제 사용 예정일 기준(분할 가능)</td><td>월별 지급액, 부분월(일할 계산) 표시, 추정/확정 모드</td></tr>
+        <tr><td>육아휴직 달력</td><td>출산휴가/육아휴직 시작일·일수</td><td>계산기와 동일한 구간을 달력에서 조정 가능</td><td>월별 일정 충돌, 복직 예정일, 공휴일 포함 일정</td></tr>
       </tbody>
     </table>
   </div>
-  <h2>결과 해석 시 주의</h2>
-  <p>표시된 값은 예상치입니다. 실제 지급은 회사 지급일, 행정 처리 속도, 정책 개정 시점에 따라 다를 수 있습니다. 따라서 최종 신청 직전에는 공식 사이트에서 조건을 재확인하고, 필요하면 입력값을 다시 갱신해 재계산하세요.</p>
-  <p>관련 링크: <a href="https://www.gov.kr" target="_blank" rel="noopener">정부24</a>, <a href="https://www.bokjiro.go.kr" target="_blank" rel="noopener">복지로</a>, <a href="https://www.childcare.go.kr" target="_blank" rel="noopener">아이사랑</a></p>
-  <div class="notice">사용 중 오해가 생긴 문구가 있으면 문의 페이지로 알려 주세요. 설명 텍스트를 우선 개선합니다.</div>
+
+  <h2>2) 계산 기준(서비스 내부 기준)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>항목</th><th>기준</th><th>비고</th></tr></thead>
+      <tbody>
+        <tr><td>출산전후휴가 기간</td><td>기본 90일, 다태아 120일, 미숙아 100일</td><td>입력값에 따라 자동 반영</td></tr>
+        <tr><td>출산전후휴가 급여 상한</td><td>고용보험 구간 월 210만원</td><td>우선지원대상기업 여부에 따라 회사/정부 구간 추정</td></tr>
+        <tr><td>육아휴직 일반형</td><td>1~3개월 100%(상한 250), 4~6개월 100%(상한 200), 7개월 이후 80%(상한 160)</td><td>하한 월 70만원</td></tr>
+        <tr><td>6+6 부모육아휴직제</td><td>1~6개월 상한 250/250/300/350/400/450</td><td>조건 충족 시 적용</td></tr>
+        <tr><td>부분월 계산</td><td>월 중 시작/종료 시 사용일 비율로 일할 계산</td><td>그래프 `◐` 마커로 표시</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>3) 입력 순서(권장)</h2>
+  <ol class="check-list">
+    <li>출산전후휴가 시작일 입력 후 종료일 자동 계산 확인</li>
+    <li>본인 육아휴직 구간부터 입력하고, 필요 시 배우자 구간 추가</li>
+    <li>우선지원대상기업 여부를 확인해 추정 모드 해제</li>
+    <li>달력에서 구간 겹침/복직일 확인 후 월별 표·차트 해석</li>
+  </ol>
+
+  <h2>4) 해석 시 주의</h2>
+  <p>표시 금액은 입력값 기반 예상치입니다. 실제 지급은 회사 급여 체계, 신청 시점 고시, 관할 기관 심사 결과에 따라 달라질 수 있습니다. 신청 전에는 반드시 공식 사이트에서 최신 기준을 다시 확인하고 재계산하세요.</p>
+  <p>공식 확인: <a href="https://www.work24.go.kr" target="_blank" rel="noopener">고용24</a>, <a href="https://www.ei.go.kr" target="_blank" rel="noopener">고용보험</a>, <a href="https://www.gov.kr" target="_blank" rel="noopener">정부24</a>, <a href="https://www.bokjiro.go.kr" target="_blank" rel="noopener">복지로</a></p>
 </article>
 </main>
 <footer class="site-footer"><div class="container"><ul class="footer-links"><li><a href="/about">서비스 소개</a></li><li><a href="/guide/how-to-use">사용 가이드</a></li><li><a href="/policy">관련 제도</a></li><li><a href="/faq">FAQ</a></li><li><a href="/terms">이용약관</a></li><li><a href="/contact">문의 및 개인정보처리</a></li></ul><p class="footer-meta">운영자: 출산 혜택 다나와 운영팀 | 문의: chulsandanawa@gmail.com</p></div></footer>
