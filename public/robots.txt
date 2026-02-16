@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://chulsan-danawa.web.app/sitemap.xml
+Sitemap: https://chulsan-danawa.com/sitemap.xml
