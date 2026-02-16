@@ -389,6 +389,7 @@ td, th {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+  justify-content: center;
   margin: 0 0 12px;
   padding: 0;
   list-style: none;
@@ -400,6 +401,7 @@ td, th {
   margin: 0;
   color: var(--muted);
   font-size: 0.9rem;
+  text-align: center;
 }
 
 @media (max-width: 640px) {
