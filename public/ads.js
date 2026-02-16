@@ -15,11 +15,15 @@
         return;
     }
 
-    const adsenseScript = document.createElement('script');
-    adsenseScript.async = true;
-    adsenseScript.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(config.client)}`;
-    adsenseScript.crossOrigin = 'anonymous';
-    document.head.appendChild(adsenseScript);
+    const adsenseSrc = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(config.client)}`;
+    let adsenseScript = document.querySelector(`script[src="${adsenseSrc}"]`);
+    if (!adsenseScript) {
+        adsenseScript = document.createElement('script');
+        adsenseScript.async = true;
+        adsenseScript.src = adsenseSrc;
+        adsenseScript.crossOrigin = 'anonymous';
+        document.head.appendChild(adsenseScript);
+    }
 
     sections.forEach((section) => {
         const unitName = section.getAttribute('data-adsense-slot');
@@ -36,7 +40,7 @@
         unit.style.display = 'block';
     });
 
-    adsenseScript.addEventListener('load', () => {
+    const initAdUnits = () => {
         sections.forEach((section) => {
             if (section.hidden) return;
             const unit = section.querySelector('.adsense-unit');
@@ -47,5 +51,11 @@
                 console.error('AdSense init failed:', error);
             }
         });
-    });
+    };
+
+    if (typeof window.adsbygoogle !== 'undefined') {
+        initAdUnits();
+    } else {
+        adsenseScript.addEventListener('load', initAdUnits, { once: true });
+    }
 })();
