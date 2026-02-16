@@ -27,7 +27,7 @@ export const governmentBenefits = [
         amount: 100000,
         target: "만 8세 미만 아동",
         method: "복지로 또는 주민센터",
-        note: "취학 전까지 매월 현금 지급 (2026년 확대 예정)"
+        note: "만 8세 미만까지 매월 10만원 지급"
     },
     {
         title: "임신·출산 진료비 지원",

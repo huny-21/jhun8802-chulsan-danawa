@@ -152,7 +152,12 @@ const formatCurrency = (amount) => {
     return amount;
 };
 
-const formatDateForInput = (date) => date.toISOString().split('T')[0];
+const formatDateForInput = (date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+};
 
 function setDueDateInputRange() {
     if (!dueDateInput) return;
@@ -160,9 +165,9 @@ function setDueDateInputRange() {
     const min = new Date(today);
     const max = new Date(today);
 
-    // 최근 1년 이내 출산(사후 체크리스트)부터 약 1년 뒤 예정일까지 허용
-    min.setFullYear(today.getFullYear() - 1);
-    max.setFullYear(today.getFullYear() + 1);
+    // 과거 출산 가정도 확인할 수 있도록 범위를 넓게 허용
+    min.setFullYear(today.getFullYear() - 3);
+    max.setFullYear(today.getFullYear() + 2);
 
     dueDateInput.min = formatDateForInput(min);
     dueDateInput.max = formatDateForInput(max);
@@ -257,7 +262,7 @@ function handleFormSubmit(e) {
         return;
     }
     if (dueDate < dueDateInput.min || dueDate > dueDateInput.max) {
-        showFormError('출산 예정일은 최근 1년부터 향후 1년 범위에서 입력해주세요.', dueDateInput);
+        showFormError('출산(예정)일은 최근 3년부터 향후 2년 범위에서 입력해주세요.', dueDateInput);
         return;
     }
 

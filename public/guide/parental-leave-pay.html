@@ -12,49 +12,70 @@
   <meta property="og:url" content="https://chulsan-danawa.web.app/guide/parental-leave-pay">
   <meta property="og:image" content="https://chulsan-danawa.web.app/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="stylesheet" href="/content.css?v=5">
+  <link rel="stylesheet" href="/content.css?v=10">
 </head>
 <body>
-<header class="site-header"><div class="container"><h1 class="site-title"><a class="site-title-link" href="/">출산 혜택 다나와</a></h1><p class="site-subtitle">가이드</p><nav class="site-nav" aria-label="주요 메뉴"><a href="/">홈</a><a href="/about">서비스 소개</a><a class="active" aria-current="page" href="/guide/how-to-use">사용 가이드</a><a href="/policy">관련 제도</a><a href="/faq">FAQ</a><a href="/contact">문의 및 개인정보처리</a></nav></div></header>
+<header class="site-header"><div class="container"><h1 class="site-title"><a class="site-title-link" href="/">출산 혜택 다나와</a></h1><p class="site-subtitle">가이드</p><nav class="site-nav" aria-label="사이트 탐색"><a href="/">홈</a><a href="/about">서비스 소개</a><a class="active" aria-current="page" href="/guide/how-to-use">사용 가이드</a><a href="/policy">관련 제도</a><a href="/faq">FAQ</a><a href="/contact">문의 및 개인정보처리</a></nav></div></header>
 <main class="container">
 <article class="card">
-  <h1>육아휴직 급여 계산, 왜 월별로 봐야 하나</h1>
+  <h1>육아휴직 급여 가이드</h1>
   <p class="meta-note">참고 기준일: 2026년 2월 16일</p>
-  <p>육아휴직 급여는 제도 유형(일반, 6+6 특례, 한부모 특례), 사용 순서(부모 동시/순차), 분할 횟수, 월 중 시작일에 따라 결과가 달라집니다. “총액”만 보면 비슷해 보여도 실제 현금 유입은 월별로 크게 다를 수 있습니다. 특히 두 사람이 나눠 쓰는 경우, 어느 시점에 누가 먼저 사용하는지에 따라 특정 월 수령액이 급감하거나 반대로 증가할 수 있어 가계 계획에 영향을 줍니다.</p>
-  <p>따라서 실무적으로는 1) 제도 유형을 먼저 확정하고, 2) 본인/배우자 구간을 달력으로 분리 입력하고, 3) 부분월 일할 계산이 발생하는 월을 별도로 체크해야 합니다. 본 서비스는 이 흐름을 그대로 반영해 구간별 입력과 월별 표, 그래프를 제공하며, 추정치와 공식 심사 결과의 차이를 안내합니다.</p>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>유형</th><th>주요 특징</th><th>주의점</th></tr></thead>
-      <tbody>
-        <tr><td>일반 육아휴직</td><td>기본 급여 산정 규칙 적용</td><td>상한/하한 및 지급 순서 확인</td></tr>
-        <tr><td>6+6 특례</td><td>초기 구간 우대 구조 가능</td><td>시행 시점·요건 충족 필요</td></tr>
-        <tr><td>한부모 특례</td><td>우대 산정이 적용될 수 있음</td><td>자격 판단은 기관 최종 확인</td></tr>
-        <tr><td>부분월</td><td>월 중 시작·종료 시 일할 계산</td><td>월별 생활비 계획과 함께 확인</td></tr>
-      </tbody>
-    </table>
+  <nav class="guide-tabs" aria-label="가이드 문서 탭">
+    <a class="guide-tab-link" href="/guide/how-to-use">사용 방법</a>
+    <a class="guide-tab-link" href="/guide/maternity-leave-pay">출산휴가</a>
+    <a class="guide-tab-link active" aria-current="page" href="/guide/parental-leave-pay">육아휴직</a>
+    <a class="guide-tab-link" href="/guide/disclaimer">면책/추정치</a>
+  </nav>
+  <p>육아휴직 급여는 총액보다 월별 흐름이 중요합니다. 제도 유형(일반/6+6/한부모), 부모 사용 순서, 부분월 발생 여부에 따라 월별 수령액이 크게 달라질 수 있습니다. 아래 표는 현재 계산기 기준과 동일한 값으로 정리했습니다.</p>
+
+  <div class="kpi-grid">
+    <div class="kpi-card"><span class="kpi-label">일반 1~3개월 상한</span><span class="kpi-value">월 250만원</span></div>
+    <div class="kpi-card"><span class="kpi-label">일반 7개월 이후 상한</span><span class="kpi-value">월 160만원</span></div>
+    <div class="kpi-card"><span class="kpi-label">최소 지급 하한</span><span class="kpi-value">월 70만원</span></div>
   </div>
-  <h2>기간별 상한·하한(육아휴직)</h2>
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>구분</th><th>기간</th><th>상한(월)</th><th>하한(월)</th></tr></thead>
-      <tbody>
-        <tr><td>일반 육아휴직</td><td>전 기간</td><td>150만원</td><td>70만원</td></tr>
-        <tr><td>6+6 부모육아휴직제</td><td>1개월차</td><td>200만원</td><td>70만원</td></tr>
-        <tr><td>6+6 부모육아휴직제</td><td>2개월차</td><td>250만원</td><td>70만원</td></tr>
-        <tr><td>6+6 부모육아휴직제</td><td>3개월차</td><td>300만원</td><td>70만원</td></tr>
-        <tr><td>6+6 부모육아휴직제</td><td>4개월차</td><td>350만원</td><td>70만원</td></tr>
-        <tr><td>6+6 부모육아휴직제</td><td>5개월차</td><td>400만원</td><td>70만원</td></tr>
-        <tr><td>6+6 부모육아휴직제</td><td>6개월차</td><td>450만원</td><td>70만원</td></tr>
-      </tbody>
-    </table>
+
+  <div class="section-block">
+    <h2>유형별 핵심 차이</h2>
+    <div class="policy-grid">
+      <section class="policy-card"><h3>일반 육아휴직</h3><p>1~3개월(100%, 상한 250) → 4~6개월(100%, 상한 200) → 7개월 이후(80%, 상한 160)</p></section>
+      <section class="policy-card"><h3>6+6 부모육아휴직제</h3><p>부모 각각 사용 시 1~6개월 상한이 250/250/300/350/400/450만원으로 확대</p></section>
+      <section class="policy-card"><h3>한부모 특례</h3><p>1~3개월 상한 300, 4~6개월 상한 180, 7개월 이후 상한 120 (하한 동일 70)</p></section>
+      <section class="policy-card"><h3>부분월 계산</h3><p>월 중 시작/종료 시 사용일 비율로 일할 계산되어 같은 개월 수라도 월별 금액이 달라짐</p></section>
+    </div>
   </div>
-  <h2>6+6 부모육아휴직제 핵심 설명</h2>
-  <p>6+6 제도는 생후 초기(통상 자녀 연령 요건 충족 구간) 양육에서 부모 모두의 육아휴직 사용을 촉진하기 위한 우대형 급여 체계입니다. 부모가 각각 육아휴직을 사용하면 초기 6개월 구간에서 일반 육아휴직보다 높은 상한이 단계적으로 적용될 수 있습니다. 실무에서는 “누가 먼저 시작하는지”, “각 월이 부분월인지”, “요건 충족 시점이 맞는지”가 결과에 큰 영향을 주므로, 월별 일정표와 함께 확인하는 방식이 가장 안전합니다.</p>
-  <p class="meta-note">안내: 6+6 적용 요건(자녀 연령, 신청 시점, 부모 각각의 사용 조건)은 개정될 수 있으므로 고용24/고용센터에서 최신 기준을 반드시 확인하세요.</p>
-  <h2>실전 입력 팁</h2>
-  <p>입력 시 통상임금은 세전 기준으로 넣고, 실제 수령액과 동일하다고 가정하지 마세요. 또 “모름” 항목은 추정 모드로 계산되므로, 신청 단계에서는 회사/기관 확인 후 재계산하는 것이 안전합니다.</p>
-  <p>관련 링크: <a href="https://www.work24.go.kr" target="_blank" rel="noopener">고용24</a>, <a href="https://www.ei.go.kr" target="_blank" rel="noopener">고용보험</a>, <a href="https://www.law.go.kr" target="_blank" rel="noopener">국가법령정보센터</a></p>
-  <div class="notice">이 페이지는 제도 이해를 돕는 안내 자료입니다. 최종 지급은 관할 기관 심사를 따릅니다.</div>
+
+  <div class="section-block">
+    <h2>기간별 상한·하한 (월)</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>구분</th><th>기간</th><th>급여율</th><th>상한</th><th>하한</th></tr></thead>
+        <tbody>
+          <tr><td>일반</td><td>1~3개월</td><td>통상임금 100%</td><td>250만원</td><td>70만원</td></tr>
+          <tr><td>일반</td><td>4~6개월</td><td>통상임금 100%</td><td>200만원</td><td>70만원</td></tr>
+          <tr><td>일반</td><td>7개월 이후</td><td>통상임금 80%</td><td>160만원</td><td>70만원</td></tr>
+          <tr><td>6+6</td><td>1개월차</td><td>통상임금 100%</td><td>250만원</td><td>70만원</td></tr>
+          <tr><td>6+6</td><td>2개월차</td><td>통상임금 100%</td><td>250만원</td><td>70만원</td></tr>
+          <tr><td>6+6</td><td>3개월차</td><td>통상임금 100%</td><td>300만원</td><td>70만원</td></tr>
+          <tr><td>6+6</td><td>4개월차</td><td>통상임금 100%</td><td>350만원</td><td>70만원</td></tr>
+          <tr><td>6+6</td><td>5개월차</td><td>통상임금 100%</td><td>400만원</td><td>70만원</td></tr>
+          <tr><td>6+6</td><td>6개월차</td><td>통상임금 100%</td><td>450만원</td><td>70만원</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-block">
+    <h2>입력 체크 순서</h2>
+    <ol class="check-list">
+      <li>통상임금을 세전 기준으로 입력하고 포함 수당 범위를 회사 기준으로 확인</li>
+      <li>본인/배우자 구간을 달력에서 분리 입력해 중첩/공백 구간 점검</li>
+      <li>우선지원대상기업 여부를 확인해 추정 모드를 해제</li>
+      <li>신청 직전에 고용24 공지로 상한/요건 최신값 재확인</li>
+    </ol>
+  </div>
+
+  <p class="source-links">관련 링크: <a href="https://www.work24.go.kr" target="_blank" rel="noopener">고용24</a>, <a href="https://www.ei.go.kr" target="_blank" rel="noopener">고용보험</a>, <a href="https://www.law.go.kr" target="_blank" rel="noopener">국가법령정보센터</a></p>
+  <div class="notice">이 페이지는 제도 이해를 돕는 안내 자료입니다. 최종 지급은 신청 시점의 법령·지침과 관할 기관 심사를 따릅니다.</div>
 </article>
 </main>
 <footer class="site-footer"><div class="container"><ul class="footer-links"><li><a href="/about">서비스 소개</a></li><li><a href="/guide/how-to-use">사용 가이드</a></li><li><a href="/policy">관련 제도</a></li><li><a href="/faq">FAQ</a></li><li><a href="/terms">이용약관</a></li><li><a href="/contact">문의 및 개인정보처리</a></li></ul><p class="footer-meta">운영자: 출산 혜택 다나와 운영팀 | 문의: chulsandanawa@gmail.com</p></div></footer>
