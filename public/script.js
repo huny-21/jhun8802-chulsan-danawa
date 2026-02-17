@@ -28,6 +28,7 @@ const servicePanels = {
     calculator: document.getElementById('calculatorServicePanel'),
     calendar: document.getElementById('calendarServicePanel')
 };
+const quickStartBtns = document.querySelectorAll('.quick-start-btn');
 
 // 육아휴직 계산기/달력 요소
 const leavePlannerForm = document.getElementById('leavePlannerForm');
@@ -100,6 +101,7 @@ const holidayStatusMessage = document.getElementById('holidayStatusMessage');
 // 초기화
 document.addEventListener('DOMContentLoaded', () => {
     initServiceTabs();
+    initQuickStart();
     initLeavePlanner();
 
     if (benefitForm && citySelect && districtSelect && dueDateInput) {
@@ -141,6 +143,19 @@ function handleArrowNavigation(e, nodeList, isHorizontal = false) {
     e.preventDefault();
     buttons[nextIndex].focus();
     buttons[nextIndex].click();
+}
+
+function initQuickStart() {
+    if (!quickStartBtns.length) return;
+
+    quickStartBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const target = btn.dataset.quickService;
+            if (!target || !servicePanels[target]) return;
+            switchServiceTab(target);
+            servicePanels[target].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
 }
 
 // 숫자 포맷팅 (콤마 추가)
