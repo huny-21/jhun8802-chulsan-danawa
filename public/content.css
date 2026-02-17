@@ -121,13 +121,20 @@ h2 { margin-top: 28px; font-size: 1.2rem; }
   font-size: 0.9rem;
 }
 
-.table-wrap { overflow-x: auto; }
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(16, 35, 61, 0.05);
+}
 
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 14px;
   min-width: 520px;
+  table-layout: auto;
 }
 
 th, td {
@@ -140,6 +147,10 @@ th, td {
 th {
   background: var(--brand-weak);
   font-weight: 700;
+}
+
+tbody tr:nth-child(even) {
+  background: #fbfdff;
 }
 
 td, th {
@@ -436,17 +447,21 @@ td, th {
   }
   .guide-tab-link { font-size: 0.8rem; padding: 7px 11px; }
   td, th { font-size: 0.9rem; }
-  .table-wrap {
-    overflow-x: visible;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: #fff;
-  }
+  .table-wrap { overflow-x: visible; }
   .table-wrap table {
     width: 100%;
     min-width: 0;
-    table-layout: fixed;
+    table-layout: auto;
     margin-top: 0;
+  }
+  .table-wrap th:first-child,
+  .table-wrap td:first-child {
+    width: clamp(64px, 20%, 110px);
+    white-space: nowrap;
+  }
+  .table-wrap th:nth-child(2),
+  .table-wrap td:nth-child(2) {
+    width: clamp(88px, 26%, 180px);
   }
   .table-wrap th,
   .table-wrap td {
