@@ -1021,6 +1021,11 @@ function initLeavePlanner() {
     spouseMonthsInput.addEventListener('input', () => {
         const months = normalizeMonthCount(spouseMonthsInput.value, { min: 0, max: 18, fallback: 0 });
         spouseMonthsInput.value = spouseMonthsInput.value === '' ? '' : String(months);
+        plannerState.spouseMonths = spouseMonthsInput.value === '' ? 0 : months;
+        renderPresetOptions();
+        renderChildcareQuotaInfo();
+        recalculatePlanner();
+        persistPlannerSettings();
     });
 
     calendarPrevBtn.addEventListener('click', () => {
@@ -1519,8 +1524,22 @@ function formatMonthApprox(days) {
     return (days / AVG_DAYS_PER_MONTH).toFixed(1);
 }
 
+function getPlannedChildcareMonths(actor = 'self') {
+    const segments = getEditorSegments(actor).filter((seg) => seg.start && seg.end);
+    return expandChildcareDays(segments).length / 30;
+}
+
+function hasCounterpartThreeMonths(actor = 'self') {
+    if (plannerState.spouseUsagePlanned) return true;
+    if (actor === 'self') {
+        if (plannerState.includeFather) return getPlannedChildcareMonths('spouse') >= 3;
+        return plannerState.spouseMonths >= 3;
+    }
+    return getPlannedChildcareMonths('self') >= 3;
+}
+
 function getChildcareMaxMonths(actor = 'self') {
-    return plannerState.spouseUsagePlanned ? 18 : 12;
+    return hasCounterpartThreeMonths(actor) ? 18 : 12;
 }
 
 function getChildcareMaxDays(actor = 'self') {
@@ -1597,7 +1616,11 @@ function renderPresetOptions() {
     monthlyPresetOptions.classList.toggle('hidden', !plannerState.presetMenuOpen);
     monthlyPresetToggle.classList.toggle('active', plannerState.presetMenuOpen);
     monthlyPresetToggle.setAttribute('aria-expanded', String(plannerState.presetMenuOpen));
-    const value = plannerState.selectedPresetMonths || normalizeMonthCount(motherPresetRange.value, { min: 1, max: 18, fallback: 12 });
+    const maxMonths = getChildcareMaxMonths('self');
+    motherPresetRange.max = String(maxMonths);
+    const fallbackMonths = Math.min(12, maxMonths);
+    const value = plannerState.selectedPresetMonths || normalizeMonthCount(motherPresetRange.value, { min: 1, max: maxMonths, fallback: fallbackMonths });
+    plannerState.selectedPresetMonths = value;
     motherPresetRange.value = String(value);
     motherPresetValue.textContent = `${value}개월`;
 }
