@@ -86,6 +86,7 @@ const calendarChildcareEndInput = document.getElementById('calendarChildcareEnd'
 const calendarChildcareResidualHint = document.getElementById('calendarChildcareResidualHint');
 const calendarChildcareRemainingInfo = document.getElementById('calendarChildcareRemainingInfo');
 const calendarActorTabs = document.getElementById('calendarActorTabs');
+const calendarSpouseUsagePlannedInput = document.getElementById('calendarSpouseUsagePlanned');
 const addCalendarChildcareSegmentBtn = document.getElementById('addCalendarChildcareSegmentBtn');
 const applyCalendarChildcareBtn = document.getElementById('applyCalendarChildcareBtn');
 const calendarPrevBtn = document.getElementById('calendarPrevBtn');
@@ -823,6 +824,7 @@ const plannerState = {
     lastSuggestedChildcareStart: '',
     includeFather: false,
     includeGovBenefits: false,
+    spouseUsagePlanned: false,
     father: {
         userType: 'FATHER',
         wage: 0,
@@ -993,7 +995,8 @@ function initLeavePlanner() {
         renderPresetOptions();
     });
     motherPresetRange.addEventListener('input', () => {
-        const months = normalizeMonthCount(motherPresetRange.value, { min: 1, max: 18, fallback: 12 });
+        const maxMonths = getChildcareMaxMonths('self');
+        const months = normalizeMonthCount(motherPresetRange.value, { min: 1, max: maxMonths, fallback: Math.min(12, maxMonths) });
         motherPresetRange.value = String(months);
         plannerState.selectedPresetMonths = months;
         applyMonthlyPreset(months);
@@ -1065,6 +1068,16 @@ function initLeavePlanner() {
             btn.addEventListener('keydown', (e) => handleArrowNavigation(e, actorBtns, true));
         });
     }
+    if (calendarSpouseUsagePlannedInput) {
+        calendarSpouseUsagePlannedInput.addEventListener('change', () => {
+            plannerState.spouseUsagePlanned = !!calendarSpouseUsagePlannedInput.checked;
+            renderPresetOptions();
+            renderChildcareQuotaInfo();
+            syncCalendarDateInputs();
+            recalculatePlanner();
+            persistPlannerSettings();
+        });
+    }
     if (calendarChildcareStartInput) {
         calendarChildcareStartInput.addEventListener('change', () => {
             const idx = Number((calendarChildcareSegmentIndex && calendarChildcareSegmentIndex.value) || 0);
@@ -1078,7 +1091,8 @@ function initLeavePlanner() {
                 }
             } else {
                 if (!calendarChildcareDaysInput.value) calendarChildcareDaysInput.value = '30';
-                const days = normalizeMonthCount(calendarChildcareDaysInput.value, { min: 1, max: CHILDCARE_MAX_DAYS, fallback: 30 });
+                const maxDays = getChildcareMaxDays(plannerState.calendarEditorActor);
+                const days = normalizeMonthCount(calendarChildcareDaysInput.value, { min: 1, max: maxDays, fallback: 30 });
                 calendarChildcareDaysInput.value = String(days);
                 if (!calendarChildcareEndInput.value || calendarChildcareEndInput.value < start) {
                     calendarChildcareEndInput.value = suggestSegmentEndByDays(start, days, idx, plannerState.calendarEditorActor);
@@ -1102,7 +1116,8 @@ function initLeavePlanner() {
                 renderCalendarChildcareDerivedFields();
                 return;
             }
-            const days = Math.min(Math.floor(parsed), CHILDCARE_MAX_DAYS);
+            const maxDays = getChildcareMaxDays(plannerState.calendarEditorActor);
+            const days = Math.min(Math.floor(parsed), maxDays);
             calendarChildcareEndInput.value = suggestSegmentEndByDays(start, days, idx, plannerState.calendarEditorActor);
             renderCalendarChildcareDerivedFields();
         });
@@ -1115,7 +1130,8 @@ function initLeavePlanner() {
                 renderCalendarChildcareDerivedFields();
                 return;
             }
-            const days = normalizeMonthCount(raw, { min: 1, max: CHILDCARE_MAX_DAYS, fallback: 30 });
+            const maxDays = getChildcareMaxDays(plannerState.calendarEditorActor);
+            const days = normalizeMonthCount(raw, { min: 1, max: maxDays, fallback: 30 });
             calendarChildcareDaysInput.value = String(days);
             calendarChildcareEndInput.value = suggestSegmentEndByDays(start, days, idx, plannerState.calendarEditorActor);
             renderCalendarChildcareDerivedFields();
@@ -1132,7 +1148,21 @@ function initLeavePlanner() {
         });
     }
     if (calendarChildbirthStartInput) {
-        calendarChildbirthStartInput.addEventListener('change', () => renderCalendarChildbirthInfo());
+        calendarChildbirthStartInput.addEventListener('change', () => {
+            const start = calendarChildbirthStartInput.value;
+            if (!start) {
+                if (calendarChildbirthEndInput) calendarChildbirthEndInput.value = '';
+                renderCalendarChildbirthInfo();
+                return;
+            }
+            const startDate = parseDateYmd(start);
+            if (startDate && calendarChildbirthEndInput) {
+                calendarChildbirthEndInput.value = formatDateYmd(
+                    addDays(startDate, leavePolicy.childbirth.baseDays - 1)
+                );
+            }
+            renderCalendarChildbirthInfo();
+        });
     }
     if (calendarChildbirthEndInput) {
         calendarChildbirthEndInput.addEventListener('change', () => renderCalendarChildbirthInfo());
@@ -1198,6 +1228,7 @@ function renderPlannerForm() {
     priorityCompany.value = plannerState.isPriorityCompany === null ? '' : String(plannerState.isPriorityCompany);
     includeFatherInput.checked = plannerState.includeFather;
     if (includeGovBenefitsInput) includeGovBenefitsInput.checked = plannerState.includeGovBenefits;
+    if (calendarSpouseUsagePlannedInput) calendarSpouseUsagePlannedInput.checked = plannerState.spouseUsagePlanned;
     fatherWageInput.value = formatNumberInput(plannerState.father.wage);
     fatherInputSection.classList.toggle('hidden', !plannerState.includeFather);
     viewMonthBtn.classList.toggle('active', plannerState.calendarView === 'month');
@@ -1381,7 +1412,8 @@ function addChildcareSegment(actor = 'self') {
     }
     const remainingDays = getRemainingChildcareDays(actor);
     if (remainingDays <= 0) {
-        showPlannerMessage(`${getEditorLabel(actor)} 육아휴직 사용 가능일(${CHILDCARE_MAX_DAYS}일)을 모두 사용했습니다.`, true);
+        const maxDays = getChildcareMaxDays(actor);
+        showPlannerMessage(`${getEditorLabel(actor)} 육아휴직 사용 가능일(${maxDays}일)을 모두 사용했습니다.`, true);
         return;
     }
     const start = formatDateYmd(addDays(parseDateYmd(last.end), 1));
@@ -1404,7 +1436,7 @@ function getRemainingChildcareDays(actor = 'self', excludeIndex = null) {
         .filter(({ seg, idx }) => idx !== excludeIndex && seg.start && seg.end)
         .map(({ seg }) => seg);
     const used = expandChildcareDays(segments).length;
-    return Math.max(0, CHILDCARE_MAX_DAYS - used);
+    return Math.max(0, getChildcareMaxDays(actor) - used);
 }
 
 function suggestSegmentEndByDays(start, days, excludeIndex = null, actor = 'self') {
@@ -1420,7 +1452,8 @@ function renderCalendarChildcareRemainingInfo() {
     const actor = plannerState.calendarEditorActor;
     const idx = Number((calendarChildcareSegmentIndex && calendarChildcareSegmentIndex.value) || 0);
     const remaining = getRemainingChildcareDays(actor, idx);
-    calendarChildcareRemainingInfo.textContent = `${getEditorLabel(actor)} 남은 휴직일: ${remaining}일(약 ${formatMonthApprox(remaining)}개월)`;
+    const maxDays = getChildcareMaxDays(actor);
+    calendarChildcareRemainingInfo.textContent = `${getEditorLabel(actor)} 남은 휴직일: ${remaining}일 / 최대 ${maxDays}일(약 ${formatMonthApprox(maxDays)}개월)`;
 }
 
 function renderCalendarChildbirthInfo() {
@@ -1441,16 +1474,19 @@ function renderCalendarChildcareDerivedFields() {
     const actor = plannerState.calendarEditorActor;
     const idx = Number((calendarChildcareSegmentIndex && calendarChildcareSegmentIndex.value) || 0);
     const baseRemaining = getRemainingChildcareDays(actor, idx);
-    const requestedDays = normalizeMonthCount(calendarChildcareDaysInput?.value, { min: 0, max: CHILDCARE_MAX_DAYS, fallback: 0 });
+    const maxDays = getChildcareMaxDays(actor);
+    const requestedDays = normalizeMonthCount(calendarChildcareDaysInput?.value, { min: 0, max: maxDays, fallback: 0 });
     const residual = Math.max(0, baseRemaining - requestedDays);
     calendarChildcareResidualHint.textContent = `잔여예정 ${residual}일`;
 }
 
 function renderChildcareQuotaInfo() {
     const used = expandChildcareDays(plannerState.childcareSegments.filter((seg) => seg.start && seg.end)).length;
-    const remaining = Math.max(0, CHILDCARE_MAX_DAYS - used);
+    const maxMonths = getChildcareMaxMonths('self');
+    const maxDays = getChildcareMaxDays('self');
+    const remaining = Math.max(0, maxDays - used);
     if (childcareQuotaInfo) {
-        childcareQuotaInfo.textContent = `사용 ${used}일 · 남은 ${remaining}일(약 ${formatMonthApprox(remaining)}개월) / 총 ${CHILDCARE_MAX_MONTHS}개월(약 ${(CHILDCARE_MAX_MONTHS * AVG_DAYS_PER_MONTH).toFixed(1)}일) · 분할 ${plannerState.childcareSegments.length}/${CHILDCARE_MAX_SEGMENTS}`;
+        childcareQuotaInfo.textContent = `사용 ${used}일 · 남은 ${remaining}일(약 ${formatMonthApprox(remaining)}개월) / 총 ${maxMonths}개월(약 ${maxDays.toFixed(1)}일) · 분할 ${plannerState.childcareSegments.length}/${CHILDCARE_MAX_SEGMENTS}`;
     }
     const disableAdd = plannerState.childcareSegments.length >= CHILDCARE_MAX_SEGMENTS || remaining <= 0;
     if (addSegmentBtn) addSegmentBtn.disabled = disableAdd;
@@ -1464,6 +1500,17 @@ function renderChildcareQuotaInfo() {
 
 function formatMonthApprox(days) {
     return (days / AVG_DAYS_PER_MONTH).toFixed(1);
+}
+
+function getChildcareMaxMonths(actor = 'self') {
+    if (actor === 'self') {
+        return plannerState.spouseUsagePlanned ? 18 : 12;
+    }
+    return 18;
+}
+
+function getChildcareMaxDays(actor = 'self') {
+    return Math.round(getChildcareMaxMonths(actor) * AVG_DAYS_PER_MONTH);
 }
 
 function collectPlannerForm() {
