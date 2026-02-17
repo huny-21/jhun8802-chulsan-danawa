@@ -52,6 +52,7 @@ const fatherPresetRange = document.getElementById('fatherPresetRange');
 const fatherPresetValue = document.getElementById('fatherPresetValue');
 const includeFatherInput = document.getElementById('includeFather');
 const includeGovBenefitsInput = document.getElementById('includeGovBenefits');
+const includeGovBenefitsHint = document.getElementById('includeGovBenefitsHint');
 const fatherInputSection = document.getElementById('fatherInputSection');
 const fatherWageInput = document.getElementById('fatherWage');
 const addFatherSegmentBtn = document.getElementById('addFatherSegmentBtn');
@@ -97,12 +98,20 @@ const plannerCalendarGrid = document.getElementById('plannerCalendarGrid');
 const calendarMessage = document.getElementById('calendarMessage');
 const calendarBadges = document.getElementById('calendarBadges');
 const holidayStatusMessage = document.getElementById('holidayStatusMessage');
+const benefitLinkContext = {
+    linked: false,
+    city: '',
+    district: '',
+    dueDate: '',
+    childOrder: 1
+};
 
 // 초기화
 document.addEventListener('DOMContentLoaded', () => {
     initServiceTabs();
     initQuickStart();
     initLeavePlanner();
+    initBenefitLinkState();
 
     if (benefitForm && citySelect && districtSelect && dueDateInput) {
         initCityDropdown();
@@ -156,6 +165,41 @@ function initQuickStart() {
             servicePanels[target].scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
     });
+}
+
+function initBenefitLinkState() {
+    if (!includeGovBenefitsInput) return;
+    setGovBenefitLinkStatus(false);
+}
+
+function setGovBenefitLinkStatus(linked, context = null) {
+    if (!includeGovBenefitsInput) return;
+
+    benefitLinkContext.linked = !!linked;
+    if (linked && context) {
+        benefitLinkContext.city = context.city || '';
+        benefitLinkContext.district = context.district || '';
+        benefitLinkContext.dueDate = context.dueDate || '';
+        benefitLinkContext.childOrder = Number(context.childOrder) || 1;
+    }
+
+    includeGovBenefitsInput.disabled = !linked;
+
+    if (!linked) {
+        includeGovBenefitsInput.checked = false;
+        plannerState.includeGovBenefits = false;
+        if (includeGovBenefitsHint) {
+            includeGovBenefitsHint.textContent = '※ 동네 혜택 조회를 완료하면 정부지원금 연동 옵션이 자동 활성화됩니다.';
+        }
+        return;
+    }
+
+    includeGovBenefitsInput.checked = true;
+    plannerState.includeGovBenefits = true;
+    if (includeGovBenefitsHint) {
+        const childLabel = benefitLinkContext.childOrder >= 5 ? '다섯째 이상' : `${benefitLinkContext.childOrder}째`;
+        includeGovBenefitsHint.textContent = `※ 최근 조회 기준(${childLabel}, ${benefitLinkContext.city} ${benefitLinkContext.district}) 정부지원금을 월별 급여에 자동 반영합니다.`;
+    }
 }
 
 // 숫자 포맷팅 (콤마 추가)
@@ -299,6 +343,7 @@ function handleFormSubmit(e) {
         renderBenefits(city, district, childOrder);
         renderChecklist(dueDate);
         renderTotalSummary(city, district, childOrder); // 총액 계산 함수 호출
+        setGovBenefitLinkStatus(true, { city, district, dueDate, childOrder });
         
         setLoadingState(false);
         resultSection.classList.remove('hidden');
@@ -1678,8 +1723,7 @@ function restorePlannerSettings() {
 }
 
 function getPlannerChildOrder() {
-    const childOrderEl = document.getElementById('childOrder');
-    const parsed = Number(childOrderEl?.value || '1');
+    const parsed = Number(benefitLinkContext.childOrder || 1);
     if (!Number.isFinite(parsed) || parsed < 1) return 1;
     if (parsed >= 5) return 5;
     return Math.floor(parsed);
