@@ -1092,7 +1092,30 @@ function initLeavePlanner() {
             const idx = Number((calendarChildcareSegmentIndex && calendarChildcareSegmentIndex.value) || 0);
             const start = calendarChildcareStartInput?.value || '';
             if (!start) return;
-            const days = normalizeMonthCount(calendarChildcareDaysInput.value, { min: 1, max: CHILDCARE_MAX_DAYS, fallback: 30 });
+            const raw = (calendarChildcareDaysInput.value || '').trim();
+            if (!raw) {
+                renderCalendarChildcareDerivedFields();
+                return;
+            }
+            const parsed = Number(raw);
+            if (!Number.isFinite(parsed) || parsed <= 0) {
+                renderCalendarChildcareDerivedFields();
+                return;
+            }
+            const days = Math.min(Math.floor(parsed), CHILDCARE_MAX_DAYS);
+            calendarChildcareEndInput.value = suggestSegmentEndByDays(start, days, idx, plannerState.calendarEditorActor);
+            renderCalendarChildcareDerivedFields();
+        });
+        calendarChildcareDaysInput.addEventListener('change', () => {
+            const idx = Number((calendarChildcareSegmentIndex && calendarChildcareSegmentIndex.value) || 0);
+            const start = calendarChildcareStartInput?.value || '';
+            if (!start) return;
+            const raw = (calendarChildcareDaysInput.value || '').trim();
+            if (!raw) {
+                renderCalendarChildcareDerivedFields();
+                return;
+            }
+            const days = normalizeMonthCount(raw, { min: 1, max: CHILDCARE_MAX_DAYS, fallback: 30 });
             calendarChildcareDaysInput.value = String(days);
             calendarChildcareEndInput.value = suggestSegmentEndByDays(start, days, idx, plannerState.calendarEditorActor);
             renderCalendarChildcareDerivedFields();
