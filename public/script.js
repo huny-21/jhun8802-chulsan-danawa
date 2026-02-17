@@ -2049,9 +2049,7 @@ function renderPaymentTable(rows) {
     }
 
     paymentTableBody.innerHTML = rows.map((row) => {
-        const childbirthTotalText = row.companyUnknown
-            ? `${formatCurrency(row.childbirthGov)} + 회사 추정 필요`
-            : formatCurrency(row.childbirthGov + row.childbirthCompany);
+        const childbirthTotalText = formatCurrency(row.childbirthGov + row.childbirthCompany);
         const spouseCell = showSpouse ? `<td>${formatCurrency(row.childcareFather)}</td>` : '';
         const benefitCell = showBenefit ? `<td>${formatCurrency(row.govBenefit)}</td>` : '';
         return `
@@ -2080,9 +2078,7 @@ function renderPaymentMobileCards(rows) {
 
     paymentMobileCards.classList.remove('hidden');
     paymentMobileCards.innerHTML = rows.map((row) => {
-        const childbirthTotalText = row.companyUnknown
-            ? `${formatCurrency(row.childbirthGov)} + 회사 추정 필요`
-            : formatCurrency(row.childbirthGov + row.childbirthCompany);
+        const childbirthTotalText = formatCurrency(row.childbirthGov + row.childbirthCompany);
         const spouseRow = plannerState.includeFather
             ? `<div class="payment-mobile-card-row"><span>육아휴직(배우자)</span><span>${formatCurrency(row.childcareFather)}</span></div>`
             : '';
