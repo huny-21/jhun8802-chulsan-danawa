@@ -2612,9 +2612,11 @@ function applyChildcareDaysToRows(rows, notesByMonth, monthlyUsage, actorState, 
         const row = getOrInitRow(rows, usage.yearMonth);
         const monthIndex = Math.floor(cumulativeMonthRatio + 1e-9) + 1;
         const sixPlusAgeEligible = isSixPlusAgeEligibleByMonth(usage.yearMonth, sixPlusAgeCutoffDate);
-        const counterpartMonths = counterpartCumulativeByMonth.get(usage.yearMonth) || 0;
+        const counterpartMonths = getCumulativeUsageUntilMonth(counterpartCumulativeByMonth, usage.yearMonth);
+        const unlockMonth = counterpartMonthUnlock.get(monthIndex) || '';
+        const counterpartEligibleAtPayment = !!unlockMonth && unlockMonth <= usage.yearMonth;
         const spouseMonths = sixPlusAgeEligible
-            ? (counterpartMonths > 0 ? counterpartMonths : manualSpouseMonths)
+            ? ((counterpartEligibleAtPayment || manualSpouseMonths > 0) ? 1 : 0)
             : 0;
         const monthlyBaseAmount = calculateChildcareMonthlyAmount({
             userType: actorState.userType,
@@ -2644,7 +2646,8 @@ function applyChildcareDaysToRows(rows, notesByMonth, monthlyUsage, actorState, 
             yearMonth: usage.yearMonth,
             monthIndex,
             ratio: usage.ratio,
-            paidBase: monthlyBaseAmount
+            paidBase: monthlyBaseAmount,
+            counterpartEligibleAtPayment
         });
 
         cumulativeMonthRatio += usage.ratio;
@@ -2654,8 +2657,10 @@ function applyChildcareDaysToRows(rows, notesByMonth, monthlyUsage, actorState, 
     paymentRecords.forEach((record) => {
         if (record.monthIndex > 6) return;
         if (!isSixPlusAgeEligibleByMonth(record.yearMonth, sixPlusAgeCutoffDate)) return;
+        if (record.counterpartEligibleAtPayment) return;
         const unlockMonth = counterpartMonthUnlock.get(record.monthIndex);
         if (!unlockMonth) return;
+        if (unlockMonth <= record.yearMonth) return;
 
         const sixPlusBase = calculateChildcareMonthlyAmount({
             userType: actorState.userType,
@@ -2683,6 +2688,14 @@ function buildCumulativeUsageByMonth(monthlyUsage) {
         map.set(usage.yearMonth, cumulative);
     });
     return map;
+}
+
+function getCumulativeUsageUntilMonth(cumulativeMap, yearMonth) {
+    let value = 0;
+    cumulativeMap.forEach((cumulative, ym) => {
+        if (ym <= yearMonth) value = cumulative;
+    });
+    return value;
 }
 
 function buildMonthIndexUnlockMonth(monthlyUsage) {
