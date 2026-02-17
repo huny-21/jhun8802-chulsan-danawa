@@ -25,6 +25,7 @@
     --radius-sm: 4px;
     --radius-md: 8px;
     --radius-lg: 12px;
+    --radius-xl: 16px;
 }
 
 /* Reset & Typography */
@@ -144,19 +145,20 @@ body {
 .card {
     background: var(--neutral-surface);
     border: 1px solid var(--neutral-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     padding: 32px;
     margin-bottom: 24px;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.03);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
 }
 
 .card h2 {
-    font-size: 1.25rem;
+    font-size: clamp(1.2rem, 2.3vw, 1.35rem);
     font-weight: 700;
     color: var(--brand-primary);
-    margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid var(--brand-primary); /* Strong underline */
+    margin-bottom: 18px;
+    padding-left: 10px;
+    border-bottom: 0;
+    border-left: 4px solid var(--brand-accent);
 }
 
 .service-tabs-wrap {
@@ -173,12 +175,17 @@ body {
     border: 1px solid var(--neutral-border);
     background: #fff;
     color: var(--neutral-text);
-    border-radius: var(--radius-sm);
-    padding: 12px;
+    border-radius: var(--radius-md);
+    min-height: 48px;
+    padding: 11px 10px;
     font-size: 0.95rem;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
 .service-tab:hover {
@@ -187,9 +194,10 @@ body {
 }
 
 .service-tab.active {
-    background: var(--brand-primary);
+    background: linear-gradient(135deg, #1D4ED8, #2563EB);
     color: #fff;
-    border-color: var(--brand-primary);
+    border-color: #1D4ED8;
+    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.22);
 }
 
 .service-panel {
@@ -255,19 +263,22 @@ select:disabled {
 .btn-primary {
     display: block;
     width: 100%;
-    padding: 16px;
-    background-color: var(--brand-accent);
+    min-height: 52px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, #1D4ED8, #2563EB);
     color: white;
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 1.03rem;
+    font-weight: 700;
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.24);
 }
 
 .btn-primary:hover {
-    background-color: var(--brand-accent-hover);
+    filter: brightness(1.03);
+    transform: translateY(-1px);
 }
 
 .btn-primary:disabled {
@@ -279,7 +290,8 @@ select:disabled {
     border: 1px solid var(--neutral-border);
     background: #fff;
     color: var(--brand-primary);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
+    min-height: 42px;
     padding: 8px 12px;
     font-weight: 600;
     cursor: pointer;
@@ -1203,9 +1215,10 @@ input[readonly] {
 .benefit-card {
     background-color: var(--neutral-surface);
     border: 1px solid var(--neutral-border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-lg);
     padding: 24px;
     margin-bottom: 16px;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
 }
 
 .benefit-title {
@@ -1234,16 +1247,18 @@ input[readonly] {
 }
 
 .benefit-detail {
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     color: var(--neutral-text);
-    margin-bottom: 4px;
-    display: flex;
+    margin-bottom: 6px;
+    display: grid;
+    grid-template-columns: minmax(68px, 92px) minmax(0, 1fr);
+    gap: 8px;
 }
 
 .benefit-detail strong {
-    min-width: 60px;
+    min-width: 68px;
     color: var(--neutral-muted);
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .no-data {
@@ -1260,6 +1275,8 @@ input[readonly] {
     border: 1px solid var(--neutral-border);
     padding: 40px;
     margin-top: 40px;
+    border-radius: var(--radius-xl);
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
 }
 
 .summary-card h3 {
@@ -1288,9 +1305,10 @@ input[readonly] {
 .summary-row {
     display: flex;
     justify-content: space-between;
+    gap: 12px;
     padding: 12px 0;
     border-bottom: 1px solid var(--neutral-bg);
-    font-size: 1rem;
+    font-size: 0.98rem;
 }
 
 .summary-row span:first-child {
@@ -1429,10 +1447,11 @@ input[readonly] {
     text-decoration: none;
     color: var(--brand-primary);
     border: 1px solid var(--neutral-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     padding: 14px;
     background: #fff;
     transition: all 0.2s ease;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
 }
 
 .quick-link-card strong {
@@ -1461,7 +1480,7 @@ input[readonly] {
 
     .card,
     .summary-card {
-        padding: 20px;
+        padding: 18px;
     }
 
     .form-row {
@@ -1484,6 +1503,27 @@ input[readonly] {
 
     .quick-link-grid {
         grid-template-columns: 1fr;
+    }
+
+    .benefit-card {
+        padding: 18px;
+        border-radius: 12px;
+    }
+
+    .benefit-title {
+        font-size: 1.02rem;
+        line-height: 1.4;
+    }
+
+    .benefit-amount {
+        font-size: 1.16rem;
+        margin-bottom: 12px;
+    }
+
+    .benefit-detail {
+        font-size: 0.88rem;
+        grid-template-columns: minmax(62px, 82px) minmax(0, 1fr);
+        gap: 6px;
     }
 
     .segment-row {
@@ -1555,14 +1595,23 @@ input[readonly] {
     }
 
     .total-amount-row {
-        padding: 20px;
+        padding: 18px;
+        margin-top: 22px;
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
     }
 
+    .summary-row {
+        font-size: 0.92rem;
+    }
+
+    .total-amount-row span:first-child {
+        font-size: 0.98rem;
+    }
+
     .total-amount-row span:last-child {
-        font-size: 1.5rem;
+        font-size: 1.56rem;
     }
 
     .adsense-wrap {

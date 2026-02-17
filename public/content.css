@@ -112,19 +112,35 @@ main { padding: 0 0 80px; }
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 32px;
   margin-bottom: 24px;
-  box-shadow: 0 8px 20px rgba(16, 35, 61, 0.04);
+  box-shadow: 0 10px 24px rgba(16, 35, 61, 0.05);
 }
 
-h1 { margin: 0 0 10px; font-size: 1.6rem; }
-h2 { margin-top: 28px; font-size: 1.2rem; }
+h1 {
+  margin: 0 0 10px;
+  font-size: clamp(1.45rem, 3.4vw, 1.75rem);
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+}
+h2 {
+  margin-top: 28px;
+  font-size: clamp(1.1rem, 2.7vw, 1.28rem);
+  line-height: 1.36;
+}
 
 .meta-note {
-  margin: 0;
+  margin: 0 0 6px;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.86rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f1f6ff;
+  border: 1px solid #d7e6ff;
 }
 
 .table-wrap {
@@ -165,6 +181,9 @@ td, th {
 
 .card p {
   margin: 10px 0;
+  max-width: 68ch;
+  font-size: 0.98rem;
+  line-height: 1.72;
 }
 
 .card h2 + p,
@@ -173,11 +192,13 @@ td, th {
 }
 
 .notice {
-  padding: 14px;
-  border-radius: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
   border: 1px solid #bfd4ea;
-  background: #f1f7ff;
+  background: linear-gradient(180deg, #f4f8ff 0%, #eef5ff 100%);
   margin-top: 16px;
+  font-size: 0.93rem;
+  line-height: 1.62;
 }
 
 .section-block {
@@ -296,8 +317,9 @@ td, th {
 
 .policy-tab-btn.active {
   border-color: var(--brand);
-  background: var(--brand);
+  background: linear-gradient(135deg, #1D4ED8, #2563EB);
   color: #fff;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.22);
 }
 
 .policy-panel {
@@ -339,8 +361,9 @@ td, th {
 .guide-tab-link.active,
 .guide-tab-link[aria-current="page"] {
   border-color: var(--brand);
-  background: var(--brand);
+  background: linear-gradient(135deg, #1D4ED8, #2563EB);
   color: #fff;
+  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
 }
 
 .brand-palette {
@@ -427,7 +450,10 @@ td, th {
 
 @media (max-width: 640px) {
   .container { padding: 0 16px; }
-  .card { padding: 20px; }
+  .card { padding: 18px; }
+  h1 { font-size: clamp(1.3rem, 5.3vw, 1.5rem); }
+  h2 { font-size: clamp(1.02rem, 4.2vw, 1.18rem); margin-top: 24px; }
+  .card p { font-size: 0.95rem; line-height: 1.66; }
   .site-nav { justify-content: flex-start; }
   .site-nav { gap: 8px; }
   .site-nav a {
