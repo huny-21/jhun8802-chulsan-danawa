@@ -17,7 +17,7 @@ body {
   font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
-  line-height: 1.65;
+  line-height: 1.6;
   background-image: linear-gradient(180deg, #f5f9ff 0%, #f7fafc 200px);
 }
 
@@ -183,7 +183,7 @@ td, th {
   margin: 10px 0;
   max-width: 68ch;
   font-size: 0.98rem;
-  line-height: 1.72;
+  line-height: 1.68;
 }
 
 .card h2 + p,
@@ -198,7 +198,7 @@ td, th {
   background: linear-gradient(180deg, #f4f8ff 0%, #eef5ff 100%);
   margin-top: 16px;
   font-size: 0.93rem;
-  line-height: 1.62;
+  line-height: 1.58;
 }
 
 .section-block {
@@ -283,12 +283,14 @@ td, th {
 
 .check-list li {
   margin: 7px 0;
+  line-height: 1.55;
 }
 
 .source-links {
   margin-top: 10px;
   color: var(--muted);
   font-size: 0.93rem;
+  line-height: 1.55;
 }
 
 .source-links a {
@@ -453,7 +455,7 @@ td, th {
   .card { padding: 18px; }
   h1 { font-size: clamp(1.3rem, 5.3vw, 1.5rem); }
   h2 { font-size: clamp(1.02rem, 4.2vw, 1.18rem); margin-top: 24px; }
-  .card p { font-size: 0.95rem; line-height: 1.66; }
+  .card p { font-size: 0.95rem; line-height: 1.62; }
   .site-nav { justify-content: flex-start; }
   .site-nav { gap: 8px; }
   .site-nav a {

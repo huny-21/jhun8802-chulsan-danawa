@@ -39,7 +39,7 @@ body {
     font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
     background-color: var(--neutral-bg);
     color: var(--brand-primary);
-    line-height: 1.5;
+    line-height: 1.56;
     word-break: keep-all;
     -webkit-font-smoothing: antialiased;
     background-image: linear-gradient(180deg, #f5f9ff 0%, #f8f9fa 180px);
@@ -263,6 +263,7 @@ body {
     font-size: 0.9rem;
     font-weight: 600;
     color: var(--brand-primary);
+    line-height: 1.42;
 }
 
 select,
@@ -601,6 +602,7 @@ select:disabled {
     margin-top: 4px;
     font-size: 0.76rem;
     color: var(--neutral-muted);
+    line-height: 1.45;
 }
 
 input[readonly] {
@@ -728,6 +730,7 @@ input[readonly] {
     font-size: 0.82rem;
     vertical-align: top;
     white-space: nowrap;
+    line-height: 1.45;
 }
 
 .payment-table th {
@@ -774,6 +777,7 @@ input[readonly] {
     padding: 3px 0;
     font-size: 0.82rem;
     color: var(--neutral-text);
+    line-height: 1.45;
 }
 
 .payment-mobile-card-row span:first-child {
@@ -1053,6 +1057,7 @@ input[readonly] {
     border-radius: 999px;
     padding: 3px 8px;
     white-space: nowrap;
+    line-height: 1.35;
 }
 
 .calendar-nav-inline {
