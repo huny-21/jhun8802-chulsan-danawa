@@ -1,4 +1,1 @@
-# Add your AdSense publisher ID before approval review.
-# Example format:
-# google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0
-TODO: replace-with-your-adsense-publisher-id
+google.com, pub-8661797971668327, DIRECT, f08c47fec0942fa0
