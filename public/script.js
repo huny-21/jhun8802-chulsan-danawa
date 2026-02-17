@@ -117,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
         initCityDropdown();
         setDueDateInputRange();
         setLoadingState(false);
+        syncBenefitDueDateToCalendar();
 
         // 이벤트 리스너
         citySelect.addEventListener('change', handleCityChange);
@@ -129,6 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
             field.addEventListener('change', clearFormError);
             field.addEventListener('input', clearFormError);
         });
+        dueDateInput.addEventListener('change', syncBenefitDueDateToCalendar);
+        dueDateInput.addEventListener('input', syncBenefitDueDateToCalendar);
     }
 });
 
@@ -170,6 +173,14 @@ function initQuickStart() {
 function initBenefitLinkState() {
     if (!includeGovBenefitsInput) return;
     setGovBenefitLinkStatus(false);
+}
+
+function syncBenefitDueDateToCalendar() {
+    const dueDate = dueDateInput?.value || '';
+    benefitLinkContext.dueDate = dueDate;
+    if (plannerCalendarGrid) {
+        renderPlannerCalendar();
+    }
 }
 
 function setGovBenefitLinkStatus(linked, context = null) {
@@ -2291,6 +2302,10 @@ function renderCalendarCell(date, cursor, holidayMap) {
         const childcareMark = buildConnectedDayMark(ymd, date, seg.start, seg.end, 'childcare', `육휴${idx + 1}`);
         if (childcareMark) marks.push(childcareMark);
     });
+
+    if (benefitLinkContext.dueDate && benefitLinkContext.dueDate === ymd) {
+        marks.push('<span class="day-mark due-date">출산예정</span>');
+    }
 
     if (plannerState.returnDate === ymd) marks.push('<span class="day-mark return">복직</span>');
 

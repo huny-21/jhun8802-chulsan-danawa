@@ -23,7 +23,7 @@
     <meta name="twitter:image" content="https://chulsan-danawa.com/og-image-20260217-3.png">
     <link rel="icon" type="image/svg+xml" href="favicon.svg?v=3">
     <link rel="shortcut icon" href="favicon.svg?v=3">
-    <link rel="stylesheet" href="style.css?v=30">
+    <link rel="stylesheet" href="style.css?v=31">
     <!-- Google Fonts: Noto Sans KR (Weights 400, 500, 700, 900) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,6 +67,7 @@
 
         <section class="service-tabs-wrap card">
             <h2>서비스 선택</h2>
+            <p id="serviceFlowStatus" class="service-flow-status service-flow-status-unlinked">연동 준비: 1단계에서 동네 혜택 조회를 완료하면 2단계 계산기에 정부지원금 연동이 자동 활성화됩니다.</p>
             <div id="serviceTabs" class="service-tabs" role="tablist" aria-label="메인 서비스">
                 <button id="service-tab-benefit" class="service-tab active" type="button" role="tab" aria-selected="true" aria-controls="benefitServicePanel" tabindex="0" data-service-tab="benefit">우리동네 혜택찾기</button>
                 <button id="service-tab-calculator" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="calculatorServicePanel" tabindex="-1" data-service-tab="calculator">육아휴직 급여 계산기</button>
@@ -420,6 +421,7 @@
                 <p id="calendarMessage" class="calendar-message"></p>
                 <div class="calendar-legend">
                     <span class="legend-item"><i class="legend-dot childbirth"></i>출산휴가</span>
+                    <span class="legend-item"><i class="legend-dot due-date"></i>출산예정일</span>
                     <span class="legend-item"><i class="legend-dot childcare"></i>육아휴직</span>
                     <span class="legend-item"><i class="legend-dot return"></i>복직(예정)</span>
                     <span class="legend-item"><i class="legend-dot holiday"></i>공휴일</span>
@@ -467,6 +469,6 @@
     </script>
     <script src="ads.js?v=1"></script>
     <!-- type="module" 지정 필수 -->
-    <script type="module" src="script.js?v=29"></script>
+    <script type="module" src="script.js?v=30"></script>
 </body>
 </html>

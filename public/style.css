@@ -1189,6 +1189,11 @@ input[readonly] {
     color: #1E3A8A;
 }
 
+.day-mark.due-date {
+    background: #F3E8FF;
+    color: #6B21A8;
+}
+
 .day-mark.return {
     background: #D1FAE5;
     color: #065F46;
@@ -1223,6 +1228,7 @@ input[readonly] {
 }
 
 .legend-dot.childbirth { background: #FCA5A5; }
+.legend-dot.due-date { background: #C084FC; }
 .legend-dot.childcare { background: #60A5FA; }
 .legend-dot.return { background: #34D399; }
 .legend-dot.holiday { background: #EF4444; }
