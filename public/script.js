@@ -878,9 +878,7 @@ const leavePolicy = {
     }
 };
 
-const CHILDCARE_MAX_MONTHS = 18;
 const AVG_DAYS_PER_MONTH = 365.25 / 12;
-const CHILDCARE_MAX_DAYS = Math.round(CHILDCARE_MAX_MONTHS * AVG_DAYS_PER_MONTH);
 const CHILDCARE_MAX_SEGMENTS = 4;
 const PLANNER_STORAGE_KEY = 'leavePlannerSettingsV1';
 
@@ -1261,7 +1259,7 @@ function renderCalendarPartnerUsageLabel() {
     const actor = plannerState.calendarEditorActor;
     const actorLabel = getEditorLabel(actor);
     const counterpartLabel = getCounterpartLabel(actor);
-    calendarSpouseUsageLabel.textContent = `${counterpartLabel} 6개월 사용/사용예정 (체크 시 ${actorLabel} +6개월)`;
+    calendarSpouseUsageLabel.textContent = `${counterpartLabel} 3개월 이상 사용/사용예정 (체크 시 ${actorLabel} +6개월)`;
 }
 
 function renderSegmentList() {
@@ -1472,7 +1470,7 @@ function renderCalendarChildcareRemainingInfo() {
     const remaining = getRemainingChildcareDays(actor, idx);
     const maxDays = getChildcareMaxDays(actor);
     const counterpart = getCounterpartLabel(actor);
-    calendarChildcareRemainingInfo.textContent = `${getEditorLabel(actor)} 남은 휴직일: ${remaining}일 / 최대 ${maxDays}일(약 ${formatMonthApprox(maxDays)}개월) · 기본 12개월, ${counterpart} 6개월 사용(예정) 시 +6개월`;
+    calendarChildcareRemainingInfo.textContent = `${getEditorLabel(actor)} 남은 휴직일: ${remaining}일 / 최대 ${maxDays}일(약 ${formatMonthApprox(maxDays)}개월) · 기본 12개월, ${counterpart} 3개월 이상 사용(예정) 시 +6개월`;
 }
 
 function renderCalendarChildbirthInfo() {
@@ -1684,8 +1682,9 @@ function validatePlannerState() {
         showPlannerMessage('육아휴직 구간이 서로 겹치지 않도록 조정해주세요.', true);
         return false;
     }
-    if (expandChildcareDays(validSegments).length > CHILDCARE_MAX_DAYS) {
-        showPlannerMessage(`육아휴직 총 사용일이 ${CHILDCARE_MAX_DAYS}일을 초과했습니다.`, true);
+    const selfMaxDays = getChildcareMaxDays('self');
+    if (expandChildcareDays(validSegments).length > selfMaxDays) {
+        showPlannerMessage(`육아휴직 총 사용일이 ${selfMaxDays}일을 초과했습니다.`, true);
         return false;
     }
     const expectedStart = formatDateYmd(addDays(parseDateYmd(plannerState.childbirthLeave.end), 1));
@@ -1725,8 +1724,9 @@ function validatePlannerState() {
             showPlannerMessage('배우자 육아휴직 구간이 서로 겹치지 않도록 조정해주세요.', true);
             return false;
         }
-        if (expandChildcareDays(fatherSegments).length > CHILDCARE_MAX_DAYS) {
-            showPlannerMessage(`배우자 육아휴직 총 사용일이 ${CHILDCARE_MAX_DAYS}일을 초과했습니다.`, true);
+        const spouseMaxDays = getChildcareMaxDays('spouse');
+        if (expandChildcareDays(fatherSegments).length > spouseMaxDays) {
+            showPlannerMessage(`배우자 육아휴직 총 사용일이 ${spouseMaxDays}일을 초과했습니다.`, true);
             return false;
         }
     }
@@ -1838,6 +1838,24 @@ function getPlannerChildOrder() {
     return Math.floor(parsed);
 }
 
+function getPlannerBirthReferenceDate() {
+    const dueDate = benefitLinkContext.dueDate || dueDateInput?.value || '';
+    if (!dueDate || Number.isNaN(parseDateYmd(dueDate).getTime())) return '';
+    return dueDate;
+}
+
+function getSixPlusAgeCutoffDate(birthRefDate) {
+    if (!birthRefDate) return '';
+    // 출생(예정)일 당일을 0개월차로 보고, 18개월 창의 마지막 날까지 허용
+    return formatDateYmd(addDays(addMonths(parseDateYmd(birthRefDate), 18), -1));
+}
+
+function isSixPlusAgeEligibleByMonth(yearMonth, ageCutoffDate) {
+    if (!ageCutoffDate) return true;
+    const monthStart = `${yearMonth}-01`;
+    return monthStart <= ageCutoffDate;
+}
+
 function calculateGovBenefitByMonth(monthIndex, childOrder = 1) {
     const recurring = monthIndex <= 12 ? 1100000
         : monthIndex <= 24 ? 600000
@@ -1856,13 +1874,15 @@ function calculatePlannerRows(state) {
     const fatherDays = state.includeFather ? expandChildcareDays(state.father.childcareSegments) : [];
     const primaryUsage = buildChildcareUsageByMonth(primaryDays);
     const fatherUsage = buildChildcareUsageByMonth(fatherDays);
+    const birthRefDate = getPlannerBirthReferenceDate();
+    const sixPlusAgeCutoffDate = getSixPlusAgeCutoffDate(birthRefDate);
 
     applyChildcareDaysToRows(rows, notesByMonth, primaryUsage, {
         userType: state.userType,
         wage: state.wage,
         label: '본인',
         rowKey: 'childcarePrimary'
-    }, state.includeFather ? fatherUsage : [], state.includeFather ? '배우자' : null, state.spouseMonths);
+    }, state.includeFather ? fatherUsage : [], state.includeFather ? '배우자' : null, state.includeFather ? 0 : state.spouseMonths, sixPlusAgeCutoffDate);
 
     if (state.includeFather) {
         applyChildcareDaysToRows(rows, notesByMonth, fatherUsage, {
@@ -1870,7 +1890,7 @@ function calculatePlannerRows(state) {
             wage: state.father.wage,
             label: '배우자',
             rowKey: 'childcareFather'
-        }, primaryUsage, '본인', 0);
+        }, primaryUsage, '본인', 0, sixPlusAgeCutoffDate);
     }
 
     const childbirthDates = expandDateRange(state.childbirthLeave.start, state.childbirthLeave.end);
@@ -2462,7 +2482,8 @@ function applyCalendarDateSelection(targetType) {
         }
         const idx = Number((calendarChildcareSegmentIndex && calendarChildcareSegmentIndex.value) || 0);
         const start = calendarChildcareStartInput?.value || '';
-        const days = normalizeMonthCount(calendarChildcareDaysInput?.value, { min: 1, max: CHILDCARE_MAX_DAYS, fallback: 30 });
+        const actorMaxDays = getChildcareMaxDays(actor);
+        const days = normalizeMonthCount(calendarChildcareDaysInput?.value, { min: 1, max: actorMaxDays, fallback: 30 });
         if (calendarChildcareDaysInput) calendarChildcareDaysInput.value = String(days);
         const enteredEnd = calendarChildcareEndInput?.value || '';
         const end = isValidRange(start, enteredEnd)
@@ -2491,8 +2512,8 @@ function applyCalendarDateSelection(targetType) {
             calendarMessage.textContent = '육아휴직 구간이 겹쳐서 반영되지 않았습니다.';
             return;
         }
-        if (expandChildcareDays(cloned.filter((seg) => seg.start && seg.end)).length > CHILDCARE_MAX_DAYS) {
-            calendarMessage.textContent = `총 육아휴직 사용일이 ${CHILDCARE_MAX_DAYS}일을 초과합니다.`;
+        if (expandChildcareDays(cloned.filter((seg) => seg.start && seg.end)).length > actorMaxDays) {
+            calendarMessage.textContent = `총 육아휴직 사용일이 ${actorMaxDays}일을 초과합니다.`;
             return;
         }
         segments[idx] = { start, end };
@@ -2581,7 +2602,7 @@ function getOrInitRow(rows, ym) {
     return rows.get(ym);
 }
 
-function applyChildcareDaysToRows(rows, notesByMonth, monthlyUsage, actorState, counterpartUsage, counterpartLabel, manualSpouseMonths = 0) {
+function applyChildcareDaysToRows(rows, notesByMonth, monthlyUsage, actorState, counterpartUsage, counterpartLabel, manualSpouseMonths = 0, sixPlusAgeCutoffDate = '') {
     const counterpartCumulativeByMonth = buildCumulativeUsageByMonth(counterpartUsage);
     const counterpartMonthUnlock = buildMonthIndexUnlockMonth(counterpartUsage);
     let cumulativeMonthRatio = 0;
@@ -2590,8 +2611,11 @@ function applyChildcareDaysToRows(rows, notesByMonth, monthlyUsage, actorState, 
     monthlyUsage.forEach((usage) => {
         const row = getOrInitRow(rows, usage.yearMonth);
         const monthIndex = Math.floor(cumulativeMonthRatio + 1e-9) + 1;
+        const sixPlusAgeEligible = isSixPlusAgeEligibleByMonth(usage.yearMonth, sixPlusAgeCutoffDate);
         const counterpartMonths = counterpartCumulativeByMonth.get(usage.yearMonth) || 0;
-        const spouseMonths = counterpartMonths > 0 ? counterpartMonths : manualSpouseMonths;
+        const spouseMonths = sixPlusAgeEligible
+            ? (counterpartMonths > 0 ? counterpartMonths : manualSpouseMonths)
+            : 0;
         const monthlyBaseAmount = calculateChildcareMonthlyAmount({
             userType: actorState.userType,
             wage: actorState.wage,
@@ -2609,6 +2633,12 @@ function applyChildcareDaysToRows(rows, notesByMonth, monthlyUsage, actorState, 
                 usage.yearMonth,
                 `${actorState.label} ${monthIndex}개월 6+6 적용${counterpartLabel ? `(${counterpartLabel})` : ''}`
             );
+        } else if (actorState.userType !== 'SINGLE_PARENT' && monthIndex <= 6 && !sixPlusAgeEligible && (counterpartMonths > 0 || manualSpouseMonths > 0)) {
+            addMonthNote(
+                notesByMonth,
+                usage.yearMonth,
+                `${actorState.label} ${monthIndex}개월 6+6 미적용(자녀 18개월 기준)`
+            );
         }
         paymentRecords.push({
             yearMonth: usage.yearMonth,
@@ -2623,6 +2653,7 @@ function applyChildcareDaysToRows(rows, notesByMonth, monthlyUsage, actorState, 
     if (actorState.userType === 'SINGLE_PARENT') return;
     paymentRecords.forEach((record) => {
         if (record.monthIndex > 6) return;
+        if (!isSixPlusAgeEligibleByMonth(record.yearMonth, sixPlusAgeCutoffDate)) return;
         const unlockMonth = counterpartMonthUnlock.get(record.monthIndex);
         if (!unlockMonth) return;
 
