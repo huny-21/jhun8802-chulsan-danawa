@@ -1205,7 +1205,9 @@ function renderSegmentList() {
                     showPlannerMessage('다음 구간 시작일은 이전 구간 종료 다음날 이후로 입력해주세요.', true);
                 }
                 const safeStart = plannerState.childcareSegments[idx].start;
-                if (!plannerState.childcareSegments[idx].end || plannerState.childcareSegments[idx].end < safeStart) {
+                if (idx === 0) {
+                    plannerState.childcareSegments[idx].end = formatDateYmd(addDays(addMonths(parseDateYmd(safeStart), 12), -1));
+                } else if (!plannerState.childcareSegments[idx].end || plannerState.childcareSegments[idx].end < safeStart) {
                     plannerState.childcareSegments[idx].end = suggestSegmentEndByDays(safeStart, 30, idx, 'self');
                 }
             }
@@ -1254,7 +1256,9 @@ function renderFatherSegmentList() {
                     showPlannerMessage('배우자 다음 구간 시작일은 이전 구간 종료 다음날 이후로 입력해주세요.', true);
                 }
                 const safeStart = plannerState.father.childcareSegments[idx].start;
-                if (!plannerState.father.childcareSegments[idx].end || plannerState.father.childcareSegments[idx].end < safeStart) {
+                if (idx === 0) {
+                    plannerState.father.childcareSegments[idx].end = formatDateYmd(addDays(addMonths(parseDateYmd(safeStart), 12), -1));
+                } else if (!plannerState.father.childcareSegments[idx].end || plannerState.father.childcareSegments[idx].end < safeStart) {
                     plannerState.father.childcareSegments[idx].end = suggestSegmentEndByDays(safeStart, 30, idx, 'spouse');
                 }
             }
