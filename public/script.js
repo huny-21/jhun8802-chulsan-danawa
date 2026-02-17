@@ -1070,11 +1070,19 @@ function initLeavePlanner() {
             const idx = Number((calendarChildcareSegmentIndex && calendarChildcareSegmentIndex.value) || 0);
             const start = calendarChildcareStartInput.value;
             if (!start) return;
-            if (!calendarChildcareDaysInput.value) calendarChildcareDaysInput.value = '30';
-            const days = normalizeMonthCount(calendarChildcareDaysInput.value, { min: 1, max: CHILDCARE_MAX_DAYS, fallback: 30 });
-            calendarChildcareDaysInput.value = String(days);
-            if (!calendarChildcareEndInput.value || calendarChildcareEndInput.value < start) {
-                calendarChildcareEndInput.value = suggestSegmentEndByDays(start, days, idx, plannerState.calendarEditorActor);
+            if (idx === 0) {
+                const autoEnd = formatDateYmd(addDays(addMonths(parseDateYmd(start), 12), -1));
+                calendarChildcareEndInput.value = autoEnd;
+                if (calendarChildcareDaysInput) {
+                    calendarChildcareDaysInput.value = String(expandDateRange(start, autoEnd).length);
+                }
+            } else {
+                if (!calendarChildcareDaysInput.value) calendarChildcareDaysInput.value = '30';
+                const days = normalizeMonthCount(calendarChildcareDaysInput.value, { min: 1, max: CHILDCARE_MAX_DAYS, fallback: 30 });
+                calendarChildcareDaysInput.value = String(days);
+                if (!calendarChildcareEndInput.value || calendarChildcareEndInput.value < start) {
+                    calendarChildcareEndInput.value = suggestSegmentEndByDays(start, days, idx, plannerState.calendarEditorActor);
+                }
             }
             renderCalendarChildcareDerivedFields();
         });
@@ -2370,7 +2378,13 @@ function applyCalendarDateSelection(targetType) {
         const start = calendarChildcareStartInput?.value || '';
         const days = normalizeMonthCount(calendarChildcareDaysInput?.value, { min: 1, max: CHILDCARE_MAX_DAYS, fallback: 30 });
         if (calendarChildcareDaysInput) calendarChildcareDaysInput.value = String(days);
-        const end = suggestSegmentEndByDays(start, days, idx, actor);
+        const enteredEnd = calendarChildcareEndInput?.value || '';
+        const end = isValidRange(start, enteredEnd)
+            ? enteredEnd
+            : suggestSegmentEndByDays(start, days, idx, actor);
+        if (calendarChildcareEndInput && end) {
+            calendarChildcareEndInput.value = end;
+        }
         if (!isValidRange(start, end)) {
             calendarMessage.textContent = '육아휴직 시작일/종료일을 확인해주세요.';
             return;
