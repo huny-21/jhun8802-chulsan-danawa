@@ -973,6 +973,19 @@ input[readonly] {
     margin-bottom: 8px;
 }
 
+.calendar-actor-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.calendar-actor-row .calendar-actor-tabs {
+    margin-bottom: 0;
+}
+
 .calendar-actor-tabs .btn-secondary {
     padding: 5px 10px;
     font-size: 0.76rem;
@@ -982,6 +995,23 @@ input[readonly] {
     background: #DBEAFE;
     border-color: #93C5FD;
     color: #1E3A8A;
+}
+
+.calendar-spouse-usage {
+    border: 1px solid #BFDBFE;
+    background: #F8FBFF;
+    padding: 6px 8px;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #1E3A8A;
+    line-height: 1.3;
+    margin: 0;
+}
+
+.calendar-spouse-usage input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
 }
 
 #calendarChildcareRemainingInfo {
@@ -1242,6 +1272,15 @@ input[readonly] {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
+    }
+
+    .calendar-actor-row {
+        align-items: flex-start;
+    }
+
+    .calendar-spouse-usage {
+        width: 100%;
+        justify-content: flex-start;
     }
 }
 

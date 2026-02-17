@@ -87,6 +87,7 @@ const calendarChildcareResidualHint = document.getElementById('calendarChildcare
 const calendarChildcareRemainingInfo = document.getElementById('calendarChildcareRemainingInfo');
 const calendarActorTabs = document.getElementById('calendarActorTabs');
 const calendarSpouseUsagePlannedInput = document.getElementById('calendarSpouseUsagePlanned');
+const calendarSpouseUsageLabel = document.getElementById('calendarSpouseUsageLabel');
 const addCalendarChildcareSegmentBtn = document.getElementById('addCalendarChildcareSegmentBtn');
 const applyCalendarChildcareBtn = document.getElementById('applyCalendarChildcareBtn');
 const calendarPrevBtn = document.getElementById('calendarPrevBtn');
@@ -1071,6 +1072,7 @@ function initLeavePlanner() {
     if (calendarSpouseUsagePlannedInput) {
         calendarSpouseUsagePlannedInput.addEventListener('change', () => {
             plannerState.spouseUsagePlanned = !!calendarSpouseUsagePlannedInput.checked;
+            renderCalendarPartnerUsageLabel();
             renderPresetOptions();
             renderChildcareQuotaInfo();
             syncCalendarDateInputs();
@@ -1084,7 +1086,9 @@ function initLeavePlanner() {
             const start = calendarChildcareStartInput.value;
             if (!start) return;
             if (idx === 0) {
-                const autoEnd = formatDateYmd(addDays(addMonths(parseDateYmd(start), 12), -1));
+                const actor = plannerState.calendarEditorActor;
+                const autoMonths = getChildcareMaxMonths(actor);
+                const autoEnd = formatDateYmd(addDays(addMonths(parseDateYmd(start), autoMonths), -1));
                 calendarChildcareEndInput.value = autoEnd;
                 if (calendarChildcareDaysInput) {
                     calendarChildcareDaysInput.value = String(expandDateRange(start, autoEnd).length);
@@ -1213,6 +1217,7 @@ function switchCalendarActor(actor) {
         includeFatherInput.checked = true;
         fatherInputSection.classList.remove('hidden');
     }
+    renderCalendarPartnerUsageLabel();
     syncCalendarSegmentOptions();
     syncCalendarDateInputs();
 }
@@ -1229,6 +1234,7 @@ function renderPlannerForm() {
     includeFatherInput.checked = plannerState.includeFather;
     if (includeGovBenefitsInput) includeGovBenefitsInput.checked = plannerState.includeGovBenefits;
     if (calendarSpouseUsagePlannedInput) calendarSpouseUsagePlannedInput.checked = plannerState.spouseUsagePlanned;
+    renderCalendarPartnerUsageLabel();
     fatherWageInput.value = formatNumberInput(plannerState.father.wage);
     fatherInputSection.classList.toggle('hidden', !plannerState.includeFather);
     viewMonthBtn.classList.toggle('active', plannerState.calendarView === 'month');
@@ -1248,6 +1254,14 @@ function renderPlannerForm() {
     syncCalendarDateInputs();
     renderChildcareQuotaInfo();
     updatePaymentHeaders();
+}
+
+function renderCalendarPartnerUsageLabel() {
+    if (!calendarSpouseUsageLabel) return;
+    const actor = plannerState.calendarEditorActor;
+    const actorLabel = getEditorLabel(actor);
+    const counterpartLabel = getCounterpartLabel(actor);
+    calendarSpouseUsageLabel.textContent = `${counterpartLabel} 6개월 사용/사용예정 (체크 시 ${actorLabel} +6개월)`;
 }
 
 function renderSegmentList() {
@@ -1399,6 +1413,10 @@ function getEditorLabel(actor) {
     return actor === 'spouse' ? '배우자' : '본인';
 }
 
+function getCounterpartLabel(actor) {
+    return actor === 'spouse' ? '본인' : '배우자';
+}
+
 function addChildcareSegment(actor = 'self') {
     const segments = getEditorSegments(actor);
     if (segments.length >= CHILDCARE_MAX_SEGMENTS) {
@@ -1453,7 +1471,8 @@ function renderCalendarChildcareRemainingInfo() {
     const idx = Number((calendarChildcareSegmentIndex && calendarChildcareSegmentIndex.value) || 0);
     const remaining = getRemainingChildcareDays(actor, idx);
     const maxDays = getChildcareMaxDays(actor);
-    calendarChildcareRemainingInfo.textContent = `${getEditorLabel(actor)} 남은 휴직일: ${remaining}일 / 최대 ${maxDays}일(약 ${formatMonthApprox(maxDays)}개월)`;
+    const counterpart = getCounterpartLabel(actor);
+    calendarChildcareRemainingInfo.textContent = `${getEditorLabel(actor)} 남은 휴직일: ${remaining}일 / 최대 ${maxDays}일(약 ${formatMonthApprox(maxDays)}개월) · 기본 12개월, ${counterpart} 6개월 사용(예정) 시 +6개월`;
 }
 
 function renderCalendarChildbirthInfo() {
@@ -1503,10 +1522,7 @@ function formatMonthApprox(days) {
 }
 
 function getChildcareMaxMonths(actor = 'self') {
-    if (actor === 'self') {
-        return plannerState.spouseUsagePlanned ? 18 : 12;
-    }
-    return 18;
+    return plannerState.spouseUsagePlanned ? 18 : 12;
 }
 
 function getChildcareMaxDays(actor = 'self') {
