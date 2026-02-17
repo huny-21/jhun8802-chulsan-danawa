@@ -482,20 +482,21 @@ td, th {
   }
   .table-wrap th,
   .table-wrap td {
-    padding: 8px 10px;
-    font-size: clamp(0.72rem, 2.8vw, 0.86rem);
-    line-height: 1.45;
+    padding: 9px 12px;
+    font-size: clamp(0.74rem, 2.7vw, 0.88rem);
+    line-height: 1.5;
     white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    overflow-wrap: break-word;
+    word-break: keep-all;
   }
   .table-wrap tbody td {
     display: grid;
-    grid-template-columns: minmax(76px, 36%) minmax(0, 1fr);
-    gap: 8px;
+    grid-template-columns: minmax(78px, 34%) minmax(0, 1fr);
+    gap: 10px;
     align-items: start;
     border: 0;
     border-bottom: 1px dashed var(--line);
+    text-wrap: pretty;
   }
   .table-wrap tbody td:last-child {
     border-bottom: 0;
@@ -504,8 +505,34 @@ td, th {
     content: attr(data-label);
     color: var(--muted);
     font-weight: 700;
+    font-size: 0.74rem;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
   }
   tbody tr:nth-child(even) {
     background: #fff;
+  }
+
+  .table-wrap tbody td strong,
+  .table-wrap tbody td b {
+    font-weight: 700;
+  }
+}
+
+@media (max-width: 400px) {
+  .table-wrap tbody td {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 8px 10px;
+  }
+
+  .table-wrap tbody td::before {
+    display: inline-block;
+    width: fit-content;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: #eef5ff;
+    color: #355a85;
+    font-size: 0.68rem;
   }
 }
