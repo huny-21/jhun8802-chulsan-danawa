@@ -2308,6 +2308,17 @@ function bindPaymentChartTooltip(chartRows) {
         hit.addEventListener('mouseleave', () => {
             paymentChartTooltip.classList.add('hidden');
         });
+        hit.addEventListener('click', (e) => {
+            const idx = Number(hit.dataset.idx);
+            const row = chartRows[idx];
+            if (!row) return;
+            const hitRect = hit.getBoundingClientRect();
+            const parentRect = paymentChartSection.getBoundingClientRect();
+            const left = Math.min(parentRect.width - 188, Math.max(10, hitRect.left - parentRect.left + (hitRect.width / 2) - 70));
+            const top = Math.max(54, hitRect.top - parentRect.top + 12);
+            showTooltip(row, left, top);
+            e.stopPropagation();
+        });
     });
 
     const proratedMarkers = paymentChartSvg.querySelectorAll('.chart-prorated-marker');
@@ -2324,6 +2335,18 @@ function bindPaymentChartTooltip(chartRows) {
             e.stopPropagation();
         });
     });
+
+    if (paymentChartTooltip && !paymentChartTooltip.dataset.outsideBound) {
+        const hideTooltipOnOutsideTap = (e) => {
+            if (!paymentChartSection) return;
+            if (!paymentChartSection.contains(e.target)) {
+                paymentChartTooltip.classList.add('hidden');
+            }
+        };
+        document.addEventListener('click', hideTooltipOnOutsideTap);
+        document.addEventListener('touchstart', hideTooltipOnOutsideTap, { passive: true });
+        paymentChartTooltip.dataset.outsideBound = '1';
+    }
 }
 
 function formatShortWon(amount) {
