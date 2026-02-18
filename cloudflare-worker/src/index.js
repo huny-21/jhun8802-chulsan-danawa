@@ -216,6 +216,10 @@ async function handleBabyPhoto(req, env, cors) {
     cf_country: req?.cf?.country || null,
     cf_colo: req?.cf?.colo || null
   };
+  const origin = req.headers.get("Origin") || "";
+  const explicitTestMode = body?.test_mode === true;
+  const isLocalOrigin = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+  const testMode = explicitTestMode || isPreviewOrigin(origin) || isLocalOrigin;
   const genderLabel =
     gender === "female" ? "girl" : gender === "male" ? "boy" : "unknown";
 
@@ -240,35 +244,38 @@ async function handleBabyPhoto(req, env, cors) {
     analysisUserContent.push({ type: "input_image", image_url: ultrasoundImageDataUrls[i] });
   }
 
-  const analysisRes = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${env.OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: "gpt-4.1-mini",
-      input: [
-        {
-          role: "system",
-          content: [{ type: "input_text", text: "You extract concise visual traits for a fictional newborn render prompt." }]
-        },
-        {
-          role: "user",
-          content: analysisUserContent
-        }
-      ],
-      temperature: 0.2,
-      max_output_tokens: 140
-    })
-  });
+  let combinedFeatures = "a cute button nose, round cheeks, and a defined chin";
+  if (!testMode) {
+    const analysisRes = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4.1-mini",
+        input: [
+          {
+            role: "system",
+            content: [{ type: "input_text", text: "You extract concise visual traits for a fictional newborn render prompt." }]
+          },
+          {
+            role: "user",
+            content: analysisUserContent
+          }
+        ],
+        temperature: 0.2,
+        max_output_tokens: 140
+      })
+    });
 
-  const analysisJson = await analysisRes.json().catch(() => ({}));
-  if (!analysisRes.ok) {
-    return json(buildOpenAiErrorPayload(analysisJson, "Failed to analyze parent/ultrasound images", requestContext), analysisRes.status, cors);
+    const analysisJson = await analysisRes.json().catch(() => ({}));
+    if (!analysisRes.ok) {
+      return json(buildOpenAiErrorPayload(analysisJson, "Failed to analyze parent/ultrasound images", requestContext), analysisRes.status, cors);
+    }
+    combinedFeatures = extractCombinedFeatures(extractResponseText(analysisJson)) ||
+      "a cute button nose, round cheeks, and a defined chin";
   }
-  const combinedFeatures = extractCombinedFeatures(extractResponseText(analysisJson)) ||
-    "a cute button nose, round cheeks, and a defined chin";
 
   const imagePrompt = [
     "A heartwarming, high-quality 3D animation render of a newborn baby, in the distinct style of Pixar.",
@@ -311,7 +318,8 @@ async function handleBabyPhoto(req, env, cors) {
       ok: true,
       image_data_url: `data:image/png;base64,${b64}`,
       prompt_used: imagePrompt,
-      combined_features_english: combinedFeatures
+      combined_features_english: combinedFeatures,
+      test_mode: testMode
     },
     200,
     cors
