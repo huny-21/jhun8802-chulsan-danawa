@@ -1,0 +1,7 @@
+name = "chulsan-danawa-ai"
+main = "src/index.js"
+compatibility_date = "2026-02-17"
+placement = { mode = "targeted", region = "aws:us-east-1" }
+
+[vars]
+ALLOWED_ORIGINS = "https://chulsan-danawa.com,https://www.chulsan-danawa.com,https://chulsan-danawa.web.app,https://test-17133889-10c0f.web.app,https://chulsan-danawa--preview-hpoei7gh.web.app,http://localhost:5000,http://127.0.0.1:5000"

@@ -1,8 +1,16 @@
 const GA_MEASUREMENT_ID = "G-Z1R3F1Y8C5";
+const CLARITY_PROJECT_ID = "viza42872j";
 
 function initGoogleAnalytics() {
   if (!GA_MEASUREMENT_ID) return;
   if (window.__gaInitialized) return;
+  const hasExistingGtag = !!document.querySelector(
+    `script[src*="googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}"]`
+  );
+  if (hasExistingGtag && typeof window.gtag === "function") {
+    window.__gaInitialized = true;
+    return;
+  }
 
   window.dataLayer = window.dataLayer || [];
   window.gtag =
@@ -21,8 +29,29 @@ function initGoogleAnalytics() {
   window.__gaInitialized = true;
 }
 
+function initMicrosoftClarity() {
+  if (!CLARITY_PROJECT_ID) return;
+  if (window.__clarityInitialized) return;
+
+  (function (c, l, a, r, i, m, s) {
+    c[a] =
+      c[a] ||
+      function clarity() {
+        (c[a].q = c[a].q || []).push(arguments);
+      };
+    m = l.createElement(r);
+    m.async = 1;
+    m.src = `https://www.clarity.ms/tag/${i}`;
+    s = l.getElementsByTagName(r)[0];
+    s.parentNode.insertBefore(m, s);
+  })(window, document, "clarity", "script", CLARITY_PROJECT_ID);
+
+  window.__clarityInitialized = true;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   initGoogleAnalytics();
+  initMicrosoftClarity();
 
   const tables = document.querySelectorAll(".table-wrap table");
 

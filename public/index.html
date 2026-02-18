@@ -1,15 +1,24 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-Z1R3F1Y8C5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag("js", new Date());
+
+      gtag("config", "G-Z1R3F1Y8C5");
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>출산 혜택 다나와</title>
-    <meta name="description" content="우리동네 출산·육아 혜택 조회, 육아휴직 급여 계산기, 육아휴직 달력을 한 번에 확인하세요.">
+    <title>출산 혜택 다나와 | 지역별 출산지원금·육아휴직 급여 계산</title>
+    <meta name="description" content="지역별 출산지원금·육아 혜택을 한눈에 조회하고, 육아휴직 급여 계산기와 휴직 달력으로 우리 가족 지원금을 미리 계획하세요.">
     <link rel="canonical" href="https://chulsan-danawa.com/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="출산 혜택 다나와">
-    <meta property="og:title" content="출산 혜택 다나와">
-    <meta property="og:description" content="우리동네 출산·육아 혜택 조회, 육아휴직 급여 계산기, 육아휴직 달력을 한 번에 확인하세요.">
+    <meta property="og:title" content="출산 혜택 다나와 | 지역별 출산지원금·육아휴직 급여 계산">
+    <meta property="og:description" content="지역별 출산지원금·육아 혜택을 한눈에 조회하고, 육아휴직 급여 계산기와 휴직 달력으로 우리 가족 지원금을 미리 계획하세요.">
     <meta property="og:url" content="https://chulsan-danawa.com/">
     <meta property="og:image" content="https://chulsan-danawa.com/og-image-20260217-3.png">
   <meta property="og:image:type" content="image/png">
@@ -18,8 +27,8 @@
     <meta property="og:locale" content="ko_KR">
     <meta name="naver-site-verification" content="b7ebc721f1c553db8f5ae40c9f11e8767e2f45ff" />
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="출산 혜택 다나와">
-    <meta name="twitter:description" content="우리동네 출산·육아 혜택 조회, 육아휴직 급여 계산기, 육아휴직 달력을 한 번에 확인하세요.">
+    <meta name="twitter:title" content="출산 혜택 다나와 | 지역별 출산지원금·육아휴직 급여 계산">
+    <meta name="twitter:description" content="지역별 출산지원금·육아 혜택을 한눈에 조회하고, 육아휴직 급여 계산기와 휴직 달력으로 우리 가족 지원금을 미리 계획하세요.">
     <meta name="twitter:image" content="https://chulsan-danawa.com/og-image-20260217-3.png">
     <link rel="icon" type="image/svg+xml" href="favicon.svg?v=3">
     <link rel="shortcut icon" href="favicon.svg?v=3">
@@ -54,23 +63,14 @@
             <ins class="adsbygoogle adsense-unit" data-adsense-unit="top"></ins>
         </section>
 
-        <section class="quick-start-card card" aria-label="빠른 시작">
-            <h2>지금 필요한 기능 바로 시작</h2>
-            <p class="quick-start-note">처음 방문했다면 아래에서 현재 목적에 가장 가까운 항목을 누르세요.</p>
-            <div class="quick-start-actions">
-                <button type="button" class="quick-start-btn" data-quick-service="benefit">우리동네 혜택 먼저 확인</button>
-                <button type="button" class="quick-start-btn" data-quick-service="calculator">육아휴직 급여부터 계산</button>
-                <button type="button" class="quick-start-btn" data-quick-service="calendar">일정/복직일 먼저 계획</button>
-            </div>
-        </section>
-
         <section class="service-tabs-wrap card">
             <h2>서비스 선택</h2>
-            <p id="serviceFlowStatus" class="service-flow-status service-flow-status-unlinked">혜택 조회 시 정부지원금 휴직급여 연동 가능, 휴직기간 입력 시 달력에 자동 반영됩니다.</p>
+            <p id="serviceFlowStatus" class="service-flow-status service-flow-status-unlinked">지금 필요한 기능을 아래 탭에서 바로 선택하세요. 혜택 조회 후 계산기·달력 연동이 자동 적용됩니다.</p>
             <div id="serviceTabs" class="service-tabs" role="tablist" aria-label="메인 서비스">
                 <button id="service-tab-benefit" class="service-tab active" type="button" role="tab" aria-selected="true" aria-controls="benefitServicePanel" tabindex="0" data-service-tab="benefit">우리동네 혜택찾기</button>
                 <button id="service-tab-calculator" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="calculatorServicePanel" tabindex="-1" data-service-tab="calculator">육아휴직 급여 계산기</button>
                 <button id="service-tab-calendar" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="calendarServicePanel" tabindex="-1" data-service-tab="calendar">육아휴직 달력</button>
+                <button id="service-tab-ai" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="aiServicePanel" tabindex="-1" data-service-tab="ai">AI 미래 아이 사진</button>
             </div>
         </section>
 
@@ -299,38 +299,48 @@
             </section>
 
             <section class="card">
-                <h3>월별 예상 수령액 (출산휴가 + 육아휴직)</h3>
-                <div id="plannerBadges" class="planner-badges"></div>
-                <div class="planner-option-row">
-                    <label class="check-option" for="includeGovBenefits">
-                        <input type="checkbox" id="includeGovBenefits">
-                        <span>출산 혜택 포함(정부 공통)</span>
-                    </label>
-                    <p id="includeGovBenefitsHint" class="readonly-hint">※ 동네 혜택 조회를 완료하면 정부지원금 연동 옵션이 자동 활성화됩니다.</p>
+                <div class="payment-result-head">
+                    <h3>월별 예상 수령액 (출산휴가 + 육아휴직)</h3>
+                    <button type="button" id="paymentResultToggleBtn" class="btn-secondary payment-result-toggle" aria-expanded="false" aria-controls="paymentResultContent">월별 지급내역 펼치기</button>
                 </div>
-                <div class="table-wrap">
-                    <table class="payment-table">
-                        <thead>
-                            <tr>
-                                <th>월</th>
-                                <th>출산휴가</th>
-                                <th id="primaryChildcareHeader">육아휴직(본인)</th>
-                                <th id="fatherChildcareHeader">육아휴직(배우자)</th>
-                                <th id="benefitHeader">출산혜택</th>
-                                <th>월 합계</th>
-                                <th>비고</th>
-                            </tr>
-                        </thead>
-                        <tbody id="paymentTableBody">
-                            <tr><td colspan="5" class="empty-table">입력 후 계산하면 월별 예상 수령액이 표시됩니다.</td></tr>
-                        </tbody>
-                    </table>
+                <div id="paymentResultContent" class="payment-result-content hidden">
+                    <div id="plannerBadges" class="planner-badges"></div>
+                    <div class="planner-option-row">
+                        <label class="check-option" for="includeGovBenefits">
+                            <input type="checkbox" id="includeGovBenefits">
+                            <span>출산 혜택 포함(정부 공통)</span>
+                        </label>
+                        <p id="includeGovBenefitsHint" class="readonly-hint">※ 혜택 조회 없이도 체크 시 정부 공통지원금(첫만남/부모급여/아동수당/의료비)이 반영됩니다.<br>※ 출산예정일 미입력 시 출산휴가 시작일 + 1개월을 출산 기준일로 계산합니다.<br>※ 지자체 장려금·축하금 등 지역 특화 지원금은 포함되지 않습니다.</p>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="payment-table">
+                            <thead>
+                                <tr>
+                                    <th>월</th>
+                                    <th>출산휴가</th>
+                                    <th id="primaryChildcareHeader">육아휴직(본인)</th>
+                                    <th id="fatherChildcareHeader">육아휴직(배우자)</th>
+                                    <th id="benefitHeader">출산혜택</th>
+                                    <th>월 합계</th>
+                                    <th>비고</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paymentTableBody">
+                                <tr><td colspan="5" class="empty-table">입력 후 계산하면 월별 예상 수령액이 표시됩니다.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="paymentMobileCards" class="payment-mobile-cards hidden" aria-live="polite"></div>
+                    <div class="disclaimer-section">
+                        <p class="disclaimer">※ 본 계산 결과는 입력값을 기반으로 한 예상치이며, 법적·행정적 효력을 갖지 않습니다.</p>
+                        <p class="disclaimer">※ 실제 지급액, 지급시점, 소급 적용 여부는 고용센터·사업장 및 관계 기관 심사 결과에 따라 달라질 수 있으므로 반드시 최종 확인하시기 바랍니다.</p>
+                    </div>
                 </div>
-                <div id="paymentMobileCards" class="payment-mobile-cards hidden" aria-live="polite"></div>
                 <section id="paymentChartSection" class="payment-chart-section hidden" aria-live="polite">
                     <div class="payment-chart-toolbar">
                         <strong>육아휴직 급여 비교 그래프</strong>
                         <div id="paymentChartToggles" class="payment-chart-toggles">
+                            <button type="button" class="btn-secondary active" data-series-toggle="childbirth">출산휴가</button>
                             <button type="button" class="btn-secondary active" data-series-toggle="self">본인</button>
                             <button type="button" class="btn-secondary active" data-series-toggle="spouse">배우자</button>
                             <button type="button" class="btn-secondary active" data-series-toggle="benefit">출산혜택</button>
@@ -343,16 +353,12 @@
                     </div>
                     <p class="readonly-hint">※ ◐ 표시는 해당 월 급여가 일할 계산(부분월 계산)으로 반영되었음을 의미합니다.</p>
                     <div class="payment-chart-totals">
-                        <div><span>본인 총 수령액</span><strong id="chartSelfTotal">0원</strong></div>
+                        <div><span>본인 총 수령액(출산휴가+육아휴직)</span><strong id="chartSelfTotal">0원</strong></div>
                         <div><span>배우자 총 수령액</span><strong id="chartSpouseTotal">0원</strong></div>
                         <div><span>출산혜택 총액</span><strong id="chartGovBenefitTotal">0원</strong></div>
                         <div><span>누적 합산 총액</span><strong id="chartCombinedTotal">0원</strong></div>
                     </div>
                 </section>
-                <div class="disclaimer-section">
-                    <p class="disclaimer">※ 본 계산 결과는 입력값을 기반으로 한 예상치이며, 법적·행정적 효력을 갖지 않습니다.</p>
-                    <p class="disclaimer">※ 실제 지급액, 지급시점, 소급 적용 여부는 고용센터·사업장 및 관계 기관 심사 결과에 따라 달라질 수 있으므로 반드시 최종 확인하시기 바랍니다.</p>
-                </div>
             </section>
         </section>
 
@@ -438,6 +444,53 @@
             </section>
         </section>
 
+        <section id="aiServicePanel" class="service-panel" role="tabpanel" aria-labelledby="service-tab-ai" hidden>
+            <section class="card">
+                <h2>AI 미래 아이 사진 예측 (베타)</h2>
+                <p class="readonly-hint">임신주차, 성별, 엄마/아빠 사진, 초음파 사진 1~3장을 함께 업로드하면 총 3~5장의 이미지를 바탕으로 예측 이미지를 생성합니다.</p>
+                <form id="babyPhotoForm" class="ai-photo-form" novalidate>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="motherPhotoInput">엄마 사진 업로드</label>
+                            <input type="file" id="motherPhotoInput" accept="image/*" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fatherPhotoInput">아빠 사진 업로드</label>
+                            <input type="file" id="fatherPhotoInput" accept="image/*" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ultrasoundImageInput">초음파 사진 업로드 (1~3장)</label>
+                            <input type="file" id="ultrasoundImageInput" accept="image/*" multiple required>
+                        </div>
+                        <div class="form-group">
+                            <label for="gestationalWeeksInput">임신 주차</label>
+                            <input type="number" id="gestationalWeeksInput" min="4" max="42" step="1" placeholder="예: 24" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="babyGenderInput">예상 성별</label>
+                            <select id="babyGenderInput" required>
+                                <option value="">선택하세요</option>
+                                <option value="female">여아</option>
+                                <option value="male">남아</option>
+                                <option value="unknown">모름</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" id="babyPhotoSubmitBtn" class="btn-primary">미래 아이 사진 생성하기</button>
+                    <p id="babyPhotoStatus" class="form-error hidden" role="status" aria-live="polite"></p>
+                </form>
+                <div id="babyPhotoResultWrap" class="ai-photo-result hidden">
+                    <p class="readonly-hint">생성 결과</p>
+                    <img id="babyPhotoResultImage" class="ai-photo-image" alt="AI가 생성한 미래 아이 예측 이미지">
+                    <p class="disclaimer">※ 본 결과는 AI 기반 시각화 예시로 실제 아기 얼굴과 일치하지 않을 수 있습니다.</p>
+                </div>
+            </section>
+        </section>
+
         <section class="adsense-wrap card" data-adsense-slot="bottom" aria-label="광고 영역">
             <ins class="adsbygoogle adsense-unit" data-adsense-unit="bottom"></ins>
         </section>
@@ -470,9 +523,11 @@
                 bottom: ""
             }
         };
+        // Cloudflare Worker base URL
+        window.AI_API_BASE = "https://chulsan-danawa-ai.jhun8802.workers.dev";
     </script>
     <script src="ads.js?v=1"></script>
     <!-- type="module" 지정 필수 -->
-    <script type="module" src="script.js?v=31"></script>
+    <script type="module" src="script.js?v=42"></script>
 </body>
 </html>

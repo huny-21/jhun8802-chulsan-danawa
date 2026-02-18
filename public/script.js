@@ -1,6 +1,10 @@
 import { governmentBenefits, localBenefitsData } from './data.js?v=2';
 
 const GA_MEASUREMENT_ID = 'G-Z1R3F1Y8C5';
+const CLARITY_PROJECT_ID = 'viza42872j';
+const AI_API_BASE = typeof window !== 'undefined' && typeof window.AI_API_BASE === 'string'
+    ? window.AI_API_BASE.replace(/\/+$/, '')
+    : '';
 
 // DOM 요소
 const citySelect = document.getElementById('citySelect');
@@ -28,9 +32,20 @@ const serviceTabBtns = document.querySelectorAll('.service-tab');
 const servicePanels = {
     benefit: document.getElementById('benefitServicePanel'),
     calculator: document.getElementById('calculatorServicePanel'),
-    calendar: document.getElementById('calendarServicePanel')
+    calendar: document.getElementById('calendarServicePanel'),
+    ai: document.getElementById('aiServicePanel')
 };
 const quickStartBtns = document.querySelectorAll('.quick-start-btn');
+const babyPhotoForm = document.getElementById('babyPhotoForm');
+const ultrasoundImageInput = document.getElementById('ultrasoundImageInput');
+const motherPhotoInput = document.getElementById('motherPhotoInput');
+const fatherPhotoInput = document.getElementById('fatherPhotoInput');
+const gestationalWeeksInput = document.getElementById('gestationalWeeksInput');
+const babyGenderInput = document.getElementById('babyGenderInput');
+const babyPhotoSubmitBtn = document.getElementById('babyPhotoSubmitBtn');
+const babyPhotoStatus = document.getElementById('babyPhotoStatus');
+const babyPhotoResultWrap = document.getElementById('babyPhotoResultWrap');
+const babyPhotoResultImage = document.getElementById('babyPhotoResultImage');
 
 // 육아휴직 계산기/달력 요소
 const leavePlannerForm = document.getElementById('leavePlannerForm');
@@ -69,6 +84,8 @@ const primaryChildcareHeader = document.getElementById('primaryChildcareHeader')
 const fatherChildcareHeader = document.getElementById('fatherChildcareHeader');
 const benefitHeader = document.getElementById('benefitHeader');
 const plannerBadges = document.getElementById('plannerBadges');
+const paymentResultToggleBtn = document.getElementById('paymentResultToggleBtn');
+const paymentResultContent = document.getElementById('paymentResultContent');
 const paymentChartSection = document.getElementById('paymentChartSection');
 const paymentChartSvg = document.getElementById('paymentChartSvg');
 const paymentChartTooltip = document.getElementById('paymentChartTooltip');
@@ -109,13 +126,17 @@ const benefitLinkContext = {
     dueDate: '',
     childOrder: 1
 };
+const GOV_BENEFIT_EXCLUDE_NOTE = '※ 지자체 장려금·축하금 등 지역 특화 지원금은 포함되지 않습니다.';
+const GOV_BENEFIT_FALLBACK_NOTE = '※ 출산예정일 미입력 시 출산휴가 시작일 + 1개월을 출산 기준일로 계산합니다.';
 
 // 초기화
 document.addEventListener('DOMContentLoaded', () => {
     initGoogleAnalytics();
+    initMicrosoftClarity();
     initServiceTabs();
     initQuickStart();
     initLeavePlanner();
+    initBabyPhotoGenerator();
     initBenefitLinkState();
 
     if (benefitForm && citySelect && districtSelect && dueDateInput) {
@@ -140,9 +161,153 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+function initBabyPhotoGenerator() {
+    if (!babyPhotoForm || !ultrasoundImageInput || !motherPhotoInput || !fatherPhotoInput) return;
+    babyPhotoForm.addEventListener('submit', handleBabyPhotoSubmit);
+}
+
+function setBabyPhotoStatus(message, isError = false) {
+    if (!babyPhotoStatus) return;
+    if (!message) {
+        babyPhotoStatus.textContent = '';
+        babyPhotoStatus.classList.add('hidden');
+        babyPhotoStatus.removeAttribute('style');
+        return;
+    }
+    babyPhotoStatus.textContent = message;
+    babyPhotoStatus.classList.remove('hidden');
+    babyPhotoStatus.style.borderColor = isError ? '#FCA5A5' : '#86EFAC';
+    babyPhotoStatus.style.backgroundColor = isError ? '#FEF2F2' : '#F0FDF4';
+    babyPhotoStatus.style.color = isError ? '#B91C1C' : '#166534';
+}
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+        reader.onerror = () => reject(new Error('이미지 파일을 읽는 중 오류가 발생했습니다.'));
+        reader.readAsDataURL(file);
+    });
+}
+
+async function readFilesAsDataUrls(files) {
+    return Promise.all(files.map((file) => readFileAsDataUrl(file)));
+}
+
+function validateImageFile(file, label) {
+    if (!file) {
+        throw new Error(`${label} 파일을 확인해주세요.`);
+    }
+    const isImage = typeof file.type === 'string' && file.type.startsWith('image/');
+    if (!isImage) {
+        throw new Error(`${label}: 이미지 파일만 업로드할 수 있습니다.`);
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        throw new Error(`${label}: 파일 크기는 5MB 이하로 업로드해주세요.`);
+    }
+}
+
+async function handleBabyPhotoSubmit(e) {
+    e.preventDefault();
+    const motherFile = motherPhotoInput?.files?.[0] || null;
+    const fatherFile = fatherPhotoInput?.files?.[0] || null;
+    const ultrasoundFiles = Array.from(ultrasoundImageInput?.files || []);
+    const gestationalWeeks = Number(gestationalWeeksInput?.value || 0);
+    const gender = (babyGenderInput?.value || '').trim();
+
+    if (!motherFile || !fatherFile) {
+        setBabyPhotoStatus('엄마/아빠 사진을 각각 1장씩 업로드해주세요.', true);
+        return;
+    }
+    if (ultrasoundFiles.length < 1 || ultrasoundFiles.length > 3) {
+        setBabyPhotoStatus('초음파 사진은 1~3장 업로드해주세요.', true);
+        return;
+    }
+    if (!Number.isFinite(gestationalWeeks) || gestationalWeeks < 4 || gestationalWeeks > 42) {
+        setBabyPhotoStatus('임신 주차는 4~42 사이로 입력해주세요.', true);
+        return;
+    }
+    if (!gender) {
+        setBabyPhotoStatus('예상 성별을 선택해주세요.', true);
+        return;
+    }
+    const totalImages = 2 + ultrasoundFiles.length;
+    if (totalImages < 3 || totalImages > 5) {
+        setBabyPhotoStatus('총 이미지 수는 3~5장이어야 합니다.', true);
+        return;
+    }
+
+    const prevLabel = babyPhotoSubmitBtn?.textContent || '미래 아이 사진 생성하기';
+    if (babyPhotoSubmitBtn) {
+        babyPhotoSubmitBtn.disabled = true;
+        babyPhotoSubmitBtn.textContent = 'AI 생성 중...';
+    }
+    setBabyPhotoStatus('3~5장의 이미지를 분석하고 있습니다. 잠시만 기다려주세요.');
+
+    try {
+        if (!AI_API_BASE) {
+            throw new Error('AI 백엔드 URL이 설정되지 않았습니다. 운영자에게 문의해주세요.');
+        }
+        validateImageFile(motherFile, '엄마 사진');
+        validateImageFile(fatherFile, '아빠 사진');
+        ultrasoundFiles.forEach((file, idx) => validateImageFile(file, `초음파 사진 ${idx + 1}`));
+
+        const [motherImageDataUrl, fatherImageDataUrl, ultrasoundImageDataUrls] = await Promise.all([
+            readFileAsDataUrl(motherFile),
+            readFileAsDataUrl(fatherFile),
+            readFilesAsDataUrls(ultrasoundFiles)
+        ]);
+        const payload = {
+            gestational_weeks: Math.floor(gestationalWeeks),
+            gender,
+            mother_image_data_url: motherImageDataUrl,
+            father_image_data_url: fatherImageDataUrl,
+            ultrasound_image_data_urls: ultrasoundImageDataUrls
+        };
+
+        const apiUrl = `${AI_API_BASE}/api/baby-photo`;
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const raw = await response.text();
+        let data = {};
+        try {
+            data = raw ? JSON.parse(raw) : {};
+        } catch (parseError) {
+            throw new Error('AI 서버 응답 형식이 올바르지 않습니다. 잠시 후 다시 시도해주세요.');
+        }
+        if (!response.ok || !data?.ok || !data?.image_data_url) {
+            const parts = [];
+            if (data?.error) parts.push(String(data.error));
+            if (data?.error_code) parts.push(`코드: ${data.error_code}`);
+            if (data?.error_type) parts.push(`유형: ${data.error_type}`);
+            if (data?.error_help) parts.push(String(data.error_help));
+            throw new Error(parts.join('\n') || '이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        }
+
+        babyPhotoResultImage.src = data.image_data_url;
+        babyPhotoResultWrap?.classList.remove('hidden');
+        setBabyPhotoStatus('생성이 완료되었습니다. 결과 이미지를 확인해주세요.');
+    } catch (err) {
+        setBabyPhotoStatus(err instanceof Error ? err.message : '이미지 생성 중 오류가 발생했습니다.', true);
+    } finally {
+        if (babyPhotoSubmitBtn) {
+            babyPhotoSubmitBtn.disabled = false;
+            babyPhotoSubmitBtn.textContent = prevLabel;
+        }
+    }
+}
+
 function initGoogleAnalytics() {
     if (!GA_MEASUREMENT_ID) return;
     if (window.__gaInitialized) return;
+    const hasExistingGtag = !!document.querySelector(`script[src*="googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}"]`);
+    if (hasExistingGtag && typeof window.gtag === 'function') {
+        window.__gaInitialized = true;
+        return;
+    }
 
     window.dataLayer = window.dataLayer || [];
     window.gtag = window.gtag || function gtag() {
@@ -157,6 +322,24 @@ function initGoogleAnalytics() {
     window.gtag('js', new Date());
     window.gtag('config', GA_MEASUREMENT_ID);
     window.__gaInitialized = true;
+}
+
+function initMicrosoftClarity() {
+    if (!CLARITY_PROJECT_ID) return;
+    if (window.__clarityInitialized) return;
+
+    (function (c, l, a, r, i, m, s) {
+        c[a] = c[a] || function clarity() {
+            (c[a].q = c[a].q || []).push(arguments);
+        };
+        m = l.createElement(r);
+        m.async = 1;
+        m.src = `https://www.clarity.ms/tag/${i}`;
+        s = l.getElementsByTagName(r)[0];
+        s.parentNode.insertBefore(m, s);
+    }(window, document, 'clarity', 'script', CLARITY_PROJECT_ID));
+
+    window.__clarityInitialized = true;
 }
 
 function handleArrowNavigation(e, nodeList, isHorizontal = false) {
@@ -218,13 +401,9 @@ function setGovBenefitLinkStatus(linked, context = null) {
         benefitLinkContext.childOrder = Number(context.childOrder) || 1;
     }
 
-    includeGovBenefitsInput.disabled = !linked;
-
     if (!linked) {
-        includeGovBenefitsInput.checked = false;
-        plannerState.includeGovBenefits = false;
         if (includeGovBenefitsHint) {
-            includeGovBenefitsHint.textContent = '※ 동네 혜택 조회를 완료하면 정부지원금 연동 옵션이 자동 활성화됩니다.';
+            includeGovBenefitsHint.innerHTML = `※ 혜택 조회 없이도 체크 시 정부 공통지원금(첫만남/부모급여/아동수당/의료비)이 반영됩니다.<br>${GOV_BENEFIT_FALLBACK_NOTE}<br>${GOV_BENEFIT_EXCLUDE_NOTE}`;
         }
         return;
     }
@@ -233,7 +412,7 @@ function setGovBenefitLinkStatus(linked, context = null) {
     plannerState.includeGovBenefits = true;
     if (includeGovBenefitsHint) {
         const childLabel = benefitLinkContext.childOrder >= 5 ? '다섯째 이상' : `${benefitLinkContext.childOrder}째`;
-        includeGovBenefitsHint.textContent = `※ 최근 조회 기준(${childLabel}, ${benefitLinkContext.city} ${benefitLinkContext.district}) 정부지원금을 월별 급여에 자동 반영합니다.`;
+        includeGovBenefitsHint.innerHTML = `※ 최근 조회 기준(${childLabel}, ${benefitLinkContext.city} ${benefitLinkContext.district}) 정부 공통지원금을 월별 급여에 자동 반영합니다.<br>${GOV_BENEFIT_FALLBACK_NOTE}<br>${GOV_BENEFIT_EXCLUDE_NOTE}`;
     }
 }
 
@@ -860,13 +1039,15 @@ const plannerState = {
     calendarView: 'month',
     calendarCursor: startOfDay(new Date()),
     returnDate: '',
-    monthlyRows: []
+    monthlyRows: [],
+    isCalculated: false
 };
 
 const holidayCache = {};
 const failedHolidayYears = new Set();
 
 const paymentChartState = {
+    showChildbirth: true,
     showSelf: true,
     showSpouse: true,
     showBenefit: true,
@@ -907,6 +1088,14 @@ const PLANNER_STORAGE_KEY = 'leavePlannerSettingsV1';
 function initLeavePlanner() {
     if (!leavePlannerForm) return;
 
+    if (paymentResultToggleBtn && paymentResultContent) {
+        paymentResultToggleBtn.addEventListener('click', () => {
+            const expanded = paymentResultToggleBtn.getAttribute('aria-expanded') === 'true';
+            setPaymentResultExpanded(!expanded);
+        });
+        setPaymentResultExpanded(false);
+    }
+
     if (plannerWageHelpBtn && plannerWageHelpText) {
         plannerWageHelpBtn.addEventListener('click', () => {
             const expanded = plannerWageHelpBtn.getAttribute('aria-expanded') === 'true';
@@ -930,11 +1119,13 @@ function initLeavePlanner() {
         paymentChartToggles.querySelectorAll('[data-series-toggle]').forEach((btn) => {
             btn.addEventListener('click', () => {
                 const key = btn.dataset.seriesToggle;
+                if (key === 'childbirth') paymentChartState.showChildbirth = !paymentChartState.showChildbirth;
                 if (key === 'self') paymentChartState.showSelf = !paymentChartState.showSelf;
                 if (key === 'spouse') paymentChartState.showSpouse = !paymentChartState.showSpouse;
                 if (key === 'benefit') paymentChartState.showBenefit = !paymentChartState.showBenefit;
                 if (key === 'total') paymentChartState.showTotal = !paymentChartState.showTotal;
-                btn.classList.toggle('active', (key === 'self' && paymentChartState.showSelf)
+                btn.classList.toggle('active', (key === 'childbirth' && paymentChartState.showChildbirth)
+                    || (key === 'self' && paymentChartState.showSelf)
                     || (key === 'spouse' && paymentChartState.showSpouse)
                     || (key === 'benefit' && paymentChartState.showBenefit)
                     || (key === 'total' && paymentChartState.showTotal));
@@ -1225,8 +1416,17 @@ function handlePlannerSubmit(e) {
     e.preventDefault();
     collectPlannerForm();
     if (!validatePlannerState()) return;
+    plannerState.isCalculated = true;
     recalculatePlanner();
+    setPaymentResultExpanded(true);
     showPlannerMessage('계산이 완료되었습니다.', false);
+}
+
+function setPaymentResultExpanded(expanded) {
+    if (!paymentResultToggleBtn || !paymentResultContent) return;
+    paymentResultToggleBtn.setAttribute('aria-expanded', String(expanded));
+    paymentResultContent.classList.toggle('hidden', !expanded);
+    paymentResultToggleBtn.textContent = expanded ? '월별 지급내역 접기' : '월별 지급내역 펼치기';
 }
 
 function switchCalendarActor(actor) {
@@ -1780,7 +1980,19 @@ function validatePlannerState() {
 
 function recalculatePlanner() {
     renderChildcareQuotaInfo();
+
+    if (!plannerState.isCalculated) {
+        plannerState.monthlyRows = [];
+        renderPaymentTable([]);
+        renderPlannerBadges();
+        renderCalendarBadges();
+        renderPlannerCalendar();
+        persistPlannerSettings();
+        return;
+    }
+
     if (!validatePlannerState()) {
+        plannerState.monthlyRows = [];
         renderPaymentTable([]);
         renderPlannerBadges();
         renderCalendarBadges();
@@ -1877,16 +2089,29 @@ function restorePlannerSettings() {
 }
 
 function getPlannerChildOrder() {
-    const parsed = Number(benefitLinkContext.childOrder || 1);
+    const childOrderInput = document.getElementById('childOrder');
+    const fallbackOrder = Number(childOrderInput?.value || 1) || 1;
+    const parsed = Number(benefitLinkContext.childOrder || fallbackOrder);
     if (!Number.isFinite(parsed) || parsed < 1) return 1;
     if (parsed >= 5) return 5;
     return Math.floor(parsed);
 }
 
-function getPlannerBirthReferenceDate() {
+function getPlannerBirthReferenceDate(state = plannerState) {
     const dueDate = benefitLinkContext.dueDate || dueDateInput?.value || '';
-    if (!dueDate || Number.isNaN(parseDateYmd(dueDate).getTime())) return '';
-    return dueDate;
+    if (dueDate && !Number.isNaN(parseDateYmd(dueDate).getTime())) return dueDate;
+    const childbirthStart = state?.childbirthLeave?.start || '';
+    if (!childbirthStart || Number.isNaN(parseDateYmd(childbirthStart).getTime())) return '';
+    return formatDateYmd(addMonths(parseDateYmd(childbirthStart), 1));
+}
+
+function getGovBenefitMonthIndex(rowYearMonth, birthRefDate) {
+    if (!birthRefDate || !rowYearMonth) return 0;
+    const [rowYear, rowMonth] = rowYearMonth.split('-').map((v) => Number(v));
+    const birthDate = parseDateYmd(birthRefDate);
+    if (!Number.isFinite(rowYear) || !Number.isFinite(rowMonth) || Number.isNaN(birthDate.getTime())) return 0;
+    const monthDiff = (rowYear - birthDate.getFullYear()) * 12 + (rowMonth - (birthDate.getMonth() + 1));
+    return monthDiff + 1;
 }
 
 function getSixPlusAgeCutoffDate(birthRefDate) {
@@ -1919,7 +2144,7 @@ function calculatePlannerRows(state) {
     const fatherDays = state.includeFather ? expandChildcareDays(state.father.childcareSegments) : [];
     const primaryUsage = buildChildcareUsageByMonth(primaryDays);
     const fatherUsage = buildChildcareUsageByMonth(fatherDays);
-    const birthRefDate = getPlannerBirthReferenceDate();
+    const birthRefDate = getPlannerBirthReferenceDate(state);
     const sixPlusAgeCutoffDate = getSixPlusAgeCutoffDate(birthRefDate);
 
     applyChildcareDaysToRows(rows, notesByMonth, primaryUsage, {
@@ -2013,10 +2238,11 @@ function calculatePlannerRows(state) {
 
     if (state.includeGovBenefits) {
         const childOrder = getPlannerChildOrder();
-        sortedRows = sortedRows.map((row, idx) => {
-            const govBenefit = calculateGovBenefitByMonth(idx + 1, childOrder);
+        sortedRows = sortedRows.map((row) => {
+            const govBenefitMonthIndex = getGovBenefitMonthIndex(row.yearMonth, birthRefDate);
+            const govBenefit = govBenefitMonthIndex > 0 ? calculateGovBenefitByMonth(govBenefitMonthIndex, childOrder) : 0;
             const notes = [...row.notes];
-            if (idx === 0 && govBenefit > 0) {
+            if (govBenefitMonthIndex === 1 && govBenefit > 0) {
                 notes.push('정부공통 혜택 포함(일시금+월지급)');
             }
             return {
@@ -2147,10 +2373,11 @@ function renderPaymentChart(rows) {
     const fatherSpouseMonths = primaryDays.length / 30;
 
     const chartRows = rows.map((row, idx) => {
+        const childbirth = (row.childbirthGov || 0) + (row.childbirthCompany || 0);
         const self = row.childcarePrimary || 0;
         const spouse = plannerState.includeFather ? (row.childcareFather || 0) : 0;
         const benefit = plannerState.includeGovBenefits ? (row.govBenefit || 0) : 0;
-        const total = self + spouse;
+        const total = childbirth + self + spouse;
         const totalWithBenefit = total + benefit;
         const monthIndexInfo = parseMonthIndexesFromNotes(row.notes || []);
         const sixPlus = (monthIndexInfo.self > 0 && plannerState.userType !== 'SINGLE_PARENT' && primarySpouseMonths > 0 && monthIndexInfo.self <= 6)
@@ -2159,6 +2386,7 @@ function renderPaymentChart(rows) {
             idx,
             month: idx + 1,
             yearMonth: row.yearMonth,
+            childbirth,
             self,
             spouse,
             benefit,
@@ -2172,6 +2400,7 @@ function renderPaymentChart(rows) {
 
     const maxValue = Math.max(
         1,
+        ...chartRows.map((row) => (paymentChartState.showChildbirth ? row.childbirth : 0)),
         ...chartRows.map((row) => (paymentChartState.showSelf ? row.self : 0)),
         ...chartRows.map((row) => (paymentChartState.showSpouse ? row.spouse : 0)),
         ...chartRows.map((row) => (paymentChartState.showTotal ? row.total : 0)),
@@ -2217,18 +2446,36 @@ function renderPaymentChart(rows) {
         `;
     }).join('');
 
-    const visibleBars = [paymentChartState.showSelf, paymentChartState.showSpouse].filter(Boolean).length || 1;
-    const groupW = Math.min(28, slotW * 0.65);
-    const barW = Math.max(6, (groupW - 4) / visibleBars);
+    const activeBarSeries = [
+        paymentChartState.showChildbirth ? 'childbirth' : null,
+        paymentChartState.showSelf ? 'self' : null,
+        paymentChartState.showSpouse ? 'spouse' : null
+    ].filter(Boolean);
+    const visibleBars = activeBarSeries.length || 1;
+    const groupW = Math.min(42, slotW * 0.72);
+    const barGap = 2;
+    const barW = Math.max(5, (groupW - (barGap * Math.max(0, visibleBars - 1))) / visibleBars);
+    const getBarShift = (seriesKey) => {
+        const idx = activeBarSeries.indexOf(seriesKey);
+        if (idx < 0) return 0;
+        const centerIdx = (visibleBars - 1) / 2;
+        return (idx - centerIdx) * (barW + barGap);
+    };
+
+    const childbirthBars = paymentChartState.showChildbirth ? chartRows.map((row) => {
+        const shift = getBarShift('childbirth');
+        const h = Math.max(0, plotH - (yPos(row.childbirth) - margin.top));
+        return `<rect x="${xCenter(row.idx) + shift - barW / 2}" y="${yPos(row.childbirth)}" width="${barW}" height="${h}" rx="3" fill="#F97316" opacity="0.88" />`;
+    }).join('') : '';
 
     const selfBars = paymentChartState.showSelf ? chartRows.map((row) => {
-        const shift = paymentChartState.showSpouse ? (-barW / 2 - 1) : 0;
+        const shift = getBarShift('self');
         const h = Math.max(0, plotH - (yPos(row.self) - margin.top));
         return `<rect x="${xCenter(row.idx) + shift - barW / 2}" y="${yPos(row.self)}" width="${barW}" height="${h}" rx="3" fill="#2563EB" opacity="0.9" />`;
     }).join('') : '';
 
     const spouseBars = paymentChartState.showSpouse ? chartRows.map((row) => {
-        const shift = paymentChartState.showSelf ? (barW / 2 + 1) : 0;
+        const shift = getBarShift('spouse');
         const h = Math.max(0, plotH - (yPos(row.spouse) - margin.top));
         return `<rect x="${xCenter(row.idx) + shift - barW / 2}" y="${yPos(row.spouse)}" width="${barW}" height="${h}" rx="3" fill="#10B981" opacity="0.85" />`;
     }).join('') : '';
@@ -2272,6 +2519,7 @@ function renderPaymentChart(rows) {
         <line x1="${margin.left}" y1="${margin.top + plotH}" x2="${W - margin.right}" y2="${margin.top + plotH}" stroke="#94A3B8" stroke-width="1.2" />
         ${totalArea}
         ${benefitBandArea}
+        ${childbirthBars}
         ${selfBars}
         ${spouseBars}
         ${totalLine}
@@ -2280,10 +2528,11 @@ function renderPaymentChart(rows) {
         ${hitAreas}
     `;
 
-    const selfTotal = chartRows.reduce((sum, row) => sum + row.self, 0);
+    const selfTotal = chartRows.reduce((sum, row) => sum + row.childbirth + row.self, 0);
     const spouseTotal = chartRows.reduce((sum, row) => sum + row.spouse, 0);
     const govBenefitTotal = chartRows.reduce((sum, row) => sum + row.benefit, 0);
-    updateChartTotals(selfTotal, spouseTotal, govBenefitTotal, selfTotal + spouseTotal + govBenefitTotal);
+    const combinedTotal = rows.reduce((sum, row) => sum + (row.total || 0), 0);
+    updateChartTotals(selfTotal, spouseTotal, govBenefitTotal, combinedTotal);
     bindPaymentChartTooltip(chartRows);
 }
 
@@ -2302,11 +2551,12 @@ function bindPaymentChartTooltip(chartRows) {
     const showTooltip = (row, left, top, showProratedHelp = false) => {
         paymentChartTooltip.innerHTML = `
             <strong>${row.yearMonth} (${row.month}개월차)</strong>
+            <div class="payment-chart-tooltip-row"><span>출산휴가</span><span>${formatCurrency(row.childbirth)}</span></div>
             <div class="payment-chart-tooltip-row"><span>본인</span><span>${formatCurrency(row.self)}</span></div>
             <div class="payment-chart-tooltip-row"><span>배우자</span><span>${formatCurrency(row.spouse)}</span></div>
-            <div class="payment-chart-tooltip-row"><span>합산</span><span>${formatCurrency(row.total)}</span></div>
+            <div class="payment-chart-tooltip-row"><span>육아휴직 합산</span><span>${formatCurrency(row.self + row.spouse)}</span></div>
             ${plannerState.includeGovBenefits ? `<div class="payment-chart-tooltip-row"><span>출산혜택</span><span>${formatCurrency(row.benefit)}</span></div>` : ''}
-            ${plannerState.includeGovBenefits ? `<div class="payment-chart-tooltip-row"><span>누적합산</span><span>${formatCurrency(row.totalWithBenefit)}</span></div>` : ''}
+            <div class="payment-chart-tooltip-row"><span>총합계</span><span>${formatCurrency(row.totalWithBenefit)}</span></div>
             ${(row.proratedSelf || row.proratedSpouse) ? `<div class="payment-chart-tooltip-row"><span>일할</span><span>◐ 적용</span></div>${showProratedHelp ? '<div class="payment-chart-tooltip-row"><span>안내</span><span>월 일부 기간만 사용되어 일할 계산됨</span></div>' : ''}` : ''}
         `;
         paymentChartTooltip.classList.remove('hidden');
@@ -2403,6 +2653,14 @@ function animateAmountCounter(el, target) {
 
 function renderPlannerBadges() {
     if (!plannerBadges) return;
+
+    if (!plannerState.isCalculated) {
+        plannerBadges.innerHTML = `
+        <span class="planner-badge muted">월별 급여 계산하기를 누르면 결과가 표시됩니다.</span>
+    `;
+        return;
+    }
+
     const total = plannerState.monthlyRows.reduce((sum, row) => sum + row.total, 0);
     const estimateMode = plannerState.monthlyRows.some((row) => row.companyUnknown);
     const modeBadge = estimateMode ? '추정 모드' : '확정 모드';
