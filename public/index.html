@@ -30,9 +30,9 @@
     <meta name="twitter:title" content="출산 혜택 다나와 | 지역별 출산지원금·육아휴직 급여 계산">
     <meta name="twitter:description" content="지역별 출산지원금·육아 혜택을 한눈에 조회하고, 육아휴직 급여 계산기와 휴직 달력으로 우리 가족 지원금을 미리 계획하세요.">
     <meta name="twitter:image" content="https://chulsan-danawa.com/og-image-20260217-3.png">
-    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=3">
-    <link rel="shortcut icon" href="favicon.svg?v=3">
-    <link rel="stylesheet" href="style.css?v=31">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg?v=4">
+    <link rel="shortcut icon" href="favicon.svg?v=4">
+    <link rel="stylesheet" href="style.css?v=62">
     <!-- Google Fonts: Noto Sans KR (Weights 400, 500, 700, 900) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -70,7 +70,7 @@
                 <button id="service-tab-benefit" class="service-tab active" type="button" role="tab" aria-selected="true" aria-controls="benefitServicePanel" tabindex="0" data-service-tab="benefit">우리동네 혜택찾기</button>
                 <button id="service-tab-calculator" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="calculatorServicePanel" tabindex="-1" data-service-tab="calculator">육아휴직 급여 계산기</button>
                 <button id="service-tab-calendar" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="calendarServicePanel" tabindex="-1" data-service-tab="calendar">육아휴직 달력</button>
-                <button id="service-tab-ai" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="aiServicePanel" tabindex="-1" data-service-tab="ai">AI 미래 아이 사진</button>
+                <button id="service-tab-ai" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="aiServicePanel" tabindex="-1" data-service-tab="ai">AI 아기 사진관</button>
             </div>
         </section>
 
@@ -173,7 +173,11 @@
             <section class="card">
                 <h2>육아휴직 급여 계산기</h2>
                 <form id="leavePlannerForm" novalidate>
-                    <div class="planner-section">
+                    <div id="plannerWizard" class="planner-wizard" aria-label="계산기 단계">
+                        <button type="button" class="planner-wizard-step active" data-planner-step-target="1">1. 기본 정보</button>
+                        <button type="button" class="planner-wizard-step" data-planner-step-target="2">2. 기간 설정 및 계산</button>
+                    </div>
+                    <div class="planner-section planner-step" data-planner-step="1">
                         <h3 class="section-title">본인 기본정보</h3>
                         <div class="form-row">
                             <div class="form-group">
@@ -181,7 +185,7 @@
                                 <select id="plannerUserType">
                                     <option value="MOTHER">엄마</option>
                                     <option value="FATHER">아빠</option>
-                                    <option value="SINGLE_PARENT">한부모</option>
+                                    <option value="SINGLE_PARENT">한부모(미혼모/미혼부 포함)</option>
                                 </select>
                             </div>
                             <div class="form-group">
@@ -239,26 +243,6 @@
                                 <input type="number" id="spouseMonths" min="0" max="18" step="1" placeholder="예: 3">
                             </div>
                         </div>
-                        <div class="segment-header">
-                            <h3>본인 육아휴직 구간 (분할 가능)</h3>
-                            <div class="segment-actions">
-                                <button type="button" id="monthlyPresetToggle" class="btn-secondary btn-icon-toggle" aria-expanded="false" aria-controls="monthlyPresetOptions">🗓 육아휴직 기간</button>
-                                <button type="button" id="addSegmentBtn" class="btn-secondary">+ 구간 추가</button>
-                            </div>
-                        </div>
-                        <div id="monthlyPresetOptions" class="preset-options hidden">
-                            <div class="preset-range-control">
-                                <label for="motherPresetRange">기간(개월)</label>
-                                <input type="number" id="motherPresetRange" min="1" max="18" step="1" value="12">
-                                <strong id="motherPresetValue">12개월</strong>
-                            </div>
-                        </div>
-                        <p class="readonly-hint">위 육아휴직 기간 버튼으로 기간을 선택한 뒤, 아래 날짜 입력에서 세부 일정을 조정할 수 있습니다.</p>
-                        <p id="childcareQuotaInfo" class="readonly-hint">사용 0일 · 남은 548일(약 18.0개월) / 총 18개월(약 547.9일) · 분할 1/4</p>
-                        <div id="segmentList" class="segment-list"></div>
-                    </div>
-
-                    <div class="planner-section">
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="check-option" for="includeFather">
@@ -267,14 +251,40 @@
                                 </label>
                             </div>
                         </div>
-                        <div id="fatherInputSection" class="card-subsection hidden">
-                            <h3>배우자 육아휴직 입력</h3>
+                        <div id="fatherWageSection" class="hidden">
                             <div class="form-row">
                                 <div class="form-group">
                                     <label for="fatherWage">배우자 월 통상임금 (세전, 원)</label>
                                     <input type="text" inputmode="numeric" id="fatherWage" placeholder="예: 3,500,000">
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="planner-section planner-step" data-planner-step="2">
+                        <h3 class="section-title">기간 설정</h3>
+                        <div id="selfInputSection" class="card-subsection">
+                            <h3>본인 육아휴직 기간</h3>
+                            <div class="segment-header">
+                                <h3>본인 육아휴직 구간 (분할 가능)</h3>
+                                <div class="segment-actions">
+                                    <button type="button" id="monthlyPresetToggle" class="btn-secondary btn-icon-toggle" aria-expanded="false" aria-controls="monthlyPresetOptions">🗓 육아휴직 기간</button>
+                                    <button type="button" id="addSegmentBtn" class="btn-secondary">+ 구간 추가</button>
+                                </div>
+                            </div>
+                            <div id="monthlyPresetOptions" class="preset-options hidden">
+                                <div class="preset-range-control">
+                                    <label for="motherPresetRange">기간(개월)</label>
+                                    <input type="number" id="motherPresetRange" min="1" max="18" step="1" value="12">
+                                    <strong id="motherPresetValue">12개월</strong>
+                                </div>
+                            </div>
+                            <p class="readonly-hint">위 육아휴직 기간 버튼으로 기간을 선택한 뒤, 아래 날짜 입력에서 세부 일정을 조정할 수 있습니다.</p>
+                            <p id="childcareQuotaInfo" class="readonly-hint">사용 0일 · 남은 548일(약 18.0개월) / 총 18개월(약 547.9일) · 분할 1/4</p>
+                            <div id="segmentList" class="segment-list"></div>
+                        </div>
+                        <div id="fatherInputSection" class="card-subsection hidden">
+                            <h3>배우자 육아휴직 기간</h3>
                             <div class="segment-header">
                                 <h3>배우자 육아휴직 구간 (분할 가능)</h3>
                                 <div class="segment-actions">
@@ -291,9 +301,13 @@
                             </div>
                             <div id="fatherSegmentList" class="segment-list"></div>
                         </div>
+                        <button type="submit" class="btn-primary">월별 급여 계산하기</button>
                     </div>
-
-                    <button type="submit" class="btn-primary">월별 급여 계산하기</button>
+                    <div class="planner-step-nav" aria-label="계산기 단계 이동">
+                        <button type="button" id="plannerStepPrevBtn" class="btn-secondary">이전</button>
+                        <p id="plannerStepCounter" class="planner-step-counter">1 / 2</p>
+                        <button type="button" id="plannerStepNextBtn" class="btn-secondary">다음</button>
+                    </div>
                     <p id="plannerFormMessage" class="form-error hidden" role="alert" aria-live="assertive"></p>
                 </form>
             </section>
@@ -429,6 +443,13 @@
                     <span id="calendarNavMeta" class="calendar-nav-meta">💰 당월 예상 수령액 합계 0원</span>
                 </div>
                 <div id="plannerCalendarGrid" class="planner-calendar-grid"></div>
+                <section id="calendarDaySheet" class="calendar-day-sheet hidden" aria-live="polite" aria-label="선택 날짜 상세">
+                    <div class="calendar-day-sheet-head">
+                        <strong id="calendarDaySheetTitle">선택한 날짜</strong>
+                        <button type="button" id="calendarDaySheetCloseBtn" class="btn-secondary">닫기</button>
+                    </div>
+                    <ul id="calendarDaySheetList" class="calendar-day-sheet-list"></ul>
+                </section>
                 <p id="calendarMessage" class="calendar-message"></p>
                 <div class="calendar-legend">
                     <span class="legend-item"><i class="legend-dot childbirth"></i>출산휴가</span>
@@ -446,47 +467,191 @@
 
         <section id="aiServicePanel" class="service-panel" role="tabpanel" aria-labelledby="service-tab-ai" hidden>
             <section class="card">
-                <h2>AI 미래 아이 사진 예측 (베타)</h2>
-                <p class="readonly-hint">임신주차, 성별, 엄마/아빠 사진, 초음파 사진 1~3장을 함께 업로드하면 총 3~5장의 이미지를 바탕으로 예측 이미지를 생성합니다.</p>
-                <form id="babyPhotoForm" class="ai-photo-form" novalidate>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="motherPhotoInput">엄마 사진 업로드</label>
-                            <input type="file" id="motherPhotoInput" accept="image/*" required>
+                <h2>AI 아기 사진관 (베타)</h2>
+                <section class="ai-hero" aria-label="AI 소개 배너">
+                    <p class="ai-hero-kicker">AI BABY PREVIEW</p>
+                    <h3>엄마, 아빠 닮은 예쁜 아기 얼굴, AI로 미리 만나보세요</h3>
+                    <p>엄마·아빠 사진과 초음파 컷을 바탕으로 밝고 깔끔한 분위기의 실사형 아기 이미지를 예측합니다. 쿠폰 1장으로 설레는 미리보기를 시작해보세요.</p>
+                </section>
+                <div id="aiEventPopup" class="ai-event-popup hidden" role="dialog" aria-modal="true" aria-labelledby="aiEventPopupTitle">
+                    <div class="ai-event-dialog">
+                        <div class="ai-event-head">
+                            <p class="ai-event-badge">사진관 첫 오픈기념 이벤트</p>
+                            <button type="button" id="aiEventPopupCloseBtn" class="btn-secondary">닫기</button>
                         </div>
-                        <div class="form-group">
-                            <label for="fatherPhotoInput">아빠 사진 업로드</label>
-                            <input type="file" id="fatherPhotoInput" accept="image/*" required>
-                        </div>
+                        <h3 id="aiEventPopupTitle">첫 로그인 시 사진 생성 쿠폰 1장 자동 지급</h3>
+                        <p>Google 계정으로 처음 로그인하면 테스트용 쿠폰 1장을 바로 드립니다. 계정당 1회, 선착순 30장 한정입니다.</p>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="ultrasoundImageInput">초음파 사진 업로드 (1~3장)</label>
-                            <input type="file" id="ultrasoundImageInput" accept="image/*" multiple required>
-                        </div>
-                        <div class="form-group">
-                            <label for="gestationalWeeksInput">임신 주차</label>
-                            <input type="number" id="gestationalWeeksInput" min="4" max="42" step="1" placeholder="예: 24" required>
-                        </div>
+                </div>
+                <section class="ai-summary-card" aria-label="서비스 요약 안내">
+                    <h3>이용 안내</h3>
+                    <ul class="ai-guide-list">
+                        <li><span aria-hidden="true">👤</span> Google 로그인</li>
+                        <li><span aria-hidden="true">💰</span> 충전 후 쿠폰 받기 ($1 = 쿠폰 4장)</li>
+                        <li><span aria-hidden="true">📸</span> 엄마/아빠 1장 + 초음파 1~2장 업로드 후 생성</li>
+                    </ul>
+                </section>
+                <div class="ai-auth-box" aria-label="AI 로그인">
+                    <div class="ai-auth-actions">
+                        <p id="aiAuthStatus" class="readonly-hint">로그인 필요: Google 계정으로 로그인 후 이용 가능합니다.</p>
+                        <button type="button" id="googleLoginBtn" class="btn-secondary">Google 로그인</button>
+                        <button type="button" id="photoAlbumBtn" class="btn-secondary hidden">사진첩</button>
+                        <button type="button" id="googleLogoutBtn" class="btn-secondary hidden">로그아웃</button>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="babyGenderInput">예상 성별</label>
-                            <select id="babyGenderInput" required>
-                                <option value="">선택하세요</option>
-                                <option value="female">여아</option>
-                                <option value="male">남아</option>
-                                <option value="unknown">모름</option>
+                </div>
+                <div id="walletBox" class="wallet-box hidden" aria-label="지갑 바">
+                    <div class="wallet-toolbar">
+                        <p id="walletStatus" class="wallet-balance">내 쿠폰 확인 중...</p>
+                        <button type="button" id="refreshWalletBtn" class="btn-secondary wallet-refresh-btn">🔄</button>
+                        <div class="wallet-charge-config">
+                            <label for="chargeDollarInput">충전</label>
+                            <select id="chargeDollarInput">
+                                <option value="1">$1 (쿠폰 4장)</option>
+                                <option value="2">$2 (쿠폰 8장)</option>
+                                <option value="3">$3 (쿠폰 12장)</option>
+                                <option value="4">$4 (쿠폰 16장)</option>
+                                <option value="5">$5 (쿠폰 20장)</option>
+                                <option value="6">$6 (쿠폰 24장)</option>
+                                <option value="7">$7 (쿠폰 28장)</option>
+                                <option value="8">$8 (쿠폰 32장)</option>
+                                <option value="9">$9 (쿠폰 36장)</option>
+                                <option value="10">$10 (쿠폰 40장)</option>
+                                <option value="11">$11 (쿠폰 44장)</option>
+                                <option value="12">$12 (쿠폰 48장)</option>
+                                <option value="13">$13 (쿠폰 52장)</option>
+                                <option value="14">$14 (쿠폰 56장)</option>
+                                <option value="15">$15 (쿠폰 60장)</option>
+                                <option value="16">$16 (쿠폰 64장)</option>
+                                <option value="17">$17 (쿠폰 68장)</option>
+                                <option value="18">$18 (쿠폰 72장)</option>
+                                <option value="19">$19 (쿠폰 76장)</option>
+                                <option value="20">$20 (쿠폰 80장)</option>
                             </select>
                         </div>
+                        <button type="button" id="chargeCreditsBtn" class="btn-secondary wallet-charge-btn">+ 충전</button>
                     </div>
-                    <button type="submit" id="babyPhotoSubmitBtn" class="btn-primary">미래 아이 사진 생성하기</button>
+                </div>
+                <form id="babyPhotoForm" class="ai-photo-form" novalidate>
+                    <section class="ai-step-card" aria-label="1단계 사진 업로드">
+                        <h3><span>1</span> 사진 업로드</h3>
+                        <p class="readonly-hint">엄마/아빠 각 1장, 초음파는 이목구비·얼굴형 특징이 잘 보이는 컷으로 최대 2장까지 업로드해 주세요. 각 파일은 2MB 이하만 첨부할 수 있습니다.</p>
+                        <div class="form-row ai-upload-row">
+                            <div class="form-group ai-upload-group">
+                                <input type="file" id="motherPhotoInput" class="ai-upload-input" accept="image/*" required>
+                                <label for="motherPhotoInput" class="ai-upload-drop">
+                                    <span class="upload-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" role="presentation">
+                                            <circle cx="12" cy="8" r="3.5"></circle>
+                                            <path d="M5.5 19c.9-3 3.5-4.8 6.5-4.8s5.6 1.8 6.5 4.8"></path>
+                                        </svg>
+                                    </span>
+                                    <span class="ai-upload-title">엄마 사진 업로드</span>
+                                    <span class="ai-upload-subtitle">박스 전체를 눌러 파일 선택</span>
+                                </label>
+                            </div>
+                            <div class="form-group ai-upload-group">
+                                <input type="file" id="fatherPhotoInput" class="ai-upload-input" accept="image/*" required>
+                                <label for="fatherPhotoInput" class="ai-upload-drop">
+                                    <span class="upload-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" role="presentation">
+                                            <circle cx="12" cy="8" r="3.5"></circle>
+                                            <path d="M5.5 19c.9-3 3.5-4.8 6.5-4.8s5.6 1.8 6.5 4.8"></path>
+                                        </svg>
+                                    </span>
+                                    <span class="ai-upload-title">아빠 사진 업로드</span>
+                                    <span class="ai-upload-subtitle">박스 전체를 눌러 파일 선택</span>
+                                </label>
+                            </div>
+                            <div class="form-group ai-upload-group">
+                                <input type="file" id="ultrasoundImageInput" class="ai-upload-input" accept="image/*" multiple required>
+                                <label for="ultrasoundImageInput" class="ai-upload-drop">
+                                    <span class="upload-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" role="presentation">
+                                            <path d="M4.5 7.5h15v9h-15z"></path>
+                                            <path d="M8 12h8"></path>
+                                            <path d="M12 9.2v5.6"></path>
+                                        </svg>
+                                    </span>
+                                    <span class="ai-upload-title">초음파 사진 업로드 (1~2장)</span>
+                                    <span class="ai-upload-subtitle">박스 전체를 눌러 파일 선택</span>
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="ai-step-card" aria-label="2단계 정보 입력">
+                        <h3><span>2</span> 정보 입력</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="gestationalWeeksInput">임신 주차</label>
+                                <input type="number" id="gestationalWeeksInput" min="4" max="42" step="1" placeholder="예: 24" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="babyGenderInput">예상 성별</label>
+                                <select id="babyGenderInput" required>
+                                    <option value="">선택하세요</option>
+                                    <option value="female">여아</option>
+                                    <option value="male">남아</option>
+                                    <option value="unknown">모름</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+                    <section class="ai-step-card" aria-label="3단계 생성하기">
+                        <h3><span>3</span> 생성하기</h3>
+                        <p class="readonly-hint">총 3~4장의 이미지를 바탕으로 예측 이미지를 생성합니다.</p>
+                        <button type="submit" id="babyPhotoSubmitBtn" class="btn-primary ai-generate-btn">설레는 우리 아기 미리 만나보기</button>
+                    </section>
                     <p id="babyPhotoStatus" class="form-error hidden" role="status" aria-live="polite"></p>
+                    <div id="babyPhotoLoading" class="ai-loading-box hidden" role="status" aria-live="polite">
+                        <span class="ai-loading-spinner" aria-hidden="true"></span>
+                        <div class="ai-loading-texts">
+                            <p id="babyPhotoLoadingTitle" class="ai-loading-title">AI가 사진을 만들고 있어요...</p>
+                            <p id="babyPhotoLoadingDetail" class="ai-loading-detail">사진 분석을 시작합니다.</p>
+                        </div>
+                    </div>
                 </form>
+                <section class="ai-refund-callout hidden" aria-label="초기 프로모션">
+                    <p class="ai-refund-badge">초기 20명 이벤트</p>
+                    <p><strong>자랑하기 후기 작성 시 500원 환급</strong><br>결과 이미지와 짧은 후기를 남겨주시면 확인 후 환급해드립니다.</p>
+                </section>
+                <section class="ai-review-box hidden" aria-label="이용자 후기">
+                    <h3>실사용 후기</h3>
+                    <div class="ai-review-grid">
+                        <article class="ai-review-card">
+                            <img src="review-thumb-1.svg" alt="후기 썸네일 예시 1" class="ai-review-thumb">
+                            <p class="ai-review-text">“초음파 옆모습 특징이 잘 반영된 느낌이라 신기했어요. 전체 톤이 밝아서 가족들과 공유하기 좋았습니다.”</p>
+                            <p class="ai-review-meta">김OO · 임신 27주 · 초음파 2장 업로드</p>
+                        </article>
+                        <article class="ai-review-card">
+                            <img src="review-thumb-2.svg" alt="후기 썸네일 예시 2" class="ai-review-thumb">
+                            <p class="ai-review-text">“엄마/아빠 눈매 느낌이 섞인 것 같아 재미있었고 결과 품질도 깔끔했습니다.”</p>
+                            <p class="ai-review-meta">박OO · 임신 31주 · 초음파 2장 업로드</p>
+                        </article>
+                    </div>
+                </section>
                 <div id="babyPhotoResultWrap" class="ai-photo-result hidden">
                     <p class="readonly-hint">생성 결과</p>
                     <img id="babyPhotoResultImage" class="ai-photo-image" alt="AI가 생성한 미래 아이 예측 이미지">
+                    <a id="babyPhotoDownloadBtn" class="btn-primary" download="ai-baby-photo.png" href="#" role="button">이미지 다운로드</a>
                     <p class="disclaimer">※ 본 결과는 AI 기반 시각화 예시로 실제 아기 얼굴과 일치하지 않을 수 있습니다.</p>
+                </div>
+                <section id="babyPhotoHistoryWrap" class="ai-history-box hidden" aria-label="최근 생성 결과">
+                    <h3>내 최근 생성 결과 (최대 4장)</h3>
+                    <p class="readonly-hint">생성 후 1주일 동안 다시 확인할 수 있으며, 데이터는 최대 10일 후 자동 삭제됩니다.</p>
+                    <div id="babyPhotoHistoryList" class="ai-history-grid"></div>
+                </section>
+                <div id="photoAlbumModal" class="ai-album-modal hidden" role="dialog" aria-modal="true" aria-labelledby="photoAlbumTitle">
+                    <div class="ai-album-dialog">
+                        <div class="ai-album-head">
+                            <h3 id="photoAlbumTitle">내 사진첩</h3>
+                            <div class="ai-album-head-actions">
+                                <a id="photoAlbumDownloadBtn" class="btn-secondary hidden" download="ai-baby-photo.png" href="#" role="button">선택 사진 다운로드</a>
+                                <button type="button" id="photoAlbumCloseBtn" class="btn-secondary">닫기</button>
+                            </div>
+                        </div>
+                        <p class="readonly-hint">로그인한 계정에서 생성한 사진만 표시됩니다. 최대 4장까지 보관되며, 생성 후 최대 10일까지만 다시 확인할 수 있습니다.</p>
+                        <div id="photoAlbumList" class="ai-history-grid"></div>
+                    </div>
                 </div>
             </section>
         </section>
@@ -525,9 +690,17 @@
         };
         // Cloudflare Worker base URL
         window.AI_API_BASE = "https://chulsan-danawa-ai.jhun8802.workers.dev";
+        // Firebase Auth config (fill apiKey/appId for production)
+        window.FIREBASE_AUTH_CONFIG = {
+            enabled: true,
+            apiKey: "AIzaSyAcWBQWDnEBaykK6cFmZ4jqhGQUfR2rybE",
+            authDomain: "chulsan-danawa.com",
+            projectId: "test-17133889-10c0f",
+            appId: "1:229300299555:web:7b08ffa9cc4a6a25cb8e96"
+        };
     </script>
     <script src="ads.js?v=1"></script>
     <!-- type="module" 지정 필수 -->
-    <script type="module" src="script.js?v=42"></script>
+    <script type="module" src="script.js?v=72"></script>
 </body>
 </html>

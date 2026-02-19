@@ -1,24 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+
 :root {
-  --bg: #f7fafc;
+  --bg: #fffcf8;
   --surface: #ffffff;
   --text: #10233d;
   --muted: #52657e;
   --line: #d9e2ec;
-  --brand: #2563EB;
-  --brand-hover: #1D4ED8;
-  --brand-weak: #EFF6FF;
+  --brand: #4A8F86;
+  --brand-hover: #3D766F;
+  --brand-weak: #F1F8F5;
+  --warm-coral: #FB7185;
+  --warm-mint: #2DD4BF;
   --ink-strong: #0F172A;
+  --font-main: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --fs-body: 0.95rem;
+  --fs-small: 0.86rem;
 }
 
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: var(--font-main);
+  font-size: var(--fs-body);
   background: var(--bg);
   color: var(--text);
   line-height: 1.6;
-  background-image: linear-gradient(180deg, #f5f9ff 0%, #f7fafc 200px);
+  background-image:
+    radial-gradient(140% 120% at 8% -10%, rgba(251, 113, 133, 0.1) 0%, rgba(251, 113, 133, 0) 35%),
+    radial-gradient(120% 100% at 95% -20%, rgba(45, 212, 191, 0.09) 0%, rgba(45, 212, 191, 0) 32%),
+    linear-gradient(180deg, #fff8f4 0%, #fffcf8 240px);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 .container {
@@ -48,7 +66,7 @@ body {
   color: inherit;
   text-decoration: none;
   display: inline-block;
-  text-shadow: 0 1px 0 rgba(37, 99, 235, 0.08);
+  text-shadow: 0 1px 0 rgba(74, 143, 134, 0.08);
 }
 
 .site-title-link:hover {
@@ -58,7 +76,7 @@ body {
 .site-subtitle {
   margin: 6px 0 0;
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: var(--fs-body);
 }
 
 .site-nav {
@@ -87,7 +105,7 @@ body {
   border-radius: 999px;
   padding: 10px 13px;
   min-height: 44px;
-  font-size: 0.9rem;
+  font-size: var(--fs-body);
   transition: all 0.2s ease;
   white-space: nowrap;
   display: inline-flex;
@@ -133,7 +151,7 @@ h2 {
 .meta-note {
   margin: 0 0 6px;
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: var(--fs-small);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -176,14 +194,20 @@ tbody tr:nth-child(even) {
 }
 
 td, th {
-  font-size: 0.95rem;
+  font-size: var(--fs-body);
 }
 
 .card p {
   margin: 10px 0;
   max-width: 68ch;
-  font-size: 0.98rem;
+  font-size: var(--fs-body);
   line-height: 1.68;
+}
+
+.card li,
+.check-list li,
+.source-links {
+  font-size: var(--fs-body);
 }
 
 .card h2 + p,
@@ -194,8 +218,8 @@ td, th {
 .notice {
   padding: 14px 16px;
   border-radius: 12px;
-  border: 1px solid #bfd4ea;
-  background: linear-gradient(180deg, #f4f8ff 0%, #eef5ff 100%);
+  border: 1px solid #ffd7df;
+  background: linear-gradient(180deg, #fff4f6 0%, #fff8fb 100%);
   margin-top: 16px;
   font-size: 0.93rem;
   line-height: 1.58;
@@ -319,9 +343,9 @@ td, th {
 
 .policy-tab-btn.active {
   border-color: var(--brand);
-  background: linear-gradient(135deg, #1D4ED8, #2563EB);
+  background: linear-gradient(135deg, #3D766F, #4A8F86);
   color: #fff;
-  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.22);
+  box-shadow: 0 8px 16px rgba(74, 143, 134, 0.22);
 }
 
 .policy-panel {
@@ -363,9 +387,9 @@ td, th {
 .guide-tab-link.active,
 .guide-tab-link[aria-current="page"] {
   border-color: var(--brand);
-  background: linear-gradient(135deg, #1D4ED8, #2563EB);
+  background: linear-gradient(135deg, #3D766F, #4A8F86);
   color: #fff;
-  box-shadow: 0 8px 16px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 8px 16px rgba(74, 143, 134, 0.2);
 }
 
 .brand-palette {

@@ -5,3 +5,21 @@ placement = { mode = "targeted", region = "aws:us-east-1" }
 
 [vars]
 ALLOWED_ORIGINS = "https://chulsan-danawa.com,https://www.chulsan-danawa.com,https://chulsan-danawa.web.app,https://test-17133889-10c0f.web.app,https://chulsan-danawa--preview-hpoei7gh.web.app,http://localhost:5000,http://127.0.0.1:5000"
+FIREBASE_PROJECT_ID = "test-17133889-10c0f"
+FIREBASE_WEB_API_KEY = "AIzaSyAcWBQWDnEBaykK6cFmZ4jqhGQUfR2rybE"
+# Optional: set Polar checkout base URL for billing API response.
+POLAR_CHECKOUT_BASE_URL = "https://buy.polar.sh/polar_cl_i4Dlq7yDXyDmilA9GoCKCcWwHYYJFFp69CrOO0GauKr"
+COUPON_UNIT_CREDITS = "250"
+COUPON_CAMPAIGN_MONTH = "2026-02"
+COUPON_CAMPAIGN_MAX_COUPONS = "50"
+COUPON_RESERVATION_TTL_MINUTES = "30"
+WELCOME_COUPON_MAX_COUPONS = "30"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "chulsan-danawa-credits"
+database_id = "878b4e11-6b0b-4b61-b811-b17103dc2a9e"
+
+[[r2_buckets]]
+binding = "AI_PHOTO_BUCKET"
+bucket_name = "chulsan-danawa-ai-photos"

@@ -1,10 +1,15 @@
 import { governmentBenefits, localBenefitsData } from './data.js?v=2';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
+import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
 
 const GA_MEASUREMENT_ID = 'G-Z1R3F1Y8C5';
 const CLARITY_PROJECT_ID = 'viza42872j';
 const AI_API_BASE = typeof window !== 'undefined' && typeof window.AI_API_BASE === 'string'
     ? window.AI_API_BASE.replace(/\/+$/, '')
     : '';
+const FIREBASE_AUTH_CONFIG = typeof window !== 'undefined' && window.FIREBASE_AUTH_CONFIG
+    ? window.FIREBASE_AUTH_CONFIG
+    : { enabled: false };
 
 // DOM 요소
 const citySelect = document.getElementById('citySelect');
@@ -44,11 +49,128 @@ const gestationalWeeksInput = document.getElementById('gestationalWeeksInput');
 const babyGenderInput = document.getElementById('babyGenderInput');
 const babyPhotoSubmitBtn = document.getElementById('babyPhotoSubmitBtn');
 const babyPhotoStatus = document.getElementById('babyPhotoStatus');
+const babyPhotoLoading = document.getElementById('babyPhotoLoading');
+const babyPhotoLoadingTitle = document.getElementById('babyPhotoLoadingTitle');
+const babyPhotoLoadingDetail = document.getElementById('babyPhotoLoadingDetail');
 const babyPhotoResultWrap = document.getElementById('babyPhotoResultWrap');
 const babyPhotoResultImage = document.getElementById('babyPhotoResultImage');
+const babyPhotoDownloadBtn = document.getElementById('babyPhotoDownloadBtn');
+const babyPhotoHistoryWrap = document.getElementById('babyPhotoHistoryWrap');
+const babyPhotoHistoryList = document.getElementById('babyPhotoHistoryList');
+const aiEventPopup = document.getElementById('aiEventPopup');
+const aiEventPopupCloseBtn = document.getElementById('aiEventPopupCloseBtn');
+const photoAlbumBtn = document.getElementById('photoAlbumBtn');
+const photoAlbumModal = document.getElementById('photoAlbumModal');
+const photoAlbumCloseBtn = document.getElementById('photoAlbumCloseBtn');
+const photoAlbumList = document.getElementById('photoAlbumList');
+const photoAlbumDownloadBtn = document.getElementById('photoAlbumDownloadBtn');
+const aiAuthStatus = document.getElementById('aiAuthStatus');
+const googleLoginBtn = document.getElementById('googleLoginBtn');
+const googleLogoutBtn = document.getElementById('googleLogoutBtn');
+const walletBox = document.getElementById('walletBox');
+const walletStatus = document.getElementById('walletStatus');
+const chargeCreditsBtn = document.getElementById('chargeCreditsBtn');
+const refreshWalletBtn = document.getElementById('refreshWalletBtn');
+const chargeDollarInput = document.getElementById('chargeDollarInput');
+const MAX_ULTRASOUND_FILES = 2;
+const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
+const CREDITS_PER_IMAGE = 250;
+const AI_EVENT_POPUP_SESSION_KEY = 'ai_event_popup_seen_v1';
+const uploadFieldLabelMap = {
+    motherPhotoInput: '엄마 사진',
+    fatherPhotoInput: '아빠 사진',
+    ultrasoundImageInput: '초음파 사진'
+};
+
+let firebaseAuth = null;
+let firebaseUser = null;
+let firebaseIdToken = '';
+let walletState = null;
+let babyPhotoHistoryItems = [];
+let selectedAlbumImageDataUrl = '';
+let currentPlannerStep = 1;
+let babyPhotoLoadingTimer = null;
+
+function showAiEventPopup() {
+    if (!aiEventPopup) return;
+    let seen = false;
+    try {
+        seen = sessionStorage.getItem(AI_EVENT_POPUP_SESSION_KEY) === '1';
+    } catch (_err) {
+        seen = false;
+    }
+    if (seen) return;
+    aiEventPopup.classList.remove('hidden');
+}
+
+function hideAiEventPopup(markSeen = true) {
+    if (!aiEventPopup) return;
+    aiEventPopup.classList.add('hidden');
+    if (markSeen) {
+        try {
+            sessionStorage.setItem(AI_EVENT_POPUP_SESSION_KEY, '1');
+        } catch (_err) {
+            // ignore storage errors
+        }
+    }
+}
+
+function getLocalHistoryKey() {
+    if (!firebaseUser?.uid) return '';
+    return `baby_photo_history_local:${firebaseUser.uid}`;
+}
+
+function loadLocalHistory() {
+    try {
+        const key = getLocalHistoryKey();
+        if (!key) return [];
+        const raw = localStorage.getItem(key);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed
+            .filter((item) => typeof item?.image_data_url === 'string' && item.image_data_url.startsWith('data:image/'))
+            .slice(0, 4);
+    } catch (_err) {
+        return [];
+    }
+}
+
+function saveLocalHistory(items) {
+    try {
+        const key = getLocalHistoryKey();
+        if (!key) return;
+        localStorage.setItem(key, JSON.stringify((items || []).slice(0, 4)));
+    } catch (_err) {
+        // ignore localStorage errors
+    }
+}
+
+function mergeHistoryItems(serverItems = [], localItems = []) {
+    const merged = [];
+    const seen = new Set();
+    const pushItem = (item) => {
+        const image = String(item?.image_data_url || '');
+        if (!image || seen.has(image)) return;
+        seen.add(image);
+        merged.push({
+            image_data_url: image,
+            created_at: item?.created_at || new Date().toISOString()
+        });
+    };
+    serverItems.forEach(pushItem);
+    localItems.forEach(pushItem);
+    return merged.slice(0, 4);
+}
 
 // 육아휴직 계산기/달력 요소
 const leavePlannerForm = document.getElementById('leavePlannerForm');
+const plannerWizard = document.getElementById('plannerWizard');
+const plannerWizardStepBtns = document.querySelectorAll('.planner-wizard-step');
+const plannerSteps = document.querySelectorAll('.planner-step');
+const plannerStepPrevBtn = document.getElementById('plannerStepPrevBtn');
+const plannerStepNextBtn = document.getElementById('plannerStepNextBtn');
+const plannerStepCounter = document.getElementById('plannerStepCounter');
 const plannerUserType = document.getElementById('plannerUserType');
 const plannerWage = document.getElementById('plannerWage');
 const plannerWageHelpBtn = document.getElementById('plannerWageHelpBtn');
@@ -70,6 +192,7 @@ const fatherPresetValue = document.getElementById('fatherPresetValue');
 const includeFatherInput = document.getElementById('includeFather');
 const includeGovBenefitsInput = document.getElementById('includeGovBenefits');
 const includeGovBenefitsHint = document.getElementById('includeGovBenefitsHint');
+const fatherWageSection = document.getElementById('fatherWageSection');
 const fatherInputSection = document.getElementById('fatherInputSection');
 const fatherWageInput = document.getElementById('fatherWage');
 const addFatherSegmentBtn = document.getElementById('addFatherSegmentBtn');
@@ -116,6 +239,10 @@ const calendarNavMeta = document.getElementById('calendarNavMeta');
 const viewMonthBtn = document.getElementById('viewMonthBtn');
 const viewWeekBtn = document.getElementById('viewWeekBtn');
 const plannerCalendarGrid = document.getElementById('plannerCalendarGrid');
+const calendarDaySheet = document.getElementById('calendarDaySheet');
+const calendarDaySheetTitle = document.getElementById('calendarDaySheetTitle');
+const calendarDaySheetList = document.getElementById('calendarDaySheetList');
+const calendarDaySheetCloseBtn = document.getElementById('calendarDaySheetCloseBtn');
 const calendarMessage = document.getElementById('calendarMessage');
 const calendarBadges = document.getElementById('calendarBadges');
 const holidayStatusMessage = document.getElementById('holidayStatusMessage');
@@ -128,11 +255,13 @@ const benefitLinkContext = {
 };
 const GOV_BENEFIT_EXCLUDE_NOTE = '※ 지자체 장려금·축하금 등 지역 특화 지원금은 포함되지 않습니다.';
 const GOV_BENEFIT_FALLBACK_NOTE = '※ 출산예정일 미입력 시 출산휴가 시작일 + 1개월을 출산 기준일로 계산합니다.';
+let renderedHolidayMap = {};
 
 // 초기화
 document.addEventListener('DOMContentLoaded', () => {
     initGoogleAnalytics();
     initMicrosoftClarity();
+    initAuth();
     initServiceTabs();
     initQuickStart();
     initLeavePlanner();
@@ -161,9 +290,405 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+function setAiAuthStatus(message, isError = false) {
+    if (!aiAuthStatus) return;
+    aiAuthStatus.textContent = message;
+    aiAuthStatus.style.color = isError ? '#B91C1C' : '';
+}
+
+function setWalletStatus(message, isError = false) {
+    if (!walletStatus) return;
+    walletStatus.textContent = message;
+    walletStatus.style.color = isError ? '#B91C1C' : '';
+}
+
+function applyCouponCampaignUi(campaign) {
+    const ended = campaign?.status === 'ended';
+    const soldOut = Boolean(campaign?.sold_out);
+    if (chargeCreditsBtn) {
+        chargeCreditsBtn.disabled = soldOut;
+        chargeCreditsBtn.title = ended
+            ? '2월 한정 쿠폰 이벤트가 종료되었습니다.'
+            : soldOut ? '2월 한정 쿠폰이 모두 소진되었습니다.' : '';
+    }
+    if (chargeDollarInput) {
+        chargeDollarInput.disabled = soldOut;
+    }
+    if (refreshWalletBtn) {
+        refreshWalletBtn.disabled = false;
+    }
+    if (ended) {
+        setWalletStatus('이벤트 기간이 종료되었습니다. 2월 한정 쿠폰 이벤트가 마감되어 충전/결제가 비활성화되었습니다.', true);
+        return;
+    }
+    if (soldOut) {
+        setWalletStatus('쿠폰이 모두 소진되었습니다. 2월 한정 50장 쿠폰이 마감되어 충전/결제가 비활성화되었습니다.', true);
+        return;
+    }
+    const welcomeIssuedNow = Boolean(walletState?.welcome_coupon?.issued_now);
+    if (welcomeIssuedNow) {
+        setWalletStatus(`첫 로그인 쿠폰 1장이 지급되었습니다. 내 쿠폰 ${Number(walletState?.can_generate_images || 0)}장`);
+        return;
+    }
+    setWalletStatus(`내 쿠폰 ${Number(walletState?.can_generate_images || 0)}장`);
+}
+
+function creditsToCoupons(credits) {
+    const value = Number(credits || 0);
+    if (!Number.isFinite(value) || value <= 0) return 0;
+    return Math.floor(value / CREDITS_PER_IMAGE);
+}
+
+function formatHistoryTime(value) {
+    if (!value) return '';
+    const dt = new Date(value.replace(' ', 'T') + 'Z');
+    if (Number.isNaN(dt.getTime())) return '';
+    return dt.toLocaleString('ko-KR', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function selectHistoryImage(imageDataUrl) {
+    if (!imageDataUrl || !babyPhotoResultImage) return;
+    babyPhotoResultImage.src = imageDataUrl;
+    if (babyPhotoDownloadBtn) {
+        babyPhotoDownloadBtn.href = imageDataUrl;
+        babyPhotoDownloadBtn.setAttribute('download', getBabyPhotoFileName());
+    }
+    babyPhotoResultWrap?.classList.remove('hidden');
+    if (babyPhotoStatus && babyPhotoResultWrap && babyPhotoStatus.parentElement) {
+        babyPhotoStatus.insertAdjacentElement('afterend', babyPhotoResultWrap);
+    }
+    setBabyPhotoStatus('최근 생성 결과를 불러왔습니다.');
+}
+
+function setPhotoAlbumSelection(imageDataUrl = '', selectedBtn = null) {
+    selectedAlbumImageDataUrl = imageDataUrl || '';
+    if (photoAlbumList) {
+        photoAlbumList.querySelectorAll('.ai-history-item').forEach((btn) => {
+            btn.classList.toggle('is-selected', btn === selectedBtn);
+        });
+    }
+    if (!photoAlbumDownloadBtn) return;
+    if (!selectedAlbumImageDataUrl) {
+        photoAlbumDownloadBtn.classList.add('hidden');
+        photoAlbumDownloadBtn.setAttribute('href', '#');
+        return;
+    }
+    photoAlbumDownloadBtn.classList.remove('hidden');
+    photoAlbumDownloadBtn.setAttribute('href', selectedAlbumImageDataUrl);
+    photoAlbumDownloadBtn.setAttribute('download', getBabyPhotoFileName());
+}
+
+function renderHistoryInto(container, items = [], options = {}) {
+    const { closeModalOnSelect = false, enableAlbumSelection = false } = options;
+    if (!container) return;
+    if (!Array.isArray(items) || !items.length) {
+        container.innerHTML = '';
+        return;
+    }
+    container.innerHTML = items.map((item) => {
+        const created = formatHistoryTime(item?.created_at);
+        const safeCreated = created || '저장됨';
+        const imageDataUrl = typeof item?.image_data_url === 'string' ? item.image_data_url : '';
+        return `
+            <button type="button" class="ai-history-item" data-history-image="${imageDataUrl.replace(/"/g, '&quot;')}">
+                <img src="${imageDataUrl}" alt="최근 생성 이미지">
+                <p class="ai-history-meta">${safeCreated}</p>
+            </button>
+        `;
+    }).join('');
+    container.querySelectorAll('.ai-history-item').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const imageDataUrl = btn.getAttribute('data-history-image') || '';
+            selectHistoryImage(imageDataUrl);
+            if (enableAlbumSelection) {
+                setPhotoAlbumSelection(imageDataUrl, btn);
+            }
+            if (closeModalOnSelect && photoAlbumModal) photoAlbumModal.classList.add('hidden');
+        });
+    });
+}
+
+function renderBabyPhotoHistory(items = []) {
+    if (!babyPhotoHistoryWrap || !babyPhotoHistoryList) return;
+    babyPhotoHistoryItems = Array.isArray(items) ? items : [];
+    if (!Array.isArray(items) || !items.length) {
+        babyPhotoHistoryList.innerHTML = '';
+        if (photoAlbumList) photoAlbumList.innerHTML = '';
+        setPhotoAlbumSelection('', null);
+        babyPhotoHistoryWrap.classList.add('hidden');
+        return;
+    }
+    renderHistoryInto(babyPhotoHistoryList, items, { closeModalOnSelect: true });
+    renderHistoryInto(photoAlbumList, items, { enableAlbumSelection: true });
+    setPhotoAlbumSelection('', null);
+    babyPhotoHistoryWrap.classList.remove('hidden');
+}
+
+async function fetchBabyPhotoHistory() {
+    if (!firebaseIdToken || !AI_API_BASE) {
+        renderBabyPhotoHistory(loadLocalHistory());
+        return;
+    }
+    try {
+        const response = await fetch(`${AI_API_BASE}/api/baby-photo/history`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${firebaseIdToken}` }
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data?.ok) {
+            throw new Error(data?.error || '최근 생성 결과 조회 실패');
+        }
+        const serverItems = Array.isArray(data?.items) ? data.items : [];
+        const merged = mergeHistoryItems(serverItems, loadLocalHistory());
+        saveLocalHistory(merged);
+        renderBabyPhotoHistory(merged);
+    } catch (_err) {
+        renderBabyPhotoHistory(loadLocalHistory());
+    }
+}
+
+async function fetchWallet() {
+    if (!firebaseIdToken || !AI_API_BASE) return;
+    try {
+        const response = await fetch(`${AI_API_BASE}/api/wallet`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${firebaseIdToken}` }
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data?.ok) {
+            throw new Error(data?.error || '지갑 조회 실패');
+        }
+        walletState = data;
+        applyCouponCampaignUi(data?.coupon_campaign || null);
+    } catch (err) {
+        setWalletStatus(err instanceof Error ? `지갑 조회 실패: ${err.message}` : '지갑 조회 실패', true);
+    }
+}
+
+async function startCreditCheckout() {
+    if (!firebaseIdToken || !AI_API_BASE) return;
+    if (walletState?.coupon_campaign?.sold_out) {
+        applyCouponCampaignUi(walletState.coupon_campaign);
+        return;
+    }
+    try {
+        if (firebaseUser) {
+            firebaseIdToken = await firebaseUser.getIdToken(true);
+        }
+        const selectedDollars = Math.max(1, Math.min(20, Number(chargeDollarInput?.value || 1) || 1));
+        if (chargeCreditsBtn) chargeCreditsBtn.disabled = true;
+        setWalletStatus(`$${selectedDollars} 결제 페이지를 준비 중입니다...`);
+        const response = await fetch(`${AI_API_BASE}/api/billing/checkout`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${firebaseIdToken}`
+            },
+            body: JSON.stringify({
+                package_id: 'usd_credit_topup',
+                dollar_amount: selectedDollars
+            })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data?.ok || !data?.checkout_url) {
+            if (data?.coupon_campaign) {
+                walletState = { ...(walletState || {}), coupon_campaign: data.coupon_campaign };
+                applyCouponCampaignUi(data.coupon_campaign);
+            }
+            const detail = data?.detail ? ` (${data.detail})` : '';
+            throw new Error((data?.error || '결제 세션 생성 실패') + detail);
+        }
+        window.location.href = data.checkout_url;
+    } catch (err) {
+        setWalletStatus(err instanceof Error ? `결제 시작 실패: ${err.message}` : '결제 시작 실패', true);
+    } finally {
+        if (chargeCreditsBtn && !walletState?.coupon_campaign?.sold_out) chargeCreditsBtn.disabled = false;
+    }
+}
+
+function initAuth() {
+    if (!googleLoginBtn || !googleLogoutBtn) return;
+    if (babyPhotoSubmitBtn) babyPhotoSubmitBtn.disabled = true;
+    if (!FIREBASE_AUTH_CONFIG?.enabled) {
+        setAiAuthStatus('로그인 비활성화 상태입니다. 운영자에게 문의해주세요.', true);
+        googleLoginBtn.classList.add('hidden');
+        googleLogoutBtn.classList.add('hidden');
+        return;
+    }
+    if (!FIREBASE_AUTH_CONFIG.apiKey || !FIREBASE_AUTH_CONFIG.appId || !FIREBASE_AUTH_CONFIG.projectId) {
+        setAiAuthStatus('로그인 설정이 완료되지 않았습니다. Firebase API 키/앱 ID를 설정해주세요.', true);
+        return;
+    }
+
+    const app = initializeApp({
+        apiKey: FIREBASE_AUTH_CONFIG.apiKey,
+        authDomain: FIREBASE_AUTH_CONFIG.authDomain,
+        projectId: FIREBASE_AUTH_CONFIG.projectId,
+        appId: FIREBASE_AUTH_CONFIG.appId
+    });
+    firebaseAuth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    googleLoginBtn.addEventListener('click', async () => {
+        try {
+            await signInWithPopup(firebaseAuth, provider);
+        } catch (err) {
+            setAiAuthStatus(`로그인 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`, true);
+        }
+    });
+
+    googleLogoutBtn.addEventListener('click', async () => {
+        try {
+            await signOut(firebaseAuth);
+        } catch (err) {
+            setAiAuthStatus(`로그아웃 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`, true);
+        }
+    });
+
+    if (photoAlbumBtn) {
+        photoAlbumBtn.addEventListener('click', async () => {
+            await fetchBabyPhotoHistory();
+            if (!babyPhotoHistoryItems.length) {
+                setBabyPhotoStatus('아직 저장된 생성 결과가 없습니다.');
+                return;
+            }
+            setPhotoAlbumSelection('', null);
+            photoAlbumModal?.classList.remove('hidden');
+        });
+    }
+    if (photoAlbumCloseBtn) {
+        photoAlbumCloseBtn.addEventListener('click', () => photoAlbumModal?.classList.add('hidden'));
+    }
+    if (photoAlbumModal) {
+        photoAlbumModal.addEventListener('click', (e) => {
+            if (e.target === photoAlbumModal) photoAlbumModal.classList.add('hidden');
+        });
+    }
+
+    if (chargeCreditsBtn) {
+        chargeCreditsBtn.addEventListener('click', startCreditCheckout);
+    }
+    if (refreshWalletBtn) {
+        refreshWalletBtn.addEventListener('click', fetchWallet);
+    }
+
+    onAuthStateChanged(firebaseAuth, async (user) => {
+        firebaseUser = user || null;
+        firebaseIdToken = user ? await user.getIdToken() : '';
+        if (firebaseUser?.email) {
+            setAiAuthStatus(`로그인됨: ${firebaseUser.email}`);
+            googleLoginBtn.classList.add('hidden');
+            photoAlbumBtn?.classList.remove('hidden');
+            googleLogoutBtn.classList.remove('hidden');
+            walletBox?.classList.remove('hidden');
+            if (babyPhotoSubmitBtn) babyPhotoSubmitBtn.disabled = false;
+            await fetchWallet();
+            await fetchBabyPhotoHistory();
+        } else {
+            setAiAuthStatus('로그인 필요: Google 계정으로 로그인 후 이용 가능합니다.');
+            googleLoginBtn.classList.remove('hidden');
+            photoAlbumBtn?.classList.add('hidden');
+            googleLogoutBtn.classList.add('hidden');
+            photoAlbumModal?.classList.add('hidden');
+            setPhotoAlbumSelection('', null);
+            walletBox?.classList.add('hidden');
+            setWalletStatus('로그인 후 내 쿠폰을 확인할 수 있습니다.');
+            renderBabyPhotoHistory([]);
+            if (babyPhotoSubmitBtn) babyPhotoSubmitBtn.disabled = true;
+        }
+    });
+}
+
 function initBabyPhotoGenerator() {
     if (!babyPhotoForm || !ultrasoundImageInput || !motherPhotoInput || !fatherPhotoInput) return;
+    if (aiEventPopupCloseBtn) {
+        aiEventPopupCloseBtn.addEventListener('click', () => hideAiEventPopup(true));
+    }
+    if (aiEventPopup) {
+        aiEventPopup.addEventListener('click', (e) => {
+            if (e.target === aiEventPopup) hideAiEventPopup(true);
+        });
+    }
+    motherPhotoInput.addEventListener('change', enforceMotherSelectionLimit);
+    fatherPhotoInput.addEventListener('change', enforceFatherSelectionLimit);
+    ultrasoundImageInput.addEventListener('change', enforceUltrasoundSelectionLimit);
+    updateUploadFieldState(motherPhotoInput, false);
+    updateUploadFieldState(fatherPhotoInput, false);
+    updateUploadFieldState(ultrasoundImageInput, true);
     babyPhotoForm.addEventListener('submit', handleBabyPhotoSubmit);
+}
+
+function setInputFiles(inputEl, files = []) {
+    if (!inputEl) return;
+    try {
+        const dataTransfer = new DataTransfer();
+        files.forEach((file) => dataTransfer.items.add(file));
+        inputEl.files = dataTransfer.files;
+    } catch (_err) {
+        // Fallback for browsers that disallow programmatic FileList assignment.
+    }
+}
+
+function enforceMotherSelectionLimit() {
+    enforceSingleSelectionLimit(motherPhotoInput, '엄마 사진');
+}
+
+function enforceFatherSelectionLimit() {
+    enforceSingleSelectionLimit(fatherPhotoInput, '아빠 사진');
+}
+
+function enforceSingleSelectionLimit(inputEl, label) {
+    if (!inputEl) return;
+    const selectedFile = inputEl.files?.[0] || null;
+    if (!selectedFile) {
+        updateUploadFieldState(inputEl, false);
+        return;
+    }
+    if (selectedFile.size > MAX_IMAGE_SIZE_BYTES) {
+        setInputFiles(inputEl, []);
+        setBabyPhotoStatus(`${label}: 파일 크기는 2MB 이하만 업로드할 수 있습니다.`, true);
+    }
+    updateUploadFieldState(inputEl, false);
+}
+
+function enforceUltrasoundSelectionLimit() {
+    if (!ultrasoundImageInput) return;
+    const selectedFiles = Array.from(ultrasoundImageInput.files || []);
+    if (!selectedFiles.length) {
+        updateUploadFieldState(ultrasoundImageInput, true);
+        return;
+    }
+    let files = selectedFiles.filter((file) => file.size <= MAX_IMAGE_SIZE_BYTES);
+    if (files.length !== selectedFiles.length) {
+        setBabyPhotoStatus('초음파 사진은 파일당 2MB 이하만 업로드할 수 있습니다. 2MB 초과 파일은 제외되었습니다.', true);
+    }
+    if (files.length > MAX_ULTRASOUND_FILES) {
+        files = files.slice(0, MAX_ULTRASOUND_FILES);
+        setBabyPhotoStatus(`초음파 사진은 최대 ${MAX_ULTRASOUND_FILES}장까지 첨부할 수 있어 앞의 ${MAX_ULTRASOUND_FILES}장만 반영했습니다.`, true);
+    }
+    setInputFiles(ultrasoundImageInput, files);
+    updateUploadFieldState(ultrasoundImageInput, true);
+}
+
+function updateUploadFieldState(inputEl, multiple = false) {
+    const group = inputEl?.closest('.ai-upload-group');
+    const subtitle = group?.querySelector('.ai-upload-subtitle');
+    if (!group || !subtitle || !inputEl) return;
+    const fieldLabel = uploadFieldLabelMap[inputEl.id] || '사진';
+    const count = (inputEl.files || []).length;
+    if (!count) {
+        group.classList.remove('is-uploaded');
+        subtitle.textContent = '박스 전체를 눌러 파일 선택';
+        return;
+    }
+    group.classList.add('is-uploaded');
+    const normalizedCount = multiple ? count : 1;
+    subtitle.textContent = `${fieldLabel} 업로드 완료 (${normalizedCount}장)`;
 }
 
 function setBabyPhotoStatus(message, isError = false) {
@@ -179,6 +704,33 @@ function setBabyPhotoStatus(message, isError = false) {
     babyPhotoStatus.style.borderColor = isError ? '#FCA5A5' : '#86EFAC';
     babyPhotoStatus.style.backgroundColor = isError ? '#FEF2F2' : '#F0FDF4';
     babyPhotoStatus.style.color = isError ? '#B91C1C' : '#166534';
+}
+
+function startBabyPhotoLoading() {
+    if (!babyPhotoLoading) return;
+    const steps = [
+        '사진 분석을 시작합니다.',
+        '엄마/아빠 닮은 특징을 정리하고 있어요.',
+        '아기 이미지를 정성껏 생성하고 있어요.',
+        '마무리 중입니다. 잠시만 기다려주세요.'
+    ];
+    let idx = 0;
+    babyPhotoLoading.classList.remove('hidden');
+    if (babyPhotoLoadingTitle) babyPhotoLoadingTitle.textContent = 'AI가 사진을 만들고 있어요...';
+    if (babyPhotoLoadingDetail) babyPhotoLoadingDetail.textContent = steps[0];
+    if (babyPhotoLoadingTimer) clearInterval(babyPhotoLoadingTimer);
+    babyPhotoLoadingTimer = setInterval(() => {
+        idx = (idx + 1) % steps.length;
+        if (babyPhotoLoadingDetail) babyPhotoLoadingDetail.textContent = steps[idx];
+    }, 3600);
+}
+
+function stopBabyPhotoLoading() {
+    if (babyPhotoLoadingTimer) {
+        clearInterval(babyPhotoLoadingTimer);
+        babyPhotoLoadingTimer = null;
+    }
+    babyPhotoLoading?.classList.add('hidden');
 }
 
 function readFileAsDataUrl(file) {
@@ -202,13 +754,27 @@ function validateImageFile(file, label) {
     if (!isImage) {
         throw new Error(`${label}: 이미지 파일만 업로드할 수 있습니다.`);
     }
-    if (file.size > 5 * 1024 * 1024) {
-        throw new Error(`${label}: 파일 크기는 5MB 이하로 업로드해주세요.`);
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+        throw new Error(`${label}: 파일 크기는 2MB 이하로 업로드해주세요.`);
     }
+}
+
+function getBabyPhotoFileName() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    return `ai-baby-photo-${y}${m}${d}-${hh}${mm}.png`;
 }
 
 async function handleBabyPhotoSubmit(e) {
     e.preventDefault();
+    if (!firebaseIdToken) {
+        setBabyPhotoStatus('Google 로그인 후 이용해주세요.', true);
+        return;
+    }
     const motherFile = motherPhotoInput?.files?.[0] || null;
     const fatherFile = fatherPhotoInput?.files?.[0] || null;
     const ultrasoundFiles = Array.from(ultrasoundImageInput?.files || []);
@@ -219,8 +785,8 @@ async function handleBabyPhotoSubmit(e) {
         setBabyPhotoStatus('엄마/아빠 사진을 각각 1장씩 업로드해주세요.', true);
         return;
     }
-    if (ultrasoundFiles.length < 1 || ultrasoundFiles.length > 3) {
-        setBabyPhotoStatus('초음파 사진은 1~3장 업로드해주세요.', true);
+    if (ultrasoundFiles.length < 1 || ultrasoundFiles.length > MAX_ULTRASOUND_FILES) {
+        setBabyPhotoStatus(`초음파 사진은 1~${MAX_ULTRASOUND_FILES}장 업로드해주세요.`, true);
         return;
     }
     if (!Number.isFinite(gestationalWeeks) || gestationalWeeks < 4 || gestationalWeeks > 42) {
@@ -232,17 +798,18 @@ async function handleBabyPhotoSubmit(e) {
         return;
     }
     const totalImages = 2 + ultrasoundFiles.length;
-    if (totalImages < 3 || totalImages > 5) {
-        setBabyPhotoStatus('총 이미지 수는 3~5장이어야 합니다.', true);
+    if (totalImages < 3 || totalImages > 4) {
+        setBabyPhotoStatus('총 이미지 수는 3~4장이어야 합니다.', true);
         return;
     }
 
-    const prevLabel = babyPhotoSubmitBtn?.textContent || '미래 아이 사진 생성하기';
+    const prevLabel = babyPhotoSubmitBtn?.textContent || '설레는 우리 아기 미리 만나보기';
     if (babyPhotoSubmitBtn) {
         babyPhotoSubmitBtn.disabled = true;
         babyPhotoSubmitBtn.textContent = 'AI 생성 중...';
     }
-    setBabyPhotoStatus('3~5장의 이미지를 분석하고 있습니다. 잠시만 기다려주세요.');
+    setBabyPhotoStatus('3~4장의 이미지를 분석하고 있습니다. 잠시만 기다려주세요.');
+    startBabyPhotoLoading();
 
     try {
         if (!AI_API_BASE) {
@@ -268,7 +835,10 @@ async function handleBabyPhotoSubmit(e) {
         const apiUrl = `${AI_API_BASE}/api/baby-photo`;
         const response = await fetch(apiUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${firebaseIdToken}`
+            },
             body: JSON.stringify(payload)
         });
         const raw = await response.text();
@@ -281,6 +851,10 @@ async function handleBabyPhotoSubmit(e) {
         if (!response.ok || !data?.ok || !data?.image_data_url) {
             const parts = [];
             if (data?.error) parts.push(String(data.error));
+            if (data?.required_credits) parts.push(`필요 쿠폰: ${creditsToCoupons(data.required_credits)}장`);
+            if (Number.isFinite(data?.paid_credits) || Number.isFinite(data?.bonus_credits)) {
+                parts.push(`현재 쿠폰: ${creditsToCoupons((data?.paid_credits || 0) + (data?.bonus_credits || 0))}장`);
+            }
             if (data?.error_code) parts.push(`코드: ${data.error_code}`);
             if (data?.error_type) parts.push(`유형: ${data.error_type}`);
             if (data?.error_help) parts.push(String(data.error_help));
@@ -288,11 +862,26 @@ async function handleBabyPhotoSubmit(e) {
         }
 
         babyPhotoResultImage.src = data.image_data_url;
+        if (babyPhotoDownloadBtn) {
+            babyPhotoDownloadBtn.href = data.image_data_url;
+            babyPhotoDownloadBtn.setAttribute('download', getBabyPhotoFileName());
+        }
         babyPhotoResultWrap?.classList.remove('hidden');
         setBabyPhotoStatus('생성이 완료되었습니다. 결과 이미지를 확인해주세요.');
+        if (babyPhotoStatus && babyPhotoResultWrap && babyPhotoStatus.parentElement) {
+            babyPhotoStatus.insertAdjacentElement('afterend', babyPhotoResultWrap);
+        }
+        const localMerged = mergeHistoryItems(
+            [{ image_data_url: data.image_data_url, created_at: new Date().toISOString() }],
+            loadLocalHistory()
+        );
+        saveLocalHistory(localMerged);
+        await fetchWallet();
+        await fetchBabyPhotoHistory();
     } catch (err) {
         setBabyPhotoStatus(err instanceof Error ? err.message : '이미지 생성 중 오류가 발생했습니다.', true);
     } finally {
+        stopBabyPhotoLoading();
         if (babyPhotoSubmitBtn) {
             babyPhotoSubmitBtn.disabled = false;
             babyPhotoSubmitBtn.textContent = prevLabel;
@@ -809,6 +1398,39 @@ function renderTotalSummary(cityKey, districtKey, childOrder) {
     `;
 }
 
+function classifyBenefitTag(benefit) {
+    const text = `${benefit?.title || ''} ${benefit?.note || ''} ${benefit?.target || ''}`.toLowerCase();
+    if (text.includes('바우처') || text.includes('쿠폰')) return '바우처';
+    if (text.includes('용품') || text.includes('대여') || text.includes('선물')) return '물품 지원';
+    return '현금 지원';
+}
+
+function buildBenefitShareText(benefit, amountText) {
+    const title = benefit?.title || '출산 혜택';
+    const target = benefit?.target || '대상 조건 확인';
+    const contact = benefit?.contact ? ` / 문의 ${benefit.contact}` : '';
+    return `[출산 혜택 공유]\n${title}\n금액: ${amountText}\n대상: ${target}${contact}\nhttps://chulsan-danawa.com/`;
+}
+
+async function handleBenefitShare(payload) {
+    const text = payload || '';
+    if (!text) return;
+    try {
+        if (navigator.share) {
+            await navigator.share({ title: '우리동네 출산 혜택', text });
+            return;
+        }
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+            alert('혜택 정보를 복사했어요. 카카오톡에 붙여넣어 공유해보세요.');
+            return;
+        }
+    } catch (_err) {
+        // ignore and fallback below
+    }
+    window.prompt('아래 내용을 복사해 공유하세요.', text);
+}
+
 // 카드 HTML 생성
 function createBenefitCard(benefit, childOrder) {
     const card = document.createElement('div');
@@ -863,15 +1485,30 @@ function createBenefitCard(benefit, childOrder) {
     }
 
     const methodText = (typeof benefit.method === 'string' && benefit.method.trim()) ? benefit.method : '해당 지자체 문의';
+    const benefitTag = classifyBenefitTag(benefit);
+    const sharePayload = encodeURIComponent(buildBenefitShareText(benefit, displayAmount));
 
     card.innerHTML = `
-        <h3 class="benefit-title">${benefit.title} ${badgeText}</h3>
+        <div class="benefit-card-head">
+            <h3 class="benefit-title">${benefit.title} ${badgeText}</h3>
+            <button type="button" class="btn-secondary benefit-share-btn" data-benefit-share="${sharePayload}">공유</button>
+        </div>
+        <div class="benefit-tags">
+            <span class="benefit-tag">${benefitTag}</span>
+        </div>
         <div class="benefit-amount">${displayAmount}</div>
         <div class="benefit-detail"><strong>대상</strong> <span>${benefit.target}</span></div>
         <div class="benefit-detail"><strong>신청</strong> <span>${methodText}</span></div>
         ${benefit.contact ? `<div class="benefit-detail"><strong>문의</strong> <span>${benefit.contact}</span></div>` : ''}
         ${benefit.note ? `<div class="benefit-detail"><strong>참고</strong> <span>${benefit.note}</span></div>` : ''}
     `;
+    const shareBtn = card.querySelector('[data-benefit-share]');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', () => {
+            const payload = decodeURIComponent(shareBtn.getAttribute('data-benefit-share') || '');
+            handleBenefitShare(payload);
+        });
+    }
     return card;
 }
 
@@ -1006,6 +1643,13 @@ function switchServiceTab(target) {
         syncCalendarDateInputs();
         renderCalendarBadges();
         renderPlannerCalendar();
+    } else {
+        closeCalendarDaySheet();
+    }
+    if (target === 'ai') {
+        showAiEventPopup();
+    } else {
+        hideAiEventPopup(false);
     }
 }
 
@@ -1085,8 +1729,63 @@ const AVG_DAYS_PER_MONTH = 365.25 / 12;
 const CHILDCARE_MAX_SEGMENTS = 4;
 const PLANNER_STORAGE_KEY = 'leavePlannerSettingsV1';
 
+function setPlannerStep(step) {
+    const totalSteps = Math.max(1, plannerSteps.length || 3);
+    currentPlannerStep = Math.min(Math.max(1, Number(step) || 1), totalSteps);
+
+    plannerSteps.forEach((panel) => {
+        const panelStep = Number(panel.dataset.plannerStep || 0);
+        panel.toggleAttribute('hidden', panelStep !== currentPlannerStep);
+    });
+
+    plannerWizardStepBtns.forEach((btn) => {
+        const target = Number(btn.dataset.plannerStepTarget || 0);
+        const isActive = target === currentPlannerStep;
+        const isDone = target < currentPlannerStep;
+        btn.classList.toggle('active', isActive);
+        btn.classList.toggle('done', isDone);
+        btn.setAttribute('aria-current', isActive ? 'step' : 'false');
+    });
+
+    if (plannerStepPrevBtn) plannerStepPrevBtn.disabled = currentPlannerStep <= 1;
+    if (plannerStepNextBtn) {
+        plannerStepNextBtn.classList.toggle('hidden', currentPlannerStep >= totalSteps);
+        plannerStepNextBtn.disabled = currentPlannerStep >= totalSteps;
+    }
+    if (plannerStepCounter) plannerStepCounter.textContent = `${currentPlannerStep} / ${totalSteps}`;
+}
+
+function initPlannerWizard() {
+    if (!leavePlannerForm || !plannerSteps.length) return;
+
+    plannerWizardStepBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const target = Number(btn.dataset.plannerStepTarget || 1);
+            setPlannerStep(target);
+        });
+    });
+    if (plannerStepPrevBtn) {
+        plannerStepPrevBtn.addEventListener('click', () => setPlannerStep(currentPlannerStep - 1));
+    }
+    if (plannerStepNextBtn) {
+        plannerStepNextBtn.addEventListener('click', () => setPlannerStep(currentPlannerStep + 1));
+    }
+
+    leavePlannerForm.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' || e.shiftKey) return;
+        const target = e.target;
+        const isTextInput = target instanceof HTMLInputElement || target instanceof HTMLSelectElement;
+        if (!isTextInput || currentPlannerStep >= plannerSteps.length) return;
+        e.preventDefault();
+        setPlannerStep(currentPlannerStep + 1);
+    });
+
+    setPlannerStep(1);
+}
+
 function initLeavePlanner() {
     if (!leavePlannerForm) return;
+    initPlannerWizard();
 
     if (paymentResultToggleBtn && paymentResultContent) {
         paymentResultToggleBtn.addEventListener('click', () => {
@@ -1407,6 +2106,17 @@ function initLeavePlanner() {
             applyCalendarDateSelection('CHILDCARE');
         });
     }
+    if (calendarDaySheetCloseBtn) {
+        calendarDaySheetCloseBtn.addEventListener('click', closeCalendarDaySheet);
+    }
+    document.addEventListener('click', (e) => {
+        if (!calendarDaySheet || calendarDaySheet.classList.contains('hidden')) return;
+        const insideSheet = e.target.closest('#calendarDaySheet');
+        const insideCalendarCell = e.target.closest('.calendar-day');
+        if (!insideSheet && !insideCalendarCell) {
+            closeCalendarDaySheet();
+        }
+    });
 
     renderPlannerForm();
     recalculatePlanner();
@@ -1414,6 +2124,7 @@ function initLeavePlanner() {
 
 function handlePlannerSubmit(e) {
     e.preventDefault();
+    setPlannerStep(Math.max(1, plannerSteps.length || 3));
     collectPlannerForm();
     if (!validatePlannerState()) return;
     plannerState.isCalculated = true;
@@ -1441,6 +2152,7 @@ function switchCalendarActor(actor) {
         plannerState.includeFather = true;
         includeFatherInput.checked = true;
         fatherInputSection.classList.remove('hidden');
+        fatherWageSection?.classList.remove('hidden');
     }
     renderCalendarPartnerUsageLabel();
     syncCalendarSegmentOptions();
@@ -1462,6 +2174,7 @@ function renderPlannerForm() {
     renderCalendarPartnerUsageLabel();
     fatherWageInput.value = formatNumberInput(plannerState.father.wage);
     fatherInputSection.classList.toggle('hidden', !plannerState.includeFather);
+    fatherWageSection?.classList.toggle('hidden', !plannerState.includeFather);
     viewMonthBtn.classList.toggle('active', plannerState.calendarView === 'month');
     viewWeekBtn.classList.toggle('active', plannerState.calendarView === 'week');
     if (calendarActorTabs) {
@@ -1781,6 +2494,7 @@ function collectPlannerForm() {
     plannerState.includeGovBenefits = !!includeGovBenefitsInput?.checked;
     plannerState.father.wage = parseCurrencyInput(fatherWageInput.value);
     fatherInputSection.classList.toggle('hidden', !plannerState.includeFather);
+    fatherWageSection?.classList.toggle('hidden', !plannerState.includeFather);
     updatePaymentHeaders();
     plannerState.isPriorityCompany = priorityCompany.value === '' ? null : priorityCompany.value === 'true';
 }
@@ -2696,6 +3410,7 @@ async function renderPlannerCalendar() {
     const years = new Set();
     weeks.flat().forEach((d) => years.add(d.getFullYear()));
     const holidayMap = await loadHolidayMap([...years]);
+    renderedHolidayMap = holidayMap || {};
     updateHolidayStatus([...years]);
 
     const cursorYm = formatDateYmd(cursor).slice(0, 7);
@@ -2720,6 +3435,7 @@ async function renderPlannerCalendar() {
     `).join('');
 
     plannerCalendarGrid.innerHTML = header + body;
+    bindCalendarDaySelection();
 }
 
 function renderCalendarCell(date, cursor, holidayMap) {
@@ -2780,6 +3496,51 @@ function compactHolidayLabel(name) {
         .replace('공휴일', '휴일');
     if (compact.length <= 3) return compact;
     return `${compact.slice(0, 3)}…`;
+}
+
+function getCalendarDayDetails(ymd) {
+    const details = [];
+    if (renderedHolidayMap[ymd]) {
+        details.push(`공휴일: ${renderedHolidayMap[ymd]}`);
+    }
+    if (benefitLinkContext.dueDate && benefitLinkContext.dueDate === ymd) {
+        details.push('출산예정일');
+    }
+    const childbirthInRange = isDateInRange(ymd, plannerState.childbirthLeave.start, plannerState.childbirthLeave.end);
+    if (childbirthInRange) details.push('출산휴가');
+    plannerState.childcareSegments.forEach((seg, idx) => {
+        if (isDateInRange(ymd, seg.start, seg.end)) {
+            details.push(`육아휴직 구간 ${idx + 1}`);
+        }
+    });
+    if (plannerState.returnDate === ymd) {
+        details.push('복직(예정)');
+    }
+    return details.length ? details : ['등록된 일정이 없습니다.'];
+}
+
+function closeCalendarDaySheet() {
+    if (!calendarDaySheet) return;
+    calendarDaySheet.classList.add('hidden');
+}
+
+function openCalendarDaySheet(ymd) {
+    if (!calendarDaySheet || !calendarDaySheetTitle || !calendarDaySheetList) return;
+    const details = getCalendarDayDetails(ymd);
+    calendarDaySheetTitle.textContent = `${ymd} 일정`;
+    calendarDaySheetList.innerHTML = details.map((item) => `<li>${item}</li>`).join('');
+    calendarDaySheet.classList.remove('hidden');
+}
+
+function bindCalendarDaySelection() {
+    if (!plannerCalendarGrid) return;
+    plannerCalendarGrid.querySelectorAll('.calendar-day').forEach((cell) => {
+        cell.addEventListener('click', () => {
+            const ymd = cell.getAttribute('data-date') || '';
+            if (!ymd) return;
+            openCalendarDaySheet(ymd);
+        });
+    });
 }
 
 function applyCalendarDateSelection(targetType) {
