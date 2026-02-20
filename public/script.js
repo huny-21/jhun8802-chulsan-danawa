@@ -412,17 +412,28 @@ function renderNamingQuestions() {
 }
 
 function applyNamingPreset(presetKey) {
-    const preset = NAMING_PRESET_MAP[String(presetKey || '').trim()];
+    const key = String(presetKey || '').trim();
+    let preset = NAMING_PRESET_MAP[key];
+    if (key === 'ai') {
+        // AI 추천은 클릭할 때마다 5단위 랜덤 점수로 새 조합을 생성합니다.
+        preset = {};
+        Object.keys(NAMING_LAYER_META).forEach((layerKey) => {
+            const randomStep = Math.floor(Math.random() * 21); // 0..20
+            preset[layerKey] = randomStep * 5; // 0..100
+        });
+    }
     if (!preset) return;
     namingLayerInputs.forEach((input) => {
-        const key = String(input?.dataset?.layerInput || '').trim();
-        if (!key || !Object.prototype.hasOwnProperty.call(preset, key)) return;
-        input.value = String(preset[key]);
+        const layerKey = String(input?.dataset?.layerInput || '').trim();
+        if (!layerKey || !Object.prototype.hasOwnProperty.call(preset, layerKey)) return;
+        input.value = String(preset[layerKey]);
         const valueEl = document.getElementById(`${input.id}Value`);
-        if (valueEl) valueEl.textContent = String(preset[key]);
+        if (valueEl) valueEl.textContent = String(preset[layerKey]);
     });
     updateNamingLayerSummary();
-    setNamingLabStatus('프리셋이 적용되었습니다. "레이어 설정 반영"을 눌러 질문을 생성하세요.');
+    setNamingLabStatus(key === 'ai'
+        ? 'AI 추천 랜덤 프리셋이 적용되었습니다. "레이어 설정 반영"을 눌러 질문을 생성하세요.'
+        : '프리셋이 적용되었습니다. "레이어 설정 반영"을 눌러 질문을 생성하세요.');
 }
 
 function applyNamingLayerConfig() {
