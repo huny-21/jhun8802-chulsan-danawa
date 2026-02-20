@@ -501,7 +501,7 @@ function parseJsonObjectFromText(rawText) {
 function normalizeNameLength(value, fallback = 2) {
     const n = Number(value);
     if (!Number.isFinite(n)) return fallback;
-    return Math.max(2, Math.min(4, Math.round(n)));
+    return Math.max(1, Math.min(4, Math.round(n)));
 }
 
 function collectNamingConstraints() {

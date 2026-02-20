@@ -1603,8 +1603,8 @@ async function handleNamingReport(req, env, cors) {
   let maxNameLength = Number(rawConstraints.given_name_max_length);
   if (!Number.isFinite(minNameLength)) minNameLength = 2;
   if (!Number.isFinite(maxNameLength)) maxNameLength = 2;
-  minNameLength = Math.max(2, Math.min(4, Math.round(minNameLength)));
-  maxNameLength = Math.max(2, Math.min(4, Math.round(maxNameLength)));
+  minNameLength = Math.max(1, Math.min(4, Math.round(minNameLength)));
+  maxNameLength = Math.max(1, Math.min(4, Math.round(maxNameLength)));
   if (minNameLength > maxNameLength) {
     const swap = minNameLength;
     minNameLength = maxNameLength;
