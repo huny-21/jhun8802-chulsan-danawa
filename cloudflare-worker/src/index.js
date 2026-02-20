@@ -1584,8 +1584,14 @@ async function handleAiApi(req, env, cors) {
 }
 
 async function handleNamingReport(req, env, cors) {
-  const NAMING_REPORT_CREDITS = 3000; // $3 (1 USD = 1000 credits, coupon unit = 250)
   const body = await req.json().catch(() => ({}));
+  const namingPlan = normalizeText(body.naming_plan).toLowerCase();
+  const planConfig =
+    namingPlan === "basic"
+      ? { code: "basic", credits: 1000, recommendations: 2 }
+      : { code: "plus", credits: 2000, recommendations: 5 };
+  const namingReportCredits = planConfig.credits;
+  const recommendationCount = planConfig.recommendations;
   const layerWeights = Array.isArray(body.layer_weights) ? body.layer_weights : [];
   const interviewAnswers = Array.isArray(body.interview_answers) ? body.interview_answers : [];
   const childGender = normalizeText(body.child_gender) || "unknown";
@@ -1650,13 +1656,13 @@ async function handleNamingReport(req, env, cors) {
     const auth = await requireFirebaseUser(req, env, cors);
     if (!auth.ok) return auth.response;
     const sourceId = `naming_${crypto.randomUUID()}`;
-    const deduction = await deductCreditsOrThrow(env, auth.uid, NAMING_REPORT_CREDITS, sourceId);
+    const deduction = await deductCreditsOrThrow(env, auth.uid, namingReportCredits, sourceId);
     if (!deduction.ok) {
       const wallet = await getWallet(env, auth.uid);
       return json(
         {
           error: "Insufficient credits",
-          required_credits: NAMING_REPORT_CREDITS,
+          required_credits: namingReportCredits,
           paid_credits: Number(wallet?.paid_credits || 0),
           bonus_credits: Number(wallet?.bonus_credits || 0)
         },
@@ -1686,7 +1692,7 @@ async function handleNamingReport(req, env, cors) {
     const system = [
       "You are a Korean baby naming strategist.",
       "Return strict JSON only.",
-      "Create exactly 4 recommendations.",
+      `Create exactly ${recommendationCount} recommendations.`,
       "Output keys:",
       "{\"interview_summary\":\"...\",\"naming_strategy\":\"...\",\"certificate_text\":\"...\",\"top_recommendations\":[{\"name_kr\":\"...\",\"name_hanja\":\"...\",\"hanja_meaning\":\"...\",\"name_en\":\"...\",\"name_meaning\":\"...\",\"story\":\"...\",\"expert_role\":\"...\",\"expert_commentary\":\"...\",\"scores\":{\"saju\":0,\"trend\":0,\"story\":0,\"global\":0,\"energy\":0,\"religion\":0}}]}",
       "Score each axis from 0 to 100.",
@@ -1755,7 +1761,8 @@ async function handleNamingReport(req, env, cors) {
         text: extractResponseText(data),
         model: data.model || model,
         id: data.id || null,
-        required_credits: NAMING_REPORT_CREDITS,
+        plan: planConfig.code,
+        required_credits: namingReportCredits,
         wallet: walletSnapshot
           ? {
               paid_credits: Number(walletSnapshot.paid_credits || 0),

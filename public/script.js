@@ -89,6 +89,7 @@ const namingInterviewGuide = document.getElementById('namingInterviewGuide');
 const namingQuestionList = document.getElementById('namingQuestionList');
 const namingLabSubmitBtn = document.getElementById('namingLabSubmitBtn');
 const namingLabStatus = document.getElementById('namingLabStatus');
+const namingPlanSelect = document.getElementById('namingPlanSelect');
 const namingLabResultWrap = document.getElementById('namingLabResultWrap');
 const namingLabSummary = document.getElementById('namingLabSummary');
 const namingCandidateList = document.getElementById('namingCandidateList');
@@ -760,6 +761,7 @@ async function handleNamingLabSubmit(e) {
             layer_weights: layers,
             interview_answers: answers,
             naming_constraints: constraints,
+            naming_plan: String(namingPlanSelect?.value || 'plus'),
             model: 'gpt-4.1-mini'
         };
         namingConstraintsState = constraints;

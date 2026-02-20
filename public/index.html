@@ -669,8 +669,17 @@
                     </section>
                     <section class="ai-step-card" aria-label="이름 분석 요청">
                         <h3><span>C</span> 이름 분석 리포트 생성</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="namingPlanSelect">리포트 플랜</label>
+                                <select id="namingPlanSelect">
+                                    <option value="basic">Basic · $1 (쿠폰 4장) · 추천 2개</option>
+                                    <option value="plus" selected>Plus · $2 (쿠폰 8장) · 추천 5개</option>
+                                </select>
+                            </div>
+                        </div>
                         <button type="button" id="namingLabSubmitBtn" class="btn-primary ai-generate-btn">AI 작명 리포트 생성하기</button>
-                        <p class="readonly-hint">1회 12쿠폰($3) · 추천 이름 4개 제공</p>
+                        <p class="readonly-hint">Basic: $1/2개 · Plus: $2/5개</p>
                         <p id="namingLabStatus" class="form-error hidden" role="status" aria-live="polite"></p>
                     </section>
                 </form>
@@ -796,6 +805,6 @@
     </script>
     <script src="ads.js?v=1"></script>
     <!-- type="module" 지정 필수 -->
-    <script type="module" src="script.js?v=81"></script>
+    <script type="module" src="script.js?v=82"></script>
 </body>
 </html>
