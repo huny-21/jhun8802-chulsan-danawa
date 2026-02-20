@@ -3202,9 +3202,13 @@ input[readonly] {
   overflow-x: auto;
   gap: 12px;
   padding-bottom: 4px;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
 }
 
 #namingQuestionList .naming-question-card {
-  flex: 0 0 min(360px, 82vw);
+  flex: 0 0 clamp(260px, 36vw, 360px);
   margin-bottom: 0;
+  scroll-snap-align: start;
+  min-height: 170px;
 }
