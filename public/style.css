@@ -217,6 +217,11 @@ textarea {
     background: #f8fafc;
 }
 
+.service-tab:active {
+    transform: translateY(0);
+    filter: brightness(0.98);
+}
+
 .service-tab.active {
     background: linear-gradient(135deg, #3D766F, #4A8F86);
     color: #fff;
@@ -321,6 +326,11 @@ select:disabled {
     transform: translateY(-1px);
 }
 
+.btn-primary:active {
+    transform: translateY(0);
+    filter: brightness(0.98);
+}
+
 .btn-primary:disabled {
     background-color: #A9D2C8;
     cursor: not-allowed;
@@ -336,6 +346,19 @@ select:disabled {
     font-size: var(--fs-body);
     font-weight: 600;
     cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-secondary:hover {
+    border-color: #bcd3cc;
+    background: #f6fbf9;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+}
+
+.btn-secondary:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
 }
 
 .btn-secondary.active {
@@ -1210,13 +1233,23 @@ input[readonly] {
     cursor: pointer;
 }
 
-#namingLayerSummary,
-#namingLayerImpactHint {
+.naming-layer-summary-card {
     border: 1px solid #dbe6ef;
     border-radius: 10px;
     background: #ffffff;
     padding: 10px 12px;
     margin-bottom: 8px;
+}
+
+.naming-layer-summary-card #namingLayerSummary,
+.naming-layer-summary-card #namingLayerImpactHint {
+    margin: 0;
+}
+
+.naming-layer-summary-card #namingLayerImpactHint {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed #dbe6ef;
 }
 
 #namingApplyLayersBtn {
