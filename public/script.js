@@ -41,8 +41,6 @@ const servicePanels = {
     calendar: document.getElementById('calendarServicePanel'),
     ai: document.getElementById('aiServicePanel')
 };
-const goNamingLabBtn = document.getElementById('goNamingLabBtn');
-const serviceFocusAiBtn = document.getElementById('serviceFocusAiBtn');
 const namingHeroCtaBtn = document.getElementById('namingHeroCtaBtn');
 const quickStartBtns = document.querySelectorAll('.quick-start-btn');
 const babyPhotoForm = document.getElementById('babyPhotoForm');
@@ -2324,12 +2322,6 @@ function handleTabClick(e) {
 // ==========================================
 function initServiceTabs() {
     const availableBtns = getAvailableServiceTabBtns();
-    const moveToAi = () => {
-        switchServiceTab('ai');
-        servicePanels.ai?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
-    goNamingLabBtn?.addEventListener('click', moveToAi);
-    serviceFocusAiBtn?.addEventListener('click', moveToAi);
     namingHeroCtaBtn?.addEventListener('click', () => {
         const formTop = namingLabForm?.getBoundingClientRect?.().top ?? 0;
         const absoluteTop = formTop + window.scrollY - 12;

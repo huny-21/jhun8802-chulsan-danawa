@@ -182,57 +182,6 @@ textarea {
     margin-bottom: 16px;
 }
 
-.service-positioning,
-.service-feature-card {
-    border: 1px solid #DDE7EE;
-    border-radius: 14px;
-    padding: 14px;
-    background: #fff;
-    margin-bottom: 12px;
-}
-
-.service-positioning h3,
-.service-feature-card h3 {
-    margin: 0 0 6px;
-    font-size: 1.05rem;
-    color: #0f172a;
-}
-
-.service-positioning p,
-.service-feature-card p {
-    margin: 0;
-    color: #334155;
-    font-size: 0.9rem;
-    line-height: 1.5;
-}
-
-.service-positioning-flow {
-    margin-top: 8px !important;
-    font-weight: 700;
-    color: #2f766d !important;
-}
-
-#goNamingLabBtn,
-#serviceFocusAiBtn {
-    margin-top: 10px;
-}
-
-.service-feature-card {
-    border-color: #A9D2C8;
-    background: linear-gradient(120deg, #F5FAF8 0%, #FFFFFF 90%);
-}
-
-.service-feature-badge {
-    display: inline-block;
-    margin-bottom: 6px !important;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: #e2f5ef;
-    color: #2f766d !important;
-    font-size: 0.72rem !important;
-    font-weight: 800;
-}
-
 .service-flow-status {
     margin: 2px 0 12px;
     color: var(--neutral-text);
@@ -244,10 +193,6 @@ textarea {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 10px;
-}
-
-.service-tabs-secondary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .service-tab {
@@ -966,6 +911,12 @@ input[readonly] {
     font-size: 0.9rem;
     color: #334155;
     line-height: 1.6;
+}
+
+.ai-hero .service-positioning-flow {
+    margin-top: 8px;
+    font-weight: 700;
+    color: #2f766d;
 }
 
 #namingHeroCtaBtn {
@@ -2855,10 +2806,6 @@ input[readonly] {
     }
 
     .service-tabs {
-        grid-template-columns: 1fr;
-    }
-
-    .service-tabs-secondary {
         grid-template-columns: 1fr;
     }
 
