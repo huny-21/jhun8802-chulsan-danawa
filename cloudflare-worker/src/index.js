@@ -1679,7 +1679,13 @@ async function handleNamingReport(req, env, cors) {
       lengthRule,
       surnameRule,
       "For each recommendation, write detailed but concise Korean analysis.",
-      "expert_role and expert_commentary must reflect the highest-priority layer from layer_weights."
+      "expert_role and expert_commentary must reflect the highest-priority layer from layer_weights.",
+      "expert_commentary must be storytelling-focused Korean prose in 3-4 sentences.",
+      "Write it like a warm narrative to parents: include why this name fits their values, the impression when the child is called, and a future scene/image.",
+      "Use interview_answers and the selected name as core evidence.",
+      "If objective support exists (e.g., pronunciation ease, naming trend, saju harmony, cultural/religious context), mention it as data-backed rationale in natural language.",
+      "Do not prefix with labels like '전문가:' or '전문가 해설:'.",
+      "Avoid dry bullet-point style in expert_commentary."
     ].join(" ");
     const message = JSON.stringify({
       child_gender: childGender,

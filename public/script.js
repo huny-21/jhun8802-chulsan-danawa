@@ -573,9 +573,8 @@ function renderNamingDetail(item) {
     if (namingDetailHanja) namingDetailHanja.textContent = item.hanja_meaning ? `${item.name_hanja || '-'}: ${item.hanja_meaning}` : (item.name_hanja || '-');
     if (namingDetailMeaning) namingDetailMeaning.textContent = item.name_meaning || item.story || '-';
     if (namingDetailExpert) {
-        const role = String(item.expert_role || '').trim();
         const c = String(item.expert_commentary || '').trim();
-        namingDetailExpert.textContent = role ? `${role}: ${c}` : (c || '-');
+        namingDetailExpert.textContent = c || '-';
     }
     renderNamingRadar(item.scores || {});
 }
