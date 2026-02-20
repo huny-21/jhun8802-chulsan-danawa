@@ -20,6 +20,10 @@ function setCors(req, res) {
   res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.set("Access-Control-Max-Age", "3600");
+  res.set("X-Content-Type-Options", "nosniff");
+  res.set("X-Frame-Options", "DENY");
+  res.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
 }
 
 function normalizeText(value) {
@@ -219,8 +223,13 @@ exports.babyPhoto = onRequest(
         "A realistic newborn baby portrait, soft natural light, neutral background, high detail, warm tones.";
 
       const imagePrompt = [
-        synthesizedPrompt,
-        "Creative visualization only. Non-diagnostic.",
+        "당신은 참고 이미지를 기반으로 미래 아기의 얼굴을 현실적으로 예측해 생성하는 역할을 합니다.",
+        "현실적인 한국 신생아 기본 얼굴을 기준으로, 과장/미화/필터 느낌 없이 자연스럽게 생성하세요.",
+        "부모 특징은 명확한 경우에만 균형 있게 반영하고, 한쪽 부모를 과도하게 닮게 하지 마세요.",
+        "눈을 감고 편안히 잠든 신생아, 흰색 또는 베이지색 속싸개, 단순하고 중립적인 배경, 부드럽고 중립적인 조명.",
+        "부모 얼굴 복사 금지, 질병/장애/의학적 상태 추측 금지, 광고 모델/일러스트/애니메이션 느낌 금지.",
+        `참고 특성: ${synthesizedPrompt}`,
+        "네거티브 프롬프트: 애니메이션 스타일, 만화, 일러스트, 인형 같은 피부, 플라스틱 질감, 비현실적으로 하얀 피부, 성인 얼굴 구조, 뷰티 필터, 광고 모델 같은 신생아, 과도하게 매끈한 얼굴, 눈이 비현실적으로 큰 표현, 판타지 스타일, 과장된 조명.",
         "No text, no watermark."
       ].join(" ");
 
@@ -231,7 +240,7 @@ exports.babyPhoto = onRequest(
           Authorization: `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: "gpt-image-1",
+          model: "gpt-image-1.5",
           prompt: imagePrompt,
           size: "1024x1024",
           quality: "medium",

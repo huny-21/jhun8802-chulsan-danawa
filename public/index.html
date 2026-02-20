@@ -12,13 +12,14 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>출산 혜택 다나와 | 지역별 출산지원금·육아휴직 급여 계산</title>
-    <meta name="description" content="지역별 출산지원금·육아 혜택을 한눈에 조회하고, 육아휴직 급여 계산기와 휴직 달력으로 우리 가족 지원금을 미리 계획하세요.">
+    <title>2026 출산지원금·육아휴직 급여 계산기 | 출산 혜택 다나와</title>
+    <meta name="description" content="2026년 기준 지역별 출산지원금, 부모급여, 아동수당을 한눈에 조회하고 육아휴직 급여 계산기와 달력으로 월별 수령액을 계획해 보세요.">
+    <meta name="keywords" content="2026년 육아휴직 급여 상한액, 육아휴직 1년 6개월 조건, 6+6 부모육아휴직제 혜택, 2026년 달라지는 육아정책, 출산 혜택, 출산 정책, 육아휴직 급여 계산기, 출산지원금 조회, 지역별 출산지원금, 첫만남이용권, 부모급여, 아동수당, 고용24 육아휴직, 육아휴직 계산">
     <link rel="canonical" href="https://chulsan-danawa.com/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="출산 혜택 다나와">
-    <meta property="og:title" content="출산 혜택 다나와 | 지역별 출산지원금·육아휴직 급여 계산">
-    <meta property="og:description" content="지역별 출산지원금·육아 혜택을 한눈에 조회하고, 육아휴직 급여 계산기와 휴직 달력으로 우리 가족 지원금을 미리 계획하세요.">
+    <meta property="og:title" content="2026 출산지원금·육아휴직 급여 계산기 | 출산 혜택 다나와">
+    <meta property="og:description" content="2026년 기준 지역별 출산지원금, 부모급여, 아동수당을 한눈에 조회하고 육아휴직 급여 계산기와 달력으로 월별 수령액을 계획해 보세요.">
     <meta property="og:url" content="https://chulsan-danawa.com/">
     <meta property="og:image" content="https://chulsan-danawa.com/og-image-20260217-3.png">
   <meta property="og:image:type" content="image/png">
@@ -27,8 +28,8 @@
     <meta property="og:locale" content="ko_KR">
     <meta name="naver-site-verification" content="b7ebc721f1c553db8f5ae40c9f11e8767e2f45ff" />
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="출산 혜택 다나와 | 지역별 출산지원금·육아휴직 급여 계산">
-    <meta name="twitter:description" content="지역별 출산지원금·육아 혜택을 한눈에 조회하고, 육아휴직 급여 계산기와 휴직 달력으로 우리 가족 지원금을 미리 계획하세요.">
+    <meta name="twitter:title" content="2026 출산지원금·육아휴직 급여 계산기 | 출산 혜택 다나와">
+    <meta name="twitter:description" content="2026년 기준 지역별 출산지원금, 부모급여, 아동수당을 한눈에 조회하고 육아휴직 급여 계산기와 달력으로 월별 수령액을 계획해 보세요.">
     <meta name="twitter:image" content="https://chulsan-danawa.com/og-image-20260217-3.png">
     <link rel="icon" type="image/svg+xml" href="favicon.svg?v=4">
     <link rel="shortcut icon" href="favicon.svg?v=4">
@@ -64,13 +65,25 @@
         </section>
 
         <section class="service-tabs-wrap card">
-            <h2>서비스 선택</h2>
-            <p id="serviceFlowStatus" class="service-flow-status service-flow-status-unlinked">지금 필요한 기능을 아래 탭에서 바로 선택하세요. 혜택 조회 후 계산기·달력 연동이 자동 적용됩니다.</p>
-            <div id="serviceTabs" class="service-tabs" role="tablist" aria-label="메인 서비스">
-                <button id="service-tab-benefit" class="service-tab active" type="button" role="tab" aria-selected="true" aria-controls="benefitServicePanel" tabindex="0" data-service-tab="benefit">우리동네 혜택찾기</button>
-                <button id="service-tab-calculator" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="calculatorServicePanel" tabindex="-1" data-service-tab="calculator">육아휴직 급여 계산기</button>
+            <h2>서비스 시작</h2>
+            <section class="service-positioning" aria-label="서비스 소개">
+                <h3>우리 아이 첫 이름, AI가 설계합니다</h3>
+                <p>부모의 가치관 + 사주 + 감성 + 글로벌 발음까지 한 번에 분석합니다.</p>
+                <p class="service-positioning-flow">① 3분 설정 → ② AI 분석 → ③ 이름 리포트 받기</p>
+                <button type="button" id="goNamingLabBtn" class="btn-primary">무료로 미리보기</button>
+            </section>
+            <section class="service-feature-card" aria-label="프리미엄 서비스">
+                <p class="service-feature-badge">PREMIUM</p>
+                <h3>✨ AI 작명소</h3>
+                <p>이름 추천 + 이유 + 인증서까지 한 번에 받는 프리미엄 작명 리포트</p>
+                <button type="button" id="serviceFocusAiBtn" class="btn-secondary">AI 작명소 바로가기</button>
+            </section>
+            <p id="serviceFlowStatus" class="service-flow-status service-flow-status-unlinked">보조 메뉴</p>
+            <div id="serviceTabs" class="service-tabs service-tabs-secondary" role="tablist" aria-label="보조 서비스">
+                <button id="service-tab-benefit" class="service-tab active" type="button" role="tab" aria-selected="true" aria-controls="benefitServicePanel" tabindex="0" data-service-tab="benefit">우리동네 혜택</button>
+                <button id="service-tab-calculator" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="calculatorServicePanel" tabindex="-1" data-service-tab="calculator">급여 계산</button>
                 <button id="service-tab-calendar" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="calendarServicePanel" tabindex="-1" data-service-tab="calendar">육아휴직 달력</button>
-                <button id="service-tab-ai" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="aiServicePanel" tabindex="-1" data-service-tab="ai">AI 아기 사진관</button>
+                <button id="service-tab-ai" class="service-tab hidden" type="button" role="tab" aria-selected="false" aria-controls="aiServicePanel" tabindex="-1" data-service-tab="ai">AI 작명소</button>
             </div>
         </section>
 
@@ -467,35 +480,18 @@
 
         <section id="aiServicePanel" class="service-panel" role="tabpanel" aria-labelledby="service-tab-ai" hidden>
             <section class="card">
-                <h2>AI 아기 사진관 (베타)</h2>
-                <section class="ai-hero" aria-label="AI 소개 배너">
-                    <p class="ai-hero-kicker">AI BABY PREVIEW</p>
-                    <h3>엄마, 아빠 닮은 예쁜 아기 얼굴, AI로 미리 만나보세요</h3>
-                    <p>엄마·아빠 사진과 초음파 컷을 바탕으로 밝고 깔끔한 분위기의 실사형 아기 이미지를 예측합니다. 쿠폰 1장으로 설레는 미리보기를 시작해보세요.</p>
+                <h2>AI 작명소 (프리뷰)</h2>
+                <section class="ai-hero" aria-label="작명소 소개 배너">
+                    <p class="ai-hero-kicker">NAME INTELLIGENCE LAB</p>
+                    <h3>우리 아이 첫 이름, AI가 설계합니다</h3>
+                    <p>단순 추천이 아니라 부모의 가치관과 아이의 미래상을 해석해, 이유가 분명한 이름 후보와 분석 리포트를 제공합니다.</p>
+                    <p class="service-positioning-flow">① 3분 설정 → ② AI 분석 → ③ 이름 리포트 받기</p>
+                    <button type="button" id="namingHeroCtaBtn" class="btn-primary">무료로 미리보기</button>
                 </section>
-                <div id="aiEventPopup" class="ai-event-popup hidden" role="dialog" aria-modal="true" aria-labelledby="aiEventPopupTitle">
-                    <div class="ai-event-dialog">
-                        <div class="ai-event-head">
-                            <p class="ai-event-badge">사진관 첫 오픈기념 이벤트</p>
-                            <button type="button" id="aiEventPopupCloseBtn" class="btn-secondary">닫기</button>
-                        </div>
-                        <h3 id="aiEventPopupTitle">첫 로그인 시 사진 생성 쿠폰 1장 자동 지급</h3>
-                        <p>Google 계정으로 처음 로그인하면 테스트용 쿠폰 1장을 바로 드립니다. 계정당 1회, 선착순 30장 한정입니다.</p>
-                    </div>
-                </div>
-                <section class="ai-summary-card" aria-label="서비스 요약 안내">
-                    <h3>이용 안내</h3>
-                    <ul class="ai-guide-list">
-                        <li><span aria-hidden="true">👤</span> Google 로그인</li>
-                        <li><span aria-hidden="true">💰</span> 충전 후 쿠폰 받기 ($1 = 쿠폰 4장)</li>
-                        <li><span aria-hidden="true">📸</span> 엄마/아빠 1장 + 초음파 1~2장 업로드 후 생성</li>
-                    </ul>
-                </section>
-                <div class="ai-auth-box" aria-label="AI 로그인">
+                <div class="ai-auth-box" aria-label="작명소 로그인">
                     <div class="ai-auth-actions">
                         <p id="aiAuthStatus" class="readonly-hint">로그인 필요: Google 계정으로 로그인 후 이용 가능합니다.</p>
                         <button type="button" id="googleLoginBtn" class="btn-secondary">Google 로그인</button>
-                        <button type="button" id="photoAlbumBtn" class="btn-secondary hidden">사진첩</button>
                         <button type="button" id="googleLogoutBtn" class="btn-secondary hidden">로그아웃</button>
                     </div>
                 </div>
@@ -511,148 +507,217 @@
                                 <option value="3">$3 (쿠폰 12장)</option>
                                 <option value="4">$4 (쿠폰 16장)</option>
                                 <option value="5">$5 (쿠폰 20장)</option>
-                                <option value="6">$6 (쿠폰 24장)</option>
-                                <option value="7">$7 (쿠폰 28장)</option>
-                                <option value="8">$8 (쿠폰 32장)</option>
-                                <option value="9">$9 (쿠폰 36장)</option>
                                 <option value="10">$10 (쿠폰 40장)</option>
-                                <option value="11">$11 (쿠폰 44장)</option>
-                                <option value="12">$12 (쿠폰 48장)</option>
-                                <option value="13">$13 (쿠폰 52장)</option>
-                                <option value="14">$14 (쿠폰 56장)</option>
-                                <option value="15">$15 (쿠폰 60장)</option>
-                                <option value="16">$16 (쿠폰 64장)</option>
-                                <option value="17">$17 (쿠폰 68장)</option>
-                                <option value="18">$18 (쿠폰 72장)</option>
-                                <option value="19">$19 (쿠폰 76장)</option>
-                                <option value="20">$20 (쿠폰 80장)</option>
                             </select>
                         </div>
                         <button type="button" id="chargeCreditsBtn" class="btn-secondary wallet-charge-btn">+ 충전</button>
                     </div>
                 </div>
-                <form id="babyPhotoForm" class="ai-photo-form" novalidate>
-                    <section class="ai-step-card" aria-label="1단계 사진 업로드">
-                        <h3><span>1</span> 사진 업로드</h3>
-                        <p class="readonly-hint">엄마/아빠 각 1장, 초음파는 이목구비·얼굴형 특징이 잘 보이는 컷으로 최대 2장까지 업로드해 주세요. 각 파일은 2MB 이하만 첨부할 수 있습니다.</p>
-                        <div class="form-row ai-upload-row">
-                            <div class="form-group ai-upload-group">
-                                <input type="file" id="motherPhotoInput" class="ai-upload-input" accept="image/*" required>
-                                <label for="motherPhotoInput" class="ai-upload-drop">
-                                    <span class="upload-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" role="presentation">
-                                            <circle cx="12" cy="8" r="3.5"></circle>
-                                            <path d="M5.5 19c.9-3 3.5-4.8 6.5-4.8s5.6 1.8 6.5 4.8"></path>
-                                        </svg>
-                                    </span>
-                                    <span class="ai-upload-title">엄마 사진 업로드</span>
-                                    <span class="ai-upload-subtitle">박스 전체를 눌러 파일 선택</span>
-                                </label>
-                            </div>
-                            <div class="form-group ai-upload-group">
-                                <input type="file" id="fatherPhotoInput" class="ai-upload-input" accept="image/*" required>
-                                <label for="fatherPhotoInput" class="ai-upload-drop">
-                                    <span class="upload-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" role="presentation">
-                                            <circle cx="12" cy="8" r="3.5"></circle>
-                                            <path d="M5.5 19c.9-3 3.5-4.8 6.5-4.8s5.6 1.8 6.5 4.8"></path>
-                                        </svg>
-                                    </span>
-                                    <span class="ai-upload-title">아빠 사진 업로드</span>
-                                    <span class="ai-upload-subtitle">박스 전체를 눌러 파일 선택</span>
-                                </label>
-                            </div>
-                            <div class="form-group ai-upload-group">
-                                <input type="file" id="ultrasoundImageInput" class="ai-upload-input" accept="image/*" multiple required>
-                                <label for="ultrasoundImageInput" class="ai-upload-drop">
-                                    <span class="upload-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" role="presentation">
-                                            <path d="M4.5 7.5h15v9h-15z"></path>
-                                            <path d="M8 12h8"></path>
-                                            <path d="M12 9.2v5.6"></path>
-                                        </svg>
-                                    </span>
-                                    <span class="ai-upload-title">초음파 사진 업로드 (1~2장)</span>
-                                    <span class="ai-upload-subtitle">박스 전체를 눌러 파일 선택</span>
-                                </label>
-                            </div>
+                <section class="ai-step-card" aria-label="1단계 가치관 인터뷰">
+                    <h3><span>1</span> 선제적 응답: 5대 레이어 선택 + 맞춤 인터뷰</h3>
+                    <p class="readonly-hint">먼저 무엇을 중요하게 보는지 선택하면, AI가 질문의 깊이를 자동 조정합니다.</p>
+                    <div class="table-wrap naming-table-wrap">
+                        <table class="payment-table naming-table" aria-label="레이어 종류">
+                            <thead>
+                                <tr>
+                                    <th>레이어</th>
+                                    <th>핵심 가치</th>
+                                    <th>설명</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>사주</td>
+                                    <td>전통과 균형</td>
+                                    <td>사주와 오행의 조화를 중시하는 부모</td>
+                                </tr>
+                                <tr>
+                                    <td>트렌드 (인기)</td>
+                                    <td>세련미와 감각</td>
+                                    <td>여의도·강남의 트렌디함을 추구하는 부모</td>
+                                </tr>
+                                <tr>
+                                    <td>감성 (스토리)</td>
+                                    <td>철학과 가치</td>
+                                    <td>사회복지사 아빠처럼 의미를 중시하는 부모</td>
+                                </tr>
+                                <tr>
+                                    <td>글로벌 (국제)</td>
+                                    <td>확장성과 편의</td>
+                                    <td>미래의 글로벌 인재를 꿈꾸는 부모</td>
+                                </tr>
+                                <tr>
+                                    <td>에너지 (파동)</td>
+                                    <td>운과 기운</td>
+                                    <td>이름의 소리가 주는 긍정적 힘을 믿는 부모</td>
+                                </tr>
+                                <tr>
+                                    <td>종교</td>
+                                    <td>신념과 세계관</td>
+                                    <td>가정의 신앙/종교적 가치와 상징을 존중하는 부모</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <ul class="ai-guide-list">
+                        <li><strong>레이어 중요도 슬라이더</strong>: 사주, 트렌드(인기), 감성(철학), 글로벌(해외), 에너지(소리), 종교</li>
+                        <li><strong>AI 딥 인터뷰</strong>: “아이가 어떤 삶의 태도를 가졌으면 좋겠나요?” 같은 본질 질문 중심</li>
+                        <li><strong>부모 합의 모드</strong>: 엄마/아빠 각각 응답 후 공통분모를 자동 추출</li>
+                    </ul>
+                </section>
+                <section class="ai-step-card" aria-label="2단계 이름 분석 리포트">
+                    <h3><span>2</span> 대안 제시: AI 스토리텔링 기반 이름 분석 리포트</h3>
+                    <p class="readonly-hint">이름 후보를 단어가 아닌 ‘의미 상품’으로 제공합니다.</p>
+                    <ul class="ai-guide-list">
+                        <li><strong>이름 서사 생성기</strong>: 부모의 가치관과 연결된 추천 이유를 감동적인 문장으로 제시</li>
+                        <li><strong>육각형 밸런스 차트</strong>: 이름·영어·한자·이름 뜻·사주·종교 레이어를 직관적으로 시각화</li>
+                        <li><strong>디지털 인증서</strong>: 선택한 이름의 뜻/한자/발음 가이드를 담은 PDF 인증서 발행</li>
+                    </ul>
+                </section>
+                <section class="ai-summary-card" aria-label="보완 포인트">
+                    <h3>디테일 보완 포인트</h3>
+                    <ul class="ai-guide-list">
+                        <li><strong>금지어/민감어 필터</strong>: 부정 의미, 놀림 가능 발음, 문화권 오해 표현 자동 차단</li>
+                        <li><strong>형제자매 네이밍 일관성</strong>: 기존 자녀 이름과 운율/한자 톤의 조화 점수 제공</li>
+                        <li><strong>비교 견적 모드</strong>: 후보 3~5개를 한 화면에서 의미·호칭감·영문 표기까지 비교</li>
+                        <li><strong>결정 보조</strong>: 가족 투표 링크, 최종 확정 사유 기록, 재방문 시 히스토리 복원</li>
+                    </ul>
+                    <p class="disclaimer">※ 현재는 작명소 프리뷰 단계로, 실제 추천/리포트 자동 생성 기능은 순차 오픈 예정입니다.</p>
+                </section>
+                <form id="namingLabForm" class="ai-photo-form" novalidate onsubmit="return false;">
+                    <section class="ai-step-card" aria-label="레이어 중요도 설정">
+                        <h3><span>A</span> 레이어 중요도 설정</h3>
+                        <div class="naming-preset-row" role="group" aria-label="레이어 프리셋">
+                            <button type="button" class="btn-secondary" data-naming-preset="traditional">전통 균형형</button>
+                            <button type="button" class="btn-secondary" data-naming-preset="emotional">감성 중심형</button>
+                            <button type="button" class="btn-secondary" data-naming-preset="global">글로벌 네이밍형</button>
+                            <button type="button" class="btn-secondary" data-naming-preset="trendy">트렌디 &amp; 세련형</button>
+                            <button type="button" class="btn-secondary" data-naming-preset="ai">AI 추천</button>
                         </div>
-                    </section>
-                    <section class="ai-step-card" aria-label="2단계 정보 입력">
-                        <h3><span>2</span> 정보 입력</h3>
+                        <p class="readonly-hint">각 레이어 중요도를 0~100으로 설정하세요. 값이 높을수록 이름 추천에 더 크게 반영됩니다.</p>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="gestationalWeeksInput">임신 주차</label>
-                                <input type="number" id="gestationalWeeksInput" min="4" max="42" step="1" placeholder="예: 24" required>
+                                <label for="layerSajuWeight">사주 <strong id="layerSajuWeightValue">70</strong></label>
+                                <input id="layerSajuWeight" data-layer-input="saju" type="range" min="0" max="100" step="5" value="70">
                             </div>
                             <div class="form-group">
-                                <label for="babyGenderInput">예상 성별</label>
-                                <select id="babyGenderInput" required>
-                                    <option value="">선택하세요</option>
+                                <label for="layerTrendWeight">트렌드 (인기) <strong id="layerTrendWeightValue">45</strong></label>
+                                <input id="layerTrendWeight" data-layer-input="trend" type="range" min="0" max="100" step="5" value="45">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="layerStoryWeight">감성 (스토리) <strong id="layerStoryWeightValue">80</strong></label>
+                                <input id="layerStoryWeight" data-layer-input="story" type="range" min="0" max="100" step="5" value="80">
+                            </div>
+                            <div class="form-group">
+                                <label for="layerGlobalWeight">글로벌 (국제) <strong id="layerGlobalWeightValue">55</strong></label>
+                                <input id="layerGlobalWeight" data-layer-input="global" type="range" min="0" max="100" step="5" value="55">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="layerEnergyWeight">에너지 (파동) <strong id="layerEnergyWeightValue">60</strong></label>
+                                <input id="layerEnergyWeight" data-layer-input="energy" type="range" min="0" max="100" step="5" value="60">
+                            </div>
+                            <div class="form-group">
+                                <label for="layerReligionWeight">종교 <strong id="layerReligionWeightValue">35</strong></label>
+                                <input id="layerReligionWeight" data-layer-input="religion" type="range" min="0" max="100" step="5" value="35">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="namingChildGender">아이 성별 (선택)</label>
+                                <select id="namingChildGender">
+                                    <option value="unknown">미정/중립</option>
                                     <option value="female">여아</option>
                                     <option value="male">남아</option>
-                                    <option value="unknown">모름</option>
                                 </select>
                             </div>
                         </div>
-                    </section>
-                    <section class="ai-step-card" aria-label="3단계 생성하기">
-                        <h3><span>3</span> 생성하기</h3>
-                        <p class="readonly-hint">총 3~4장의 이미지를 바탕으로 예측 이미지를 생성합니다.</p>
-                        <button type="submit" id="babyPhotoSubmitBtn" class="btn-primary ai-generate-btn">설레는 우리 아기 미리 만나보기</button>
-                    </section>
-                    <p id="babyPhotoStatus" class="form-error hidden" role="status" aria-live="polite"></p>
-                    <div id="babyPhotoLoading" class="ai-loading-box hidden" role="status" aria-live="polite">
-                        <span class="ai-loading-spinner" aria-hidden="true"></span>
-                        <div class="ai-loading-texts">
-                            <p id="babyPhotoLoadingTitle" class="ai-loading-title">AI가 사진을 만들고 있어요...</p>
-                            <p id="babyPhotoLoadingDetail" class="ai-loading-detail">사진 분석을 시작합니다.</p>
+                        <p id="namingLayerSummary" class="readonly-hint">현재 우선 레이어: 감성(스토리), 사주, 에너지(파동)</p>
+                        <p id="namingLayerImpactHint" class="readonly-hint">레이어 설명: 감성 비중이 높을수록 부드러운 발음과 서정적 의미를 우선합니다.</p>
+                        <div class="admin-actions">
+                            <button type="button" id="namingApplyLayersBtn" class="btn-secondary" onclick="window.applyNamingLayerConfig && window.applyNamingLayerConfig()">레이어 설정 반영</button>
                         </div>
-                    </div>
+                    </section>
+                    <section class="ai-step-card" aria-label="맞춤 인터뷰 질문">
+                        <h3><span>B</span> 맞춤 인터뷰 질문</h3>
+                        <p id="namingInterviewGuide" class="readonly-hint">먼저 상단에서 레이어 중요도를 설정한 뒤, "레이어 설정 반영" 버튼을 눌러주세요.</p>
+                        <div id="namingQuestionList" class="form-row"></div>
+                    </section>
+                    <section class="ai-step-card" aria-label="이름 분석 요청">
+                        <h3><span>C</span> 이름 분석 리포트 생성</h3>
+                        <button type="button" id="namingLabSubmitBtn" class="btn-primary ai-generate-btn">AI 작명 리포트 생성하기</button>
+                        <p id="namingLabStatus" class="form-error hidden" role="status" aria-live="polite"></p>
+                    </section>
                 </form>
-                <section class="ai-refund-callout hidden" aria-label="초기 프로모션">
-                    <p class="ai-refund-badge">초기 20명 이벤트</p>
-                    <p><strong>자랑하기 후기 작성 시 500원 환급</strong><br>결과 이미지와 짧은 후기를 남겨주시면 확인 후 환급해드립니다.</p>
-                </section>
-                <section class="ai-review-box hidden" aria-label="이용자 후기">
-                    <h3>실사용 후기</h3>
-                    <div class="ai-review-grid">
-                        <article class="ai-review-card">
-                            <img src="review-thumb-1.svg" alt="후기 썸네일 예시 1" class="ai-review-thumb">
-                            <p class="ai-review-text">“초음파 옆모습 특징이 잘 반영된 느낌이라 신기했어요. 전체 톤이 밝아서 가족들과 공유하기 좋았습니다.”</p>
-                            <p class="ai-review-meta">김OO · 임신 27주 · 초음파 2장 업로드</p>
-                        </article>
-                        <article class="ai-review-card">
-                            <img src="review-thumb-2.svg" alt="후기 썸네일 예시 2" class="ai-review-thumb">
-                            <p class="ai-review-text">“엄마/아빠 눈매 느낌이 섞인 것 같아 재미있었고 결과 품질도 깔끔했습니다.”</p>
-                            <p class="ai-review-meta">박OO · 임신 31주 · 초음파 2장 업로드</p>
-                        </article>
-                    </div>
-                </section>
-                <div id="babyPhotoResultWrap" class="ai-photo-result hidden">
-                    <p class="readonly-hint">생성 결과</p>
-                    <img id="babyPhotoResultImage" class="ai-photo-image" alt="AI가 생성한 미래 아이 예측 이미지">
-                    <a id="babyPhotoDownloadBtn" class="btn-primary" download="ai-baby-photo.png" href="#" role="button">이미지 다운로드</a>
-                    <p class="disclaimer">※ 본 결과는 AI 기반 시각화 예시로 실제 아기 얼굴과 일치하지 않을 수 있습니다.</p>
-                </div>
-                <section id="babyPhotoHistoryWrap" class="ai-history-box hidden" aria-label="최근 생성 결과">
-                    <h3>내 최근 생성 결과 (최대 4장)</h3>
-                    <p class="readonly-hint">생성 후 1주일 동안 다시 확인할 수 있으며, 데이터는 최대 10일 후 자동 삭제됩니다.</p>
-                    <div id="babyPhotoHistoryList" class="ai-history-grid"></div>
-                </section>
-                <div id="photoAlbumModal" class="ai-album-modal hidden" role="dialog" aria-modal="true" aria-labelledby="photoAlbumTitle">
-                    <div class="ai-album-dialog">
-                        <div class="ai-album-head">
-                            <h3 id="photoAlbumTitle">내 사진첩</h3>
-                            <div class="ai-album-head-actions">
-                                <a id="photoAlbumDownloadBtn" class="btn-secondary hidden" download="ai-baby-photo.png" href="#" role="button">선택 사진 다운로드</a>
-                                <button type="button" id="photoAlbumCloseBtn" class="btn-secondary">닫기</button>
+                <section id="namingLabResultWrap" class="ai-history-box hidden" aria-label="작명소 결과">
+                    <h3>이름 분석 리포트</h3>
+                    <p id="namingLabSummary" class="readonly-hint"></p>
+                    <section id="namingTopPick" class="naming-top-pick hidden" aria-label="AI 1순위 추천">
+                        <p class="naming-top-pick-badge">AI 1순위 추천 이름</p>
+                        <h4 id="namingTopPickName">-</h4>
+                        <button type="button" id="namingTopPickReasonBtn" class="btn-secondary">이 이름을 추천한 이유 ▼</button>
+                        <p id="namingTopPickReason" class="readonly-hint hidden">-</p>
+                    </section>
+                    <div id="namingCandidateList" class="ai-history-grid"></div>
+                    <section class="card-subsection" aria-label="선택 이름 상세 분석">
+                        <h3>선택 이름 상세 분석</h3>
+                        <p id="namingDetailHeader" class="readonly-hint">후보 이름을 선택하면 상세 분석이 표시됩니다.</p>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>이름</label>
+                                <p id="namingDetailName" class="readonly-hint">-</p>
+                            </div>
+                            <div class="form-group">
+                                <label>영문</label>
+                                <p id="namingDetailEnglish" class="readonly-hint">-</p>
                             </div>
                         </div>
-                        <p class="readonly-hint">로그인한 계정에서 생성한 사진만 표시됩니다. 최대 4장까지 보관되며, 생성 후 최대 10일까지만 다시 확인할 수 있습니다.</p>
-                        <div id="photoAlbumList" class="ai-history-grid"></div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>한자 (뜻)</label>
+                                <p id="namingDetailHanja" class="readonly-hint">-</p>
+                            </div>
+                            <div class="form-group">
+                                <label>이름 뜻</label>
+                                <p id="namingDetailMeaning" class="readonly-hint">-</p>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>우선 레이어 전문가 해설</label>
+                                <p id="namingDetailExpert" class="readonly-hint">-</p>
+                            </div>
+                        </div>
+                        <div class="naming-radar-wrap">
+                            <svg id="namingLayerRadarSvg" viewBox="0 0 360 320" role="img" aria-label="이름 레이어 육각형 분석"></svg>
+                        </div>
+                    </section>
+                    <div class="table-wrap naming-table-wrap">
+                        <table class="payment-table naming-table" aria-label="후보별 레이어 점수">
+                            <thead>
+                                <tr>
+                                    <th>후보명</th>
+                                    <th>국문이름</th>
+                                    <th>영어</th>
+                                    <th>한자</th>
+                                    <th>이름 뜻</th>
+                                    <th>사주</th>
+                                    <th>종교</th>
+                                </tr>
+                            </thead>
+                            <tbody id="namingScoreTableBody">
+                                <tr><td colspan="7" class="empty-table">리포트 생성 후 점수가 표시됩니다.</td></tr>
+                            </tbody>
+                        </table>
                     </div>
-                </div>
+                    <section class="card-subsection">
+                        <h3>디지털 인증서 문안</h3>
+                        <p id="namingCertificateText" class="readonly-hint">리포트 생성 후 인증서 문안이 표시됩니다.</p>
+                    </section>
+                </section>
             </section>
         </section>
 
@@ -671,6 +736,7 @@
                 <a href="/terms">이용약관</a>
                 <a href="/contact">문의 및 제보</a>
                 <a href="/privacy">개인정보처리방침</a>
+                <a href="/admin.html" class="admin-entry-link" rel="nofollow">운영</a>
             </nav>
             <p>행복한 육아를 응원합니다 💖</p>
             <p>운영자: 출산 혜택 다나와 운영자 | 문의: chulsandanawa@gmail.com</p>
@@ -678,7 +744,9 @@
         </div>
     </footer>
 
+    <script src="/runtime-config.js"></script>
     <script>
+        const runtimeConfig = window.RUNTIME_CONFIG || {};
         // Replace with your AdSense IDs, then set enabled to true.
         window.ADSENSE_CONFIG = {
             enabled: false,
@@ -689,18 +757,18 @@
             }
         };
         // Cloudflare Worker base URL
-        window.AI_API_BASE = "https://chulsan-danawa-ai.jhun8802.workers.dev";
-        // Firebase Auth config (fill apiKey/appId for production)
+        window.AI_API_BASE = runtimeConfig.aiApiBase || "https://chulsan-danawa-ai.jhun8802.workers.dev";
+        // Firebase Auth config from runtime-config.js (git ignored)
         window.FIREBASE_AUTH_CONFIG = {
-            enabled: true,
-            apiKey: "AIzaSyAcWBQWDnEBaykK6cFmZ4jqhGQUfR2rybE",
-            authDomain: "chulsan-danawa.com",
-            projectId: "test-17133889-10c0f",
-            appId: "1:229300299555:web:7b08ffa9cc4a6a25cb8e96"
+            enabled: Boolean(runtimeConfig.firebaseEnabled),
+            apiKey: runtimeConfig.firebaseApiKey || "",
+            authDomain: runtimeConfig.firebaseAuthDomain || "chulsan-danawa.com",
+            projectId: runtimeConfig.firebaseProjectId || "test-17133889-10c0f",
+            appId: runtimeConfig.firebaseAppId || ""
         };
     </script>
     <script src="ads.js?v=1"></script>
     <!-- type="module" 지정 필수 -->
-    <script type="module" src="script.js?v=72"></script>
+    <script type="module" src="script.js?v=73"></script>
 </body>
 </html>

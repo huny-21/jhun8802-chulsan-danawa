@@ -4,9 +4,10 @@ import { getAuth, GoogleAuthProvider, onAuthStateChanged, signInWithPopup, signO
 
 const GA_MEASUREMENT_ID = 'G-Z1R3F1Y8C5';
 const CLARITY_PROJECT_ID = 'viza42872j';
+const DEFAULT_AI_API_BASE = 'https://chulsan-danawa-ai.jhun8802.workers.dev';
 const AI_API_BASE = typeof window !== 'undefined' && typeof window.AI_API_BASE === 'string'
-    ? window.AI_API_BASE.replace(/\/+$/, '')
-    : '';
+    ? (window.AI_API_BASE.replace(/\/+$/, '') || DEFAULT_AI_API_BASE)
+    : DEFAULT_AI_API_BASE;
 const FIREBASE_AUTH_CONFIG = typeof window !== 'undefined' && window.FIREBASE_AUTH_CONFIG
     ? window.FIREBASE_AUTH_CONFIG
     : { enabled: false };
@@ -40,6 +41,9 @@ const servicePanels = {
     calendar: document.getElementById('calendarServicePanel'),
     ai: document.getElementById('aiServicePanel')
 };
+const goNamingLabBtn = document.getElementById('goNamingLabBtn');
+const serviceFocusAiBtn = document.getElementById('serviceFocusAiBtn');
+const namingHeroCtaBtn = document.getElementById('namingHeroCtaBtn');
 const quickStartBtns = document.querySelectorAll('.quick-start-btn');
 const babyPhotoForm = document.getElementById('babyPhotoForm');
 const ultrasoundImageInput = document.getElementById('ultrasoundImageInput');
@@ -73,9 +77,39 @@ const chargeCreditsBtn = document.getElementById('chargeCreditsBtn');
 const refreshWalletBtn = document.getElementById('refreshWalletBtn');
 const chargeDollarInput = document.getElementById('chargeDollarInput');
 const MAX_ULTRASOUND_FILES = 2;
-const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
+const MAX_IMAGE_SIZE_BYTES = 3 * 1024 * 1024;
 const CREDITS_PER_IMAGE = 250;
 const AI_EVENT_POPUP_SESSION_KEY = 'ai_event_popup_seen_v1';
+const AI_PHOTO_DISABLED = false;
+const AI_PHOTO_HIDDEN = false;
+const namingLabForm = document.getElementById('namingLabForm');
+const namingLayerInputs = Array.from(document.querySelectorAll('[data-layer-input]'));
+const namingLayerSummary = document.getElementById('namingLayerSummary');
+const namingLayerImpactHint = document.getElementById('namingLayerImpactHint');
+const namingPresetBtns = Array.from(document.querySelectorAll('[data-naming-preset]'));
+const namingApplyLayersBtn = document.getElementById('namingApplyLayersBtn');
+const namingInterviewGuide = document.getElementById('namingInterviewGuide');
+const namingQuestionList = document.getElementById('namingQuestionList');
+const namingLabSubmitBtn = document.getElementById('namingLabSubmitBtn');
+const namingLabStatus = document.getElementById('namingLabStatus');
+const namingLabResultWrap = document.getElementById('namingLabResultWrap');
+const namingLabSummary = document.getElementById('namingLabSummary');
+const namingCandidateList = document.getElementById('namingCandidateList');
+const namingScoreTableBody = document.getElementById('namingScoreTableBody');
+const namingCertificateText = document.getElementById('namingCertificateText');
+const namingChildGender = document.getElementById('namingChildGender');
+const namingDetailHeader = document.getElementById('namingDetailHeader');
+const namingDetailName = document.getElementById('namingDetailName');
+const namingDetailEnglish = document.getElementById('namingDetailEnglish');
+const namingDetailHanja = document.getElementById('namingDetailHanja');
+const namingDetailMeaning = document.getElementById('namingDetailMeaning');
+const namingDetailExpert = document.getElementById('namingDetailExpert');
+const namingLayerRadarSvg = document.getElementById('namingLayerRadarSvg');
+const namingTopPick = document.getElementById('namingTopPick');
+const namingTopPickName = document.getElementById('namingTopPickName');
+const namingTopPickReasonBtn = document.getElementById('namingTopPickReasonBtn');
+const namingTopPickReason = document.getElementById('namingTopPickReason');
+const HAS_BABY_PHOTO_UI = Boolean(babyPhotoForm && ultrasoundImageInput && motherPhotoInput && fatherPhotoInput);
 const uploadFieldLabelMap = {
     motherPhotoInput: '엄마 사진',
     fatherPhotoInput: '아빠 사진',
@@ -90,6 +124,581 @@ let babyPhotoHistoryItems = [];
 let selectedAlbumImageDataUrl = '';
 let currentPlannerStep = 1;
 let babyPhotoLoadingTimer = null;
+let lastTrackedServiceTab = '';
+let namingQuestionState = [];
+let namingAnswerCache = {};
+let namingReportItems = [];
+
+const SERVICE_GA_META = {
+    benefit: { path: '/service/benefit', title: '혜택 찾기' },
+    calculator: { path: '/service/calculator', title: '육아휴직 계산기' },
+    calendar: { path: '/service/calendar', title: '출산휴가 달력' },
+    ai: { path: '/service/naming-lab' , title: '우리 아이 첫 이름 연구소' }
+};
+
+const NAMING_LAYER_META = {
+    saju: {
+        label: '사주',
+        questions: [
+            '아이 이름에서 가장 우선하고 싶은 오행/균형 포인트는 무엇인가요?',
+            '전통 작명에서 꼭 지키고 싶은 기준이 있다면 적어주세요.',
+            '가문/돌림자/한자 사용 관련해서 원하는 규칙이 있나요?'
+        ]
+    },
+    trend: {
+        label: '트렌드(인기)',
+        questions: [
+            '요즘 감성으로 봤을 때 이름의 분위기를 어떻게 가져가고 싶나요?',
+            '희소한 이름과 익숙한 이름 중 어디에 더 가깝게 원하시나요?',
+            '부모님이 선호하는 이름 톤(세련됨/부드러움/강인함)을 알려주세요.'
+        ]
+    },
+    story: {
+        label: '감성(스토리)',
+        questions: [
+            '아이가 어떤 삶의 태도를 가졌으면 좋겠나요?',
+            '이름에 담고 싶은 가족의 가치나 철학을 적어주세요.',
+            '아이가 커서 들었을 때 힘이 되는 한 문장을 적어주세요.'
+        ]
+    },
+    global: {
+        label: '글로벌(국제)',
+        questions: [
+            '영문 표기에서 발음/철자 편의성 중 무엇을 더 중시하나요?',
+            '해외에서도 자연스럽게 불리길 원하는 이름 스타일이 있나요?',
+            '국문 이름과 영문 이름의 유사성을 어느 정도 원하시나요?'
+        ]
+    },
+    energy: {
+        label: '에너지(파동)',
+        questions: [
+            '이름에서 듣고 싶은 소리의 인상(맑음/부드러움/단단함)은 무엇인가요?',
+            '반복해서 불렀을 때 가장 편안한 발음 길이는 어느 정도인가요?',
+            '이름이 주길 바라는 운의 방향(건강/관계/도전 등)을 적어주세요.'
+        ]
+    },
+    religion: {
+        label: '종교',
+        questions: [
+            '가정의 신앙/종교적 가치 중 이름에 담고 싶은 핵심은 무엇인가요?',
+            '피하고 싶은 종교적 표현 또는 선호하는 상징(빛/은총/평화 등)이 있나요?',
+            '아이가 공동체 안에서 어떤 덕목을 실천하길 바라시나요?'
+        ]
+    }
+};
+
+const NAMING_LAYER_IMPACT_HINT = {
+    saju: '사주 비중이 높을수록 오행 균형과 전통 작명 규칙을 우선합니다.',
+    trend: '트렌드 비중이 높을수록 세련미와 동시대 감각을 우선합니다.',
+    story: '감성 비중이 높을수록 부드러운 발음과 서정적 의미를 우선합니다.',
+    global: '글로벌 비중이 높을수록 영문 발음 편의와 국제 호환성을 우선합니다.',
+    energy: '에너지 비중이 높을수록 소리의 울림과 긍정적 인상을 우선합니다.',
+    religion: '종교 비중이 높을수록 가정의 신념과 상징 의미를 우선합니다.'
+};
+
+const NAMING_PRESET_MAP = {
+    traditional: { saju: 90, trend: 30, story: 55, global: 35, energy: 60, religion: 55 },
+    emotional: { saju: 55, trend: 35, story: 95, global: 45, energy: 70, religion: 40 },
+    global: { saju: 40, trend: 60, story: 55, global: 95, energy: 50, religion: 35 },
+    trendy: { saju: 35, trend: 95, story: 60, global: 65, energy: 55, religion: 25 },
+    ai: { saju: 70, trend: 55, story: 80, global: 60, energy: 65, religion: 40 }
+};
+
+const NAMING_ANSWER_PLACEHOLDER = {
+    saju: '예: 화(火) 기운이 강해 수(水)·목(木) 보완을 원해요.',
+    trend: '예: 흔하지 않지만 세련된, 발음이 깔끔한 이름이 좋아요.',
+    story: '예: 따뜻하고 사람을 배려하는 아이였으면 해요.',
+    global: '예: 해외에서도 발음이 쉬운 2음절 이름을 원해요.',
+    energy: '예: 밝고 부드럽게 들리는 소리를 우선하고 싶어요.',
+    religion: '예: 은총, 평화, 사랑의 상징이 담긴 의미를 원해요.'
+};
+
+function getAvailableServiceTabBtns() {
+    return Array.from(serviceTabBtns).filter((btn) => btn?.isConnected && !btn.classList.contains('hidden'));
+}
+
+function applyAiPhotoVisibility() {
+    if (!AI_PHOTO_HIDDEN) return;
+    const aiTabBtn = document.getElementById('service-tab-ai');
+    const aiPanel = servicePanels.ai;
+    if (aiTabBtn) aiTabBtn.remove();
+    if (aiPanel) {
+        aiPanel.classList.remove('active');
+        aiPanel.setAttribute('hidden', '');
+        aiPanel.classList.add('hidden');
+    }
+    quickStartBtns.forEach((btn) => {
+        if (btn?.dataset?.quickService === 'ai') {
+            btn.classList.add('hidden');
+            btn.setAttribute('hidden', '');
+        }
+    });
+}
+
+function trackGaEvent(eventName, params = {}) {
+    if (typeof window === 'undefined') return;
+    if (typeof window.gtag !== 'function') return;
+    window.gtag('event', eventName, params);
+}
+
+function trackServicePageView(target, source = 'service_tab') {
+    const meta = SERVICE_GA_META[target];
+    if (!meta || target === lastTrackedServiceTab) return;
+    lastTrackedServiceTab = target;
+    trackGaEvent('page_view', {
+        page_title: meta.title,
+        page_location: `${window.location.origin}${meta.path}`,
+        page_path: meta.path,
+        service_name: target,
+        navigation_source: source
+    });
+}
+
+function getUserAgent() {
+    if (typeof navigator === 'undefined') return '';
+    return String(navigator.userAgent || '');
+}
+
+function isKakaoInAppBrowser() {
+    return /KAKAOTALK/i.test(getUserAgent());
+}
+
+function openCurrentPageInExternalBrowser() {
+    if (typeof window === 'undefined') return false;
+    const currentUrl = window.location.href;
+    if (!currentUrl) return false;
+    if (isKakaoInAppBrowser()) {
+        const encodedUrl = encodeURIComponent(currentUrl);
+        window.location.href = `kakaotalk://web/openExternal?url=${encodedUrl}`;
+        return true;
+    }
+    const win = window.open(currentUrl, '_blank', 'noopener,noreferrer');
+    return !!win;
+}
+
+function getBabyPhotoHistoryStatusEl() {
+    if (!babyPhotoHistoryWrap || !babyPhotoHistoryList) return null;
+    let statusEl = babyPhotoHistoryWrap.querySelector('[data-history-sync-status="true"]');
+    if (statusEl) return statusEl;
+    statusEl = document.createElement('p');
+    statusEl.className = 'readonly-hint hidden';
+    statusEl.setAttribute('data-history-sync-status', 'true');
+    babyPhotoHistoryWrap.insertBefore(statusEl, babyPhotoHistoryList);
+    return statusEl;
+}
+
+function setBabyPhotoHistoryStatus(message, isError = false) {
+    const statusEl = getBabyPhotoHistoryStatusEl();
+    if (!statusEl) return;
+    if (!message) {
+        statusEl.textContent = '';
+        statusEl.classList.add('hidden');
+        statusEl.removeAttribute('style');
+        return;
+    }
+    statusEl.textContent = message;
+    statusEl.classList.remove('hidden');
+    statusEl.style.color = isError ? '#B91C1C' : '#166534';
+}
+
+function setNamingLabStatus(message, isError = false) {
+    if (!namingLabStatus) return;
+    if (!message) {
+        namingLabStatus.textContent = '';
+        namingLabStatus.classList.add('hidden');
+        namingLabStatus.removeAttribute('style');
+        return;
+    }
+    namingLabStatus.textContent = message;
+    namingLabStatus.classList.remove('hidden');
+    namingLabStatus.style.borderColor = isError ? '#FCA5A5' : '#86EFAC';
+    namingLabStatus.style.backgroundColor = isError ? '#FEF2F2' : '#F0FDF4';
+    namingLabStatus.style.color = isError ? '#B91C1C' : '#166534';
+}
+
+function escapeHtml(value) {
+    return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+function getNamingLayerWeights() {
+    const baseInputs = namingLayerInputs.length
+        ? namingLayerInputs
+        : ['layerSajuWeight', 'layerTrendWeight', 'layerStoryWeight', 'layerGlobalWeight', 'layerEnergyWeight', 'layerReligionWeight']
+            .map((id) => document.getElementById(id))
+            .filter(Boolean);
+    return baseInputs
+        .map((input) => {
+            const key = String(input?.dataset?.layerInput || '').trim();
+            const value = Number(input?.value || 0);
+            const meta = NAMING_LAYER_META[key];
+            if (!key || !meta) return null;
+            return {
+                key,
+                label: meta.label,
+                weight: Number.isFinite(value) ? Math.max(0, Math.min(100, Math.round(value))) : 0
+            };
+        })
+        .filter(Boolean);
+}
+
+function getTopNamingLayers(limit = 3) {
+    return getNamingLayerWeights()
+        .sort((a, b) => b.weight - a.weight)
+        .slice(0, Math.max(1, limit));
+}
+
+function updateNamingLayerSummary() {
+    if (!namingLayerSummary) return;
+    const topLayers = getTopNamingLayers(3);
+    const top = topLayers.map((item) => `${item.label} ${item.weight}`).join(', ');
+    namingLayerSummary.textContent = `현재 우선 레이어: ${top}`;
+    if (namingLayerImpactHint) {
+        const topKey = topLayers[0]?.key;
+        const hint = topKey ? NAMING_LAYER_IMPACT_HINT[topKey] : '';
+        namingLayerImpactHint.textContent = hint ? `레이어 설명: ${hint}` : '';
+    }
+}
+
+function buildNamingQuestions() {
+    const topLayers = getTopNamingLayers(3);
+    const questions = [];
+    topLayers.forEach((layer) => {
+        const bank = NAMING_LAYER_META[layer.key]?.questions || [];
+        const text = bank[0] || '';
+        if (!text) return;
+        questions.push({
+            id: `layer_${layer.key}`,
+            layerKey: layer.key,
+            layerLabel: layer.label,
+            text
+        });
+    });
+    return questions;
+}
+
+function renderNamingQuestions() {
+    if (!namingQuestionList) return;
+    // Preserve existing answers when questions re-render.
+    namingQuestionState.forEach((q, idx) => {
+        const input = namingQuestionList.querySelector(`#namingQuestion_${idx}`);
+        if (!input) return;
+        namingAnswerCache[q.id] = String(input.value || '').trim();
+    });
+    namingQuestionState = buildNamingQuestions();
+    if (!namingQuestionState.length) {
+        namingQuestionList.innerHTML = '<p class="readonly-hint">레이어 값을 읽지 못했습니다. 새로고침 후 다시 시도해주세요.</p>';
+        return;
+    }
+    namingQuestionList.innerHTML = namingQuestionState
+        .map((q, idx) => `
+            <div class="form-group naming-question-card">
+                <label for="namingQuestion_${idx}">Q${idx + 1}. [${q.layerLabel}] ${q.text}</label>
+                <textarea class="naming-question-input" id="namingQuestion_${idx}" data-question-id="${q.id}" rows="3" placeholder="${escapeHtml(NAMING_ANSWER_PLACEHOLDER[q.layerKey] || '답변을 입력해주세요.')}">${escapeHtml(namingAnswerCache[q.id] || '')}</textarea>
+            </div>
+        `)
+        .join('');
+}
+
+function applyNamingPreset(presetKey) {
+    const preset = NAMING_PRESET_MAP[String(presetKey || '').trim()];
+    if (!preset) return;
+    namingLayerInputs.forEach((input) => {
+        const key = String(input?.dataset?.layerInput || '').trim();
+        if (!key || !Object.prototype.hasOwnProperty.call(preset, key)) return;
+        input.value = String(preset[key]);
+        const valueEl = document.getElementById(`${input.id}Value`);
+        if (valueEl) valueEl.textContent = String(preset[key]);
+    });
+    updateNamingLayerSummary();
+    setNamingLabStatus('프리셋이 적용되었습니다. "레이어 설정 반영"을 눌러 질문을 생성하세요.');
+}
+
+function applyNamingLayerConfig() {
+    updateNamingLayerSummary();
+    renderNamingQuestions();
+    if (namingInterviewGuide) {
+        namingInterviewGuide.textContent = '레이어 설정이 반영되었습니다. 아래 질문에 답변을 입력해 주세요.';
+    }
+    const count = namingQuestionState.length;
+    setNamingLabStatus(count > 0
+        ? `레이어 설정을 반영해 맞춤 인터뷰 질문 ${count}개를 생성했습니다.`
+        : '질문 생성에 실패했습니다. 새로고침 후 다시 시도해주세요.', count <= 0);
+}
+
+function collectNamingAnswers() {
+    if (!namingQuestionList) return [];
+    return namingQuestionState.map((q, idx) => {
+        const input = namingQuestionList.querySelector(`#namingQuestion_${idx}`);
+        return {
+            id: q.id,
+            layerKey: q.layerKey,
+            question: q.text,
+            answer: String(input?.value || '').trim()
+        };
+    });
+}
+
+function parseJsonObjectFromText(rawText) {
+    const text = String(rawText || '').trim();
+    if (!text) return null;
+    try {
+        return JSON.parse(text);
+    } catch (_err) {
+        const match = text.match(/\{[\s\S]*\}/);
+        if (!match) return null;
+        try {
+            return JSON.parse(match[0]);
+        } catch (_err2) {
+            return null;
+        }
+    }
+}
+
+function scoreCell(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return 0;
+    return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+function getLayerScore(item, key) {
+    const s = item?.scores || {};
+    return scoreCell(s[key]);
+}
+
+function renderNamingRadar(scores = {}) {
+    if (!namingLayerRadarSvg) return;
+    const axes = [
+        { key: 'name', label: '이름' },
+        { key: 'english', label: '영어' },
+        { key: 'hanja', label: '한자' },
+        { key: 'meaning', label: '이름 뜻' },
+        { key: 'saju', label: '사주' },
+        { key: 'religion', label: '종교' }
+    ];
+    const cx = 180;
+    const cy = 150;
+    const radius = 95;
+    const toPoint = (idx, ratio) => {
+        const angle = (-Math.PI / 2) + (idx * (Math.PI * 2 / axes.length));
+        const r = radius * ratio;
+        return [cx + Math.cos(angle) * r, cy + Math.sin(angle) * r];
+    };
+    const grid = [0.25, 0.5, 0.75, 1].map((step) => {
+        const pts = axes.map((_, idx) => toPoint(idx, step).join(',')).join(' ');
+        return `<polygon points="${pts}" fill="none" stroke="#d1d5db" stroke-width="1"/>`;
+    }).join('');
+    const spokes = axes.map((_, idx) => {
+        const [x, y] = toPoint(idx, 1);
+        return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+    }).join('');
+    const labels = axes.map((axis, idx) => {
+        const [x, y] = toPoint(idx, 1.15);
+        return `<text x="${x}" y="${y}" text-anchor="middle" font-size="12" fill="#334155">${axis.label}</text>`;
+    }).join('');
+    const valuePts = axes.map((axis, idx) => {
+        const v = scoreCell(scores[axis.key]) / 100;
+        return toPoint(idx, v).join(',');
+    }).join(' ');
+    namingLayerRadarSvg.innerHTML = `
+      ${grid}
+      ${spokes}
+      <polygon points="${valuePts}" fill="rgba(74,143,134,0.22)" stroke="#2f766d" stroke-width="2"></polygon>
+      ${labels}
+    `;
+}
+
+function renderNamingDetail(item) {
+    if (!item) return;
+    if (namingDetailHeader) namingDetailHeader.textContent = `${item.name_kr || '-'} 상세 분석`;
+    if (namingDetailName) namingDetailName.textContent = `${item.name_kr || '-'} ${item.name_hanja ? `(${item.name_hanja})` : ''}`.trim();
+    if (namingDetailEnglish) namingDetailEnglish.textContent = item.name_en || '-';
+    if (namingDetailHanja) namingDetailHanja.textContent = item.hanja_meaning ? `${item.name_hanja || '-'}: ${item.hanja_meaning}` : (item.name_hanja || '-');
+    if (namingDetailMeaning) namingDetailMeaning.textContent = item.name_meaning || item.story || '-';
+    if (namingDetailExpert) {
+        const role = String(item.expert_role || '').trim();
+        const c = String(item.expert_commentary || '').trim();
+        namingDetailExpert.textContent = role ? `${role}: ${c}` : (c || '-');
+    }
+    renderNamingRadar(item.scores || {});
+}
+
+function renderNamingReport(report) {
+    if (!namingLabResultWrap || !namingCandidateList || !namingScoreTableBody || !namingCertificateText || !namingLabSummary) return;
+    const items = Array.isArray(report?.top_recommendations) ? report.top_recommendations : [];
+    namingReportItems = items;
+    namingCandidateList.innerHTML = items.map((item) => {
+        const nameKr = String(item?.name_kr || '').trim() || '이름 미정';
+        const nameHanja = String(item?.name_hanja || '').trim();
+        const nameEn = String(item?.name_en || '').trim();
+        const story = String(item?.story || '').trim();
+        return `
+            <article class="ai-review-card naming-candidate-card" data-candidate-idx="${items.indexOf(item)}">
+                <p class="ai-review-meta"><strong>${escapeHtml(nameKr)}</strong>${nameHanja ? ` · ${escapeHtml(nameHanja)}` : ''}${nameEn ? ` · ${escapeHtml(nameEn)}` : ''}</p>
+                <p class="ai-review-text">${escapeHtml(story || '추천 스토리 준비 중')}</p>
+            </article>
+        `;
+    }).join('') || '<p class="readonly-hint">추천 결과가 비어 있습니다. 답변을 더 구체적으로 작성해 다시 시도해 주세요.</p>';
+
+    namingCandidateList.querySelectorAll('.naming-candidate-card').forEach((el) => {
+        el.addEventListener('click', () => {
+            namingCandidateList.querySelectorAll('.naming-candidate-card').forEach((c) => c.classList.remove('is-selected'));
+            el.classList.add('is-selected');
+            const idx = Number(el.getAttribute('data-candidate-idx'));
+            renderNamingDetail(namingReportItems[idx] || null);
+        });
+    });
+
+    namingScoreTableBody.innerHTML = items.map((item) => {
+        const nameKr = String(item?.name_kr || '').trim() || '-';
+        return `<tr>
+            <td>${escapeHtml(nameKr)}</td>
+            <td>${getLayerScore(item, 'name')}</td>
+            <td>${getLayerScore(item, 'english')}</td>
+            <td>${getLayerScore(item, 'hanja')}</td>
+            <td>${getLayerScore(item, 'meaning')}</td>
+            <td>${getLayerScore(item, 'saju')}</td>
+            <td>${getLayerScore(item, 'religion')}</td>
+        </tr>`;
+    }).join('') || '<tr><td colspan="7" class="empty-table">점수 데이터가 없습니다.</td></tr>';
+
+    namingLabSummary.textContent = String(report?.interview_summary || report?.naming_strategy || '').trim() || '인터뷰 요약이 없습니다.';
+    namingCertificateText.textContent = String(report?.certificate_text || '').trim() || '인증서 문안이 없습니다.';
+    const topPick = items[0] || null;
+    if (topPick && namingTopPick && namingTopPickName && namingTopPickReason) {
+        const topName = String(topPick.name_kr || '').trim() || '이름 미정';
+        const topReasonParts = [String(topPick.story || '').trim(), String(topPick.expert_commentary || '').trim()].filter(Boolean);
+        namingTopPickName.textContent = topName;
+        namingTopPickReason.textContent = topReasonParts.join(' ');
+        namingTopPick.classList.remove('hidden');
+        namingTopPickReason.classList.add('hidden');
+        if (namingTopPickReasonBtn) namingTopPickReasonBtn.textContent = '이 이름을 추천한 이유 ▼';
+    } else if (namingTopPick) {
+        namingTopPick.classList.add('hidden');
+    }
+    renderNamingDetail(items[0] || null);
+    const firstCard = namingCandidateList.querySelector('.naming-candidate-card');
+    if (firstCard) firstCard.classList.add('is-selected');
+    namingLabResultWrap.classList.remove('hidden');
+}
+
+function renderNamingFallbackText(rawText) {
+    if (!namingLabResultWrap || !namingCandidateList || !namingScoreTableBody || !namingCertificateText || !namingLabSummary) return;
+    const text = String(rawText || '').trim();
+    namingLabSummary.textContent = '리포트 생성은 완료되었고, 아래에 텍스트 결과를 표시합니다.';
+    namingCandidateList.innerHTML = `<article class="ai-review-card"><p class="ai-review-text">${escapeHtml(text || '결과 텍스트가 없습니다.')}</p></article>`;
+    namingScoreTableBody.innerHTML = '<tr><td colspan="7" class="empty-table">점수형 JSON이 아니어서 표는 비워두었습니다.</td></tr>';
+    namingCertificateText.textContent = text || '인증서 문안을 추출하지 못했습니다.';
+    namingLabResultWrap.classList.remove('hidden');
+}
+
+async function handleNamingLabSubmit(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    if (!AI_API_BASE) {
+        setNamingLabStatus('AI 백엔드 주소가 설정되지 않았습니다.', true);
+        return;
+    }
+    if (!firebaseIdToken) {
+        setNamingLabStatus('Google 로그인 후 이용해주세요.', true);
+        return;
+    }
+    const layers = getNamingLayerWeights();
+    const answers = collectNamingAnswers();
+    const hasAnswer = answers.some((x) => x.answer.length >= 3);
+    if (!hasAnswer) {
+        setNamingLabStatus('맞춤 질문에 최소 1개 이상 답변해 주세요.', true);
+        return;
+    }
+
+    const prev = namingLabSubmitBtn?.textContent || 'AI 작명 리포트 생성하기';
+    if (namingLabSubmitBtn) {
+        namingLabSubmitBtn.disabled = true;
+        namingLabSubmitBtn.textContent = '리포트 생성 중...';
+    }
+    setNamingLabStatus('레이어와 답변을 분석해 이름 후보를 만들고 있습니다.');
+
+    try {
+        const payload = {
+            child_gender: String(namingChildGender?.value || 'unknown'),
+            layer_weights: layers,
+            interview_answers: answers,
+            model: 'gpt-4.1-mini'
+        };
+        const response = await fetch(`${AI_API_BASE}/api/naming-report`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${firebaseIdToken}`
+            },
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok || !data?.ok || !data?.text) {
+            const parts = [];
+            if (data?.error) parts.push(String(data.error));
+            if (data?.required_credits) parts.push(`필요 쿠폰: ${creditsToCoupons(data.required_credits)}장`);
+            if (Number.isFinite(data?.paid_credits) || Number.isFinite(data?.bonus_credits)) {
+                parts.push(`현재 쿠폰: ${creditsToCoupons((data?.paid_credits || 0) + (data?.bonus_credits || 0))}장`);
+            }
+            throw new Error(parts.join('\n') || '작명 리포트 생성에 실패했습니다.');
+        }
+        const report = parseJsonObjectFromText(data.text);
+        if (!report) {
+            renderNamingFallbackText(data.text);
+            setNamingLabStatus('리포트는 생성되었으나 JSON 형식이 아니어서 텍스트 결과로 표시했습니다.');
+            return;
+        }
+        renderNamingReport(report);
+        setNamingLabStatus('작명 리포트 생성이 완료되었습니다.');
+        await fetchWallet();
+    } catch (err) {
+        setNamingLabStatus(err instanceof Error ? err.message : '리포트 생성 실패', true);
+    } finally {
+        if (namingLabSubmitBtn) {
+            namingLabSubmitBtn.disabled = false;
+            namingLabSubmitBtn.textContent = prev;
+        }
+    }
+}
+
+function initNamingLab() {
+    if (!namingLabForm) return;
+    namingLayerInputs.forEach((input) => {
+        const update = () => {
+            updateNamingLayerSummary();
+            const valueEl = document.getElementById(`${input.id}Value`);
+            if (valueEl) valueEl.textContent = String(input.value || '0');
+        };
+        input.addEventListener('input', update);
+        input.addEventListener('change', update);
+    });
+    updateNamingLayerSummary();
+    namingLayerInputs.forEach((input) => {
+        const valueEl = document.getElementById(`${input.id}Value`);
+        if (valueEl) valueEl.textContent = String(input.value || '0');
+    });
+    if (namingQuestionList) namingQuestionList.innerHTML = '';
+    namingPresetBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+            applyNamingPreset(btn.dataset.namingPreset);
+        });
+    });
+    namingApplyLayersBtn?.addEventListener('click', applyNamingLayerConfig);
+    window.applyNamingLayerConfig = applyNamingLayerConfig;
+    if (namingTopPickReasonBtn && namingTopPickReason) {
+        namingTopPickReasonBtn.addEventListener('click', () => {
+            const hidden = namingTopPickReason.classList.contains('hidden');
+            namingTopPickReason.classList.toggle('hidden', !hidden);
+            namingTopPickReasonBtn.textContent = hidden ? '이 이름을 추천한 이유 ▲' : '이 이름을 추천한 이유 ▼';
+        });
+    }
+    namingLabForm.addEventListener('submit', handleNamingLabSubmit);
+    namingLabSubmitBtn?.addEventListener('click', handleNamingLabSubmit);
+}
 
 function showAiEventPopup() {
     if (!aiEventPopup) return;
@@ -261,11 +870,13 @@ let renderedHolidayMap = {};
 document.addEventListener('DOMContentLoaded', () => {
     initGoogleAnalytics();
     initMicrosoftClarity();
+    applyAiPhotoVisibility();
     initAuth();
     initServiceTabs();
     initQuickStart();
     initLeavePlanner();
     initBabyPhotoGenerator();
+    initNamingLab();
     initBenefitLinkState();
 
     if (benefitForm && citySelect && districtSelect && dueDateInput) {
@@ -431,7 +1042,13 @@ function renderBabyPhotoHistory(items = []) {
 
 async function fetchBabyPhotoHistory() {
     if (!firebaseIdToken || !AI_API_BASE) {
-        renderBabyPhotoHistory(loadLocalHistory());
+        const localItems = loadLocalHistory();
+        renderBabyPhotoHistory(localItems);
+        if (localItems.length) {
+            setBabyPhotoHistoryStatus('서버 연결 전: 이 기기에 임시 저장된 사진을 표시 중입니다.');
+        } else {
+            setBabyPhotoHistoryStatus('');
+        }
         return;
     }
     try {
@@ -447,8 +1064,19 @@ async function fetchBabyPhotoHistory() {
         const merged = mergeHistoryItems(serverItems, loadLocalHistory());
         saveLocalHistory(merged);
         renderBabyPhotoHistory(merged);
+        if (!serverItems.length && merged.length) {
+            setBabyPhotoHistoryStatus('서버 사진첩이 비어 있어 이 기기의 임시 저장본을 함께 표시 중입니다.');
+        } else {
+            setBabyPhotoHistoryStatus('');
+        }
     } catch (_err) {
-        renderBabyPhotoHistory(loadLocalHistory());
+        const localItems = loadLocalHistory();
+        renderBabyPhotoHistory(localItems);
+        if (localItems.length) {
+            setBabyPhotoHistoryStatus('서버 조회에 실패해 현재 기기의 임시 저장본만 표시 중입니다. 다른 기기/도메인 기록은 보이지 않을 수 있습니다.', true);
+        } else {
+            setBabyPhotoHistoryStatus('서버 조회에 실패했습니다. 잠시 후 다시 시도해주세요.', true);
+        }
     }
 }
 
@@ -514,6 +1142,18 @@ async function startCreditCheckout() {
 function initAuth() {
     if (!googleLoginBtn || !googleLogoutBtn) return;
     if (babyPhotoSubmitBtn) babyPhotoSubmitBtn.disabled = true;
+    if (AI_PHOTO_DISABLED && HAS_BABY_PHOTO_UI) {
+        setAiAuthStatus('AI 아기 사진관은 개선 작업으로 임시 비활성화되었습니다. 점검 완료 후 다시 오픈됩니다.', true);
+        googleLoginBtn.classList.add('hidden');
+        photoAlbumBtn?.classList.add('hidden');
+        googleLogoutBtn.classList.add('hidden');
+        photoAlbumModal?.classList.add('hidden');
+        walletBox?.classList.add('hidden');
+        setWalletStatus('점검 중');
+        renderBabyPhotoHistory([]);
+        setBabyPhotoHistoryStatus('');
+        return;
+    }
     if (!FIREBASE_AUTH_CONFIG?.enabled) {
         setAiAuthStatus('로그인 비활성화 상태입니다. 운영자에게 문의해주세요.', true);
         googleLoginBtn.classList.add('hidden');
@@ -535,10 +1175,24 @@ function initAuth() {
     const provider = new GoogleAuthProvider();
 
     googleLoginBtn.addEventListener('click', async () => {
+        if (isKakaoInAppBrowser()) {
+            setAiAuthStatus('카카오톡 인앱브라우저에서는 Google 로그인이 차단됩니다. 외부 브라우저로 이동합니다.', true);
+            const opened = openCurrentPageInExternalBrowser();
+            if (!opened) {
+                setAiAuthStatus('카카오톡 메뉴에서 "기본 브라우저로 열기" 후 다시 로그인해주세요.', true);
+            }
+            return;
+        }
         try {
             await signInWithPopup(firebaseAuth, provider);
         } catch (err) {
-            setAiAuthStatus(`로그인 실패: ${err instanceof Error ? err.message : '알 수 없는 오류'}`, true);
+            const rawMessage = err instanceof Error ? err.message : '알 수 없는 오류';
+            const normalized = String(rawMessage || '').toLowerCase();
+            if (normalized.includes('disallowed_useragent')) {
+                setAiAuthStatus('현재 인앱브라우저에서는 Google 로그인이 차단됩니다. 기본 브라우저(Chrome/Safari)로 열어 다시 로그인해주세요.', true);
+                return;
+            }
+            setAiAuthStatus(`로그인 실패: ${rawMessage}`, true);
         }
     });
 
@@ -553,6 +1207,10 @@ function initAuth() {
     if (photoAlbumBtn) {
         photoAlbumBtn.addEventListener('click', async () => {
             await fetchBabyPhotoHistory();
+            trackGaEvent('ai_photo_album_open', {
+                service_name: 'ai',
+                item_count: babyPhotoHistoryItems.length
+            });
             if (!babyPhotoHistoryItems.length) {
                 setBabyPhotoStatus('아직 저장된 생성 결과가 없습니다.');
                 return;
@@ -588,7 +1246,9 @@ function initAuth() {
             walletBox?.classList.remove('hidden');
             if (babyPhotoSubmitBtn) babyPhotoSubmitBtn.disabled = false;
             await fetchWallet();
-            await fetchBabyPhotoHistory();
+            if (HAS_BABY_PHOTO_UI) {
+                await fetchBabyPhotoHistory();
+            }
         } else {
             setAiAuthStatus('로그인 필요: Google 계정으로 로그인 후 이용 가능합니다.');
             googleLoginBtn.classList.remove('hidden');
@@ -598,7 +1258,10 @@ function initAuth() {
             setPhotoAlbumSelection('', null);
             walletBox?.classList.add('hidden');
             setWalletStatus('로그인 후 내 쿠폰을 확인할 수 있습니다.');
-            renderBabyPhotoHistory([]);
+            if (HAS_BABY_PHOTO_UI) {
+                renderBabyPhotoHistory([]);
+                setBabyPhotoHistoryStatus('');
+            }
             if (babyPhotoSubmitBtn) babyPhotoSubmitBtn.disabled = true;
         }
     });
@@ -606,6 +1269,17 @@ function initAuth() {
 
 function initBabyPhotoGenerator() {
     if (!babyPhotoForm || !ultrasoundImageInput || !motherPhotoInput || !fatherPhotoInput) return;
+    if (AI_PHOTO_DISABLED) {
+        [motherPhotoInput, fatherPhotoInput, ultrasoundImageInput, gestationalWeeksInput, babyGenderInput].forEach((el) => {
+            if (el) el.disabled = true;
+        });
+        if (babyPhotoSubmitBtn) {
+            babyPhotoSubmitBtn.disabled = true;
+            babyPhotoSubmitBtn.textContent = '서비스 점검 중';
+        }
+        setBabyPhotoStatus('AI 아기 사진관은 현재 개선 작업으로 임시 비활성화되었습니다.', true);
+        return;
+    }
     if (aiEventPopupCloseBtn) {
         aiEventPopupCloseBtn.addEventListener('click', () => hideAiEventPopup(true));
     }
@@ -651,7 +1325,7 @@ function enforceSingleSelectionLimit(inputEl, label) {
     }
     if (selectedFile.size > MAX_IMAGE_SIZE_BYTES) {
         setInputFiles(inputEl, []);
-        setBabyPhotoStatus(`${label}: 파일 크기는 2MB 이하만 업로드할 수 있습니다.`, true);
+        setBabyPhotoStatus(`${label}: 파일 크기는 3MB 이하만 업로드할 수 있습니다.`, true);
     }
     updateUploadFieldState(inputEl, false);
 }
@@ -665,7 +1339,7 @@ function enforceUltrasoundSelectionLimit() {
     }
     let files = selectedFiles.filter((file) => file.size <= MAX_IMAGE_SIZE_BYTES);
     if (files.length !== selectedFiles.length) {
-        setBabyPhotoStatus('초음파 사진은 파일당 2MB 이하만 업로드할 수 있습니다. 2MB 초과 파일은 제외되었습니다.', true);
+        setBabyPhotoStatus('초음파 사진은 파일당 3MB 이하만 업로드할 수 있습니다. 3MB 초과 파일은 제외되었습니다.', true);
     }
     if (files.length > MAX_ULTRASOUND_FILES) {
         files = files.slice(0, MAX_ULTRASOUND_FILES);
@@ -710,7 +1384,11 @@ function startBabyPhotoLoading() {
     if (!babyPhotoLoading) return;
     const steps = [
         '사진 분석을 시작합니다.',
+        '입력된 사진 품질을 확인하고 있어요.',
         '엄마/아빠 닮은 특징을 정리하고 있어요.',
+        '초음파 단서를 함께 반영하고 있어요.',
+        '신생아 얼굴 비율을 자연스럽게 맞추고 있어요.',
+        '조명과 피부톤을 현실적으로 보정하고 있어요.',
         '아기 이미지를 정성껏 생성하고 있어요.',
         '마무리 중입니다. 잠시만 기다려주세요.'
     ];
@@ -722,7 +1400,7 @@ function startBabyPhotoLoading() {
     babyPhotoLoadingTimer = setInterval(() => {
         idx = (idx + 1) % steps.length;
         if (babyPhotoLoadingDetail) babyPhotoLoadingDetail.textContent = steps[idx];
-    }, 3600);
+    }, 5600);
 }
 
 function stopBabyPhotoLoading() {
@@ -755,7 +1433,7 @@ function validateImageFile(file, label) {
         throw new Error(`${label}: 이미지 파일만 업로드할 수 있습니다.`);
     }
     if (file.size > MAX_IMAGE_SIZE_BYTES) {
-        throw new Error(`${label}: 파일 크기는 2MB 이하로 업로드해주세요.`);
+        throw new Error(`${label}: 파일 크기는 3MB 이하로 업로드해주세요.`);
     }
 }
 
@@ -771,6 +1449,10 @@ function getBabyPhotoFileName() {
 
 async function handleBabyPhotoSubmit(e) {
     e.preventDefault();
+    if (AI_PHOTO_DISABLED) {
+        setBabyPhotoStatus('AI 아기 사진관은 현재 점검 중입니다. 추후 다시 이용해주세요.', true);
+        return;
+    }
     if (!firebaseIdToken) {
         setBabyPhotoStatus('Google 로그인 후 이용해주세요.', true);
         return;
@@ -802,6 +1484,12 @@ async function handleBabyPhotoSubmit(e) {
         setBabyPhotoStatus('총 이미지 수는 3~4장이어야 합니다.', true);
         return;
     }
+    trackGaEvent('ai_photo_generate_submit', {
+        service_name: 'ai',
+        gestational_weeks: Math.floor(gestationalWeeks),
+        gender,
+        ultrasound_count: ultrasoundFiles.length
+    });
 
     const prevLabel = babyPhotoSubmitBtn?.textContent || '설레는 우리 아기 미리 만나보기';
     if (babyPhotoSubmitBtn) {
@@ -867,7 +1555,12 @@ async function handleBabyPhotoSubmit(e) {
             babyPhotoDownloadBtn.setAttribute('download', getBabyPhotoFileName());
         }
         babyPhotoResultWrap?.classList.remove('hidden');
-        setBabyPhotoStatus('생성이 완료되었습니다. 결과 이미지를 확인해주세요.');
+        const modelLabel = typeof data?.model_used === 'string' ? data.model_used : '';
+        const promptVersion = typeof data?.prompt_version === 'string' ? data.prompt_version : '';
+        if (modelLabel || promptVersion) {
+            console.info('[baby-photo] generation model/version:', modelLabel || '-', promptVersion || '-');
+        }
+        setBabyPhotoStatus(`생성이 완료되었습니다. 결과 이미지를 확인해주세요.${promptVersion ? ` (prompt: ${promptVersion})` : ''}`);
         if (babyPhotoStatus && babyPhotoResultWrap && babyPhotoStatus.parentElement) {
             babyPhotoStatus.insertAdjacentElement('afterend', babyPhotoResultWrap);
         }
@@ -909,7 +1602,7 @@ function initGoogleAnalytics() {
     document.head.appendChild(script);
 
     window.gtag('js', new Date());
-    window.gtag('config', GA_MEASUREMENT_ID);
+    window.gtag('config', GA_MEASUREMENT_ID, { send_page_view: false });
     window.__gaInitialized = true;
 }
 
@@ -960,6 +1653,11 @@ function initQuickStart() {
         btn.addEventListener('click', () => {
             const target = btn.dataset.quickService;
             if (!target || !servicePanels[target]) return;
+            if (AI_PHOTO_HIDDEN && target === 'ai') return;
+            trackGaEvent('service_quick_start_click', {
+                service_name: target,
+                click_text: (btn.textContent || '').trim()
+            });
             switchServiceTab(target);
             servicePanels[target].scrollIntoView({ behavior: 'smooth', block: 'start' });
         });
@@ -1130,6 +1828,12 @@ function handleFormSubmit(e) {
         showFormError('출산(예정)일은 최근 3년부터 향후 2년 범위에서 입력해주세요.', dueDateInput);
         return;
     }
+    trackGaEvent('benefit_search_submit', {
+        service_name: 'benefit',
+        city,
+        district,
+        child_order: childOrder
+    });
 
     // 로딩 UI 표시
     resultSection.classList.add('hidden');
@@ -1160,6 +1864,12 @@ function handleFormSubmit(e) {
         // 스크롤 이동 (비교 섹션으로)
         document.getElementById('comparisonSection').scrollIntoView({ behavior: 'smooth' });
         resultSection.focus();
+        trackGaEvent('benefit_search_result_view', {
+            service_name: 'benefit',
+            city,
+            district,
+            child_order: childOrder
+        });
     }, 500);
 }
 
@@ -1613,17 +2323,38 @@ function handleTabClick(e) {
 // 메인 서비스 탭(3개) 전환
 // ==========================================
 function initServiceTabs() {
-    serviceTabBtns.forEach((btn) => {
+    const availableBtns = getAvailableServiceTabBtns();
+    const moveToAi = () => {
+        switchServiceTab('ai');
+        servicePanels.ai?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    goNamingLabBtn?.addEventListener('click', moveToAi);
+    serviceFocusAiBtn?.addEventListener('click', moveToAi);
+    namingHeroCtaBtn?.addEventListener('click', () => {
+        const formTop = namingLabForm?.getBoundingClientRect?.().top ?? 0;
+        const absoluteTop = formTop + window.scrollY - 12;
+        window.scrollTo({ top: Math.max(0, absoluteTop), behavior: 'smooth' });
+    });
+    availableBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
             const target = btn.dataset.serviceTab;
             switchServiceTab(target);
         });
-        btn.addEventListener('keydown', (e) => handleArrowNavigation(e, serviceTabBtns, true));
+        btn.addEventListener('keydown', (e) => handleArrowNavigation(e, availableBtns, true));
     });
+    const activeBtn = availableBtns.find((btn) => btn.classList.contains('active')) || availableBtns[0];
+    const initialTarget = activeBtn?.dataset?.serviceTab;
+    if (initialTarget) {
+        trackServicePageView(initialTarget, 'initial_load');
+    }
 }
 
 function switchServiceTab(target) {
-    serviceTabBtns.forEach((btn) => {
+    if (AI_PHOTO_HIDDEN && target === 'ai') target = 'benefit';
+    if (!servicePanels[target]) target = 'benefit';
+
+    const availableBtns = getAvailableServiceTabBtns();
+    availableBtns.forEach((btn) => {
         const active = btn.dataset.serviceTab === target;
         btn.classList.toggle('active', active);
         btn.setAttribute('aria-selected', String(active));
@@ -1651,6 +2382,7 @@ function switchServiceTab(target) {
     } else {
         hideAiEventPopup(false);
     }
+    trackServicePageView(target, 'service_tab');
 }
 
 // ==========================================
@@ -2098,11 +2830,19 @@ function initLeavePlanner() {
     }
     if (applyCalendarChildbirthBtn) {
         applyCalendarChildbirthBtn.addEventListener('click', () => {
+            trackGaEvent('calendar_apply_childbirth', {
+                service_name: 'calendar',
+                actor: plannerState.calendarEditorActor
+            });
             applyCalendarDateSelection('CHILDBIRTH');
         });
     }
     if (applyCalendarChildcareBtn) {
         applyCalendarChildcareBtn.addEventListener('click', () => {
+            trackGaEvent('calendar_apply_childcare', {
+                service_name: 'calendar',
+                actor: plannerState.calendarEditorActor
+            });
             applyCalendarDateSelection('CHILDCARE');
         });
     }
@@ -2127,6 +2867,11 @@ function handlePlannerSubmit(e) {
     setPlannerStep(Math.max(1, plannerSteps.length || 3));
     collectPlannerForm();
     if (!validatePlannerState()) return;
+    trackGaEvent('planner_calculate_submit', {
+        service_name: 'calculator',
+        user_type: plannerState.userType,
+        include_father: plannerState.includeFather
+    });
     plannerState.isCalculated = true;
     recalculatePlanner();
     setPaymentResultExpanded(true);

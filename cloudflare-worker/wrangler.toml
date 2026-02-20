@@ -6,7 +6,13 @@ placement = { mode = "targeted", region = "aws:us-east-1" }
 [vars]
 ALLOWED_ORIGINS = "https://chulsan-danawa.com,https://www.chulsan-danawa.com,https://chulsan-danawa.web.app,https://test-17133889-10c0f.web.app,https://chulsan-danawa--preview-hpoei7gh.web.app,http://localhost:5000,http://127.0.0.1:5000"
 FIREBASE_PROJECT_ID = "test-17133889-10c0f"
-FIREBASE_WEB_API_KEY = "AIzaSyAcWBQWDnEBaykK6cFmZ4jqhGQUfR2rybE"
+FIREBASE_WEB_API_KEY = "AIzaSyBlWoa9U85z6xp9Ru7SzL_0NOtufkHZnMs"
+# Optional: dedicated server-side key for Firebase token verification.
+# If set, this is used instead of FIREBASE_WEB_API_KEY for accounts:lookup.
+FIREBASE_SERVER_API_KEY = ""
+# Optional: referer header used for server-side Firebase accounts:lookup requests.
+# Useful when the Firebase API key is restricted by HTTP referrer.
+FIREBASE_API_KEY_REFERER = "https://chulsan-danawa.com"
 # Optional: set Polar checkout base URL for billing API response.
 POLAR_CHECKOUT_BASE_URL = "https://buy.polar.sh/polar_cl_i4Dlq7yDXyDmilA9GoCKCcWwHYYJFFp69CrOO0GauKr"
 COUPON_UNIT_CREDITS = "250"
@@ -14,6 +20,22 @@ COUPON_CAMPAIGN_MONTH = "2026-02"
 COUPON_CAMPAIGN_MAX_COUPONS = "50"
 COUPON_RESERVATION_TTL_MINUTES = "30"
 WELCOME_COUPON_MAX_COUPONS = "30"
+BABY_PHOTO_SERVICE_DISABLED = "true"
+# Optional AI runtime config
+AI_DEFAULT_MODEL = "gpt-4.1-nano"
+BABY_PHOTO_PROMPT_VERSION = "baby-photo-ko-v2-2026-02-19"
+BABY_PHOTO_IMAGE_MODEL = "gpt-image-1.5"
+BABY_PHOTO_IMAGE_STYLE_PROMPT = "실사 사진 스타일, 병원 신생아 촬영 느낌, 자연스러운 피부결, 과도한 보정 금지."
+BABY_PHOTO_IMAGE_SCENE_PROMPT = "출생 직후의 신생아가 흰색 속싸개 안에 편안히 누워 있는 장면, 얼굴 중심 클로즈업, 배경은 단순하고 중립적."
+BABY_PHOTO_IMAGE_SAFETY_PROMPT = "아기는 반드시 옷/속싸개를 착용한 상태로 표현하고 성적 맥락, 노출 중심 구도, 과도한 신체 강조를 금지."
+BABY_PHOTO_IMAGE_NEGATIVE_PROMPT = "애니메이션 스타일, 만화, 일러스트, 플라스틱 피부, 성인 얼굴 비율, 뷰티 필터, 과장된 조명, 텍스트, 워터마크."
+BABY_PHOTO_ANALYSIS_MODEL = "gpt-4.1-mini"
+BABY_PHOTO_ANALYSIS_PROMPT_VERSION = "traits-analysis-v1"
+BABY_PHOTO_ANALYSIS_SYSTEM_PROMPT = "You extract newborn facial traits from reference images for a realistic portrait prompt."
+BABY_PHOTO_ANALYSIS_INSTRUCTION_OVERRIDE = ""
+BABY_PHOTO_IMAGE_PROMPT_OVERRIDE = ""
+ADMIN_EMAIL_ALLOWLIST = "jhun8802@gmail.com"
+ADMIN_UID_ALLOWLIST = ""
 
 [[d1_databases]]
 binding = "DB"

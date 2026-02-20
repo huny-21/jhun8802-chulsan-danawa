@@ -182,6 +182,57 @@ textarea {
     margin-bottom: 16px;
 }
 
+.service-positioning,
+.service-feature-card {
+    border: 1px solid #DDE7EE;
+    border-radius: 14px;
+    padding: 14px;
+    background: #fff;
+    margin-bottom: 12px;
+}
+
+.service-positioning h3,
+.service-feature-card h3 {
+    margin: 0 0 6px;
+    font-size: 1.05rem;
+    color: #0f172a;
+}
+
+.service-positioning p,
+.service-feature-card p {
+    margin: 0;
+    color: #334155;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.service-positioning-flow {
+    margin-top: 8px !important;
+    font-weight: 700;
+    color: #2f766d !important;
+}
+
+#goNamingLabBtn,
+#serviceFocusAiBtn {
+    margin-top: 10px;
+}
+
+.service-feature-card {
+    border-color: #A9D2C8;
+    background: linear-gradient(120deg, #F5FAF8 0%, #FFFFFF 90%);
+}
+
+.service-feature-badge {
+    display: inline-block;
+    margin-bottom: 6px !important;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e2f5ef;
+    color: #2f766d !important;
+    font-size: 0.72rem !important;
+    font-weight: 800;
+}
+
 .service-flow-status {
     margin: 2px 0 12px;
     color: var(--neutral-text);
@@ -193,6 +244,10 @@ textarea {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 10px;
+}
+
+.service-tabs-secondary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .service-tab {
@@ -913,6 +968,10 @@ input[readonly] {
     line-height: 1.6;
 }
 
+#namingHeroCtaBtn {
+    margin-top: 12px;
+}
+
 .ai-summary-card {
     border: 1px solid #E2E8F0;
     border-left: 4px solid #4A8F86;
@@ -1115,6 +1174,19 @@ input[readonly] {
 .ai-step-card > .readonly-hint {
     margin: 0 0 12px;
     line-height: 1.55;
+}
+
+.naming-preset-row {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.naming-preset-row .btn-secondary {
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 0.84rem;
 }
 
 .ai-step-card .btn-primary {
@@ -1360,6 +1432,17 @@ input[readonly] {
     background: #fff;
     padding: 10px;
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.naming-candidate-card {
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+
+.naming-candidate-card.is-selected {
+    border-color: #4A8F86;
+    box-shadow: 0 10px 22px rgba(74, 143, 134, 0.22);
+    background: #F7FBF9;
 }
 
 .ai-review-thumb {
@@ -1694,6 +1777,139 @@ input[readonly] {
 .payment-table th {
     color: var(--neutral-text);
     background: #F8FAFC;
+}
+
+/* Naming lab layout optimization */
+.naming-table-wrap {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+}
+
+.naming-table {
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.naming-table th,
+.naming-table td {
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+}
+
+#namingQuestionList.form-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 0;
+}
+
+.naming-question-card {
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 10px;
+    background: #F8FAFC;
+    min-width: 0;
+}
+
+.naming-question-input {
+    min-height: 120px;
+    resize: vertical;
+    margin-bottom: 0;
+}
+
+.naming-radar-wrap {
+    margin-top: 8px;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    background: #fff;
+    padding: 8px;
+    overflow: hidden;
+}
+
+.naming-top-pick {
+    border: 1px solid #A9D2C8;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #F1F8F5 0%, #FFFFFF 100%);
+    padding: 12px;
+    margin-bottom: 12px;
+}
+
+.naming-top-pick-badge {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #2f766d;
+    margin-bottom: 6px;
+}
+
+.naming-top-pick h4 {
+    margin: 0 0 8px;
+    font-size: 1.15rem;
+    color: #0f172a;
+}
+
+#namingTopPickReasonBtn {
+    margin-bottom: 8px;
+}
+
+#namingLayerRadarSvg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+#namingCandidateList.ai-history-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Naming lab: keep tables inside card width and wrap text. */
+.naming-table-wrap {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+}
+
+.naming-table {
+    min-width: 0;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.naming-table th,
+.naming-table td {
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+}
+
+/* Naming lab: horizontal question cards */
+#namingQuestionList.form-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 0;
+}
+
+.naming-question-card {
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 10px;
+    background: #F8FAFC;
+    min-width: 0;
+}
+
+.naming-question-input {
+    min-height: 120px;
+    resize: vertical;
+    margin-bottom: 0;
+}
+
+#namingCandidateList.ai-history-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .payment-mobile-cards {
@@ -2519,6 +2735,16 @@ input[readonly] {
     text-decoration: underline;
 }
 
+.footer-links .admin-entry-link {
+    opacity: 0.42;
+    font-size: 0.74rem;
+    letter-spacing: 0.01em;
+}
+
+.footer-links .admin-entry-link:hover {
+    opacity: 0.9;
+}
+
 .btn-official {
     display: block;
     text-align: center;
@@ -2632,6 +2858,10 @@ input[readonly] {
         grid-template-columns: 1fr;
     }
 
+    .service-tabs-secondary {
+        grid-template-columns: 1fr;
+    }
+
     .service-flow-status {
         font-size: 0.86rem;
         line-height: 1.55;
@@ -2716,6 +2946,42 @@ input[readonly] {
 
     .table-wrap {
         display: none;
+    }
+
+    .naming-table-wrap {
+        display: block;
+    }
+
+    .naming-table {
+        font-size: 0.78rem;
+    }
+
+    #namingQuestionList.form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .naming-preset-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #namingCandidateList.ai-history-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .naming-table-wrap {
+        display: block;
+    }
+
+    .naming-table {
+        font-size: 0.78rem;
+    }
+
+    #namingQuestionList.form-row {
+        grid-template-columns: 1fr;
+    }
+
+    #namingCandidateList.ai-history-grid {
+        grid-template-columns: 1fr;
     }
 
     .payment-mobile-cards {

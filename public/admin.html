@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <title>출산 혜택 다나와 관리자</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .admin-wrap { max-width: 1100px; margin: 24px auto 64px; padding: 0 16px; }
+    .admin-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .admin-field { display: flex; flex-direction: column; gap: 6px; }
+    .admin-field input, .admin-field textarea { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; font-size: 14px; }
+    .admin-field textarea { min-height: 84px; resize: vertical; }
+    .admin-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .admin-status { font-size: 14px; color: #334155; }
+    .admin-status.error { color: #b91c1c; }
+    .admin-status.ok { color: #166534; }
+    .admin-table-wrap { overflow-x: auto; }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .admin-table th, .admin-table td { border-bottom: 1px solid #e5e7eb; text-align: left; padding: 8px; white-space: nowrap; }
+    .admin-muted { color: #64748b; font-size: 13px; }
+    .hidden { display: none !important; }
+    @media (max-width: 900px) { .admin-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <main class="admin-wrap">
+    <section class="admin-card">
+      <h1>관리자 페이지</h1>
+      <p class="admin-muted">관리자 계정으로 로그인한 경우에만 데이터가 표시됩니다.</p>
+      <div class="admin-actions">
+        <button id="adminLoginBtn" type="button" class="btn-primary">Google 로그인</button>
+        <button id="adminLogoutBtn" type="button" class="btn-secondary hidden">로그아웃</button>
+        <button id="adminReloadBtn" type="button" class="btn-secondary hidden">새로고침</button>
+      </div>
+      <p id="adminAuthStatus" class="admin-status">로그인 필요</p>
+    </section>
+
+    <section id="adminDashboard" class="hidden">
+      <section class="admin-card">
+        <h2>운영 설정 (프롬프트/모델)</h2>
+        <p class="admin-muted">저장 즉시 Worker API에 반영됩니다. override 템플릿은 `{{variable}}` 문법을 지원합니다.</p>
+        <div class="admin-grid">
+          <label class="admin-field"><span>AI_DEFAULT_MODEL</span><input id="cfgAiDefaultModel" type="text"></label>
+          <label class="admin-field"><span>BABY_PHOTO_PROMPT_VERSION</span><input id="cfgPromptVersion" type="text"></label>
+          <label class="admin-field"><span>BABY_PHOTO_IMAGE_MODEL</span><input id="cfgImageModel" type="text"></label>
+          <label class="admin-field"><span>BABY_PHOTO_ANALYSIS_MODEL</span><input id="cfgAnalysisModel" type="text"></label>
+          <label class="admin-field"><span>BABY_PHOTO_ANALYSIS_PROMPT_VERSION</span><input id="cfgAnalysisPromptVersion" type="text"></label>
+          <label class="admin-field"><span>BABY_PHOTO_ANALYSIS_SYSTEM_PROMPT</span><textarea id="cfgAnalysisSystemPrompt"></textarea></label>
+        </div>
+        <div class="admin-grid">
+          <label class="admin-field">
+            <span>BABY_PHOTO_IMAGE_STYLE_PROMPT</span>
+            <textarea id="cfgImageStylePrompt" placeholder="예: 실사 사진 톤, 부드러운 자연광, 병원 신생아 촬영 느낌"></textarea>
+          </label>
+          <label class="admin-field">
+            <span>BABY_PHOTO_IMAGE_SCENE_PROMPT</span>
+            <textarea id="cfgImageScenePrompt" placeholder="예: 막 태어난 신생아, 흰색 속싸개, 얼굴 중심 클로즈업"></textarea>
+          </label>
+        </div>
+        <div class="admin-grid">
+          <label class="admin-field">
+            <span>BABY_PHOTO_IMAGE_SAFETY_PROMPT</span>
+            <textarea id="cfgImageSafetyPrompt" placeholder="예: 옷/속싸개 착용, 노출 중심 구도 금지"></textarea>
+          </label>
+          <label class="admin-field">
+            <span>BABY_PHOTO_IMAGE_NEGATIVE_PROMPT</span>
+            <textarea id="cfgImageNegativePrompt" placeholder="예: 만화풍, 성인 비율 얼굴, 과한 피부 보정, 텍스트"></textarea>
+          </label>
+        </div>
+        <div class="admin-grid">
+          <label class="admin-field">
+            <span>BABY_PHOTO_ANALYSIS_INSTRUCTION_OVERRIDE</span>
+            <textarea id="cfgAnalysisInstructionOverride" placeholder="사용 변수: {{gestationalWeeks}}, {{genderLabel}}"></textarea>
+          </label>
+          <label class="admin-field">
+            <span>BABY_PHOTO_IMAGE_PROMPT_OVERRIDE</span>
+            <textarea id="cfgImagePromptOverride" placeholder="사용 변수: {{featureSentence}}, {{combinedFeatures}}, {{gestationalWeeks}}, {{genderLabel}}, {{promptVersion}}, {{imageStylePrompt}}, {{imageScenePrompt}}, {{imageSafetyPrompt}}, {{imageNegativePrompt}}"></textarea>
+          </label>
+        </div>
+        <div class="admin-actions">
+          <button id="cfgSaveBtn" type="button" class="btn-primary">설정 저장</button>
+          <button id="cfgReloadBtn" type="button" class="btn-secondary">다시 불러오기</button>
+        </div>
+        <p id="cfgStatus" class="admin-status"></p>
+      </section>
+
+      <section class="admin-card">
+        <h2>실결제 내역 (Polar 완료건)</h2>
+        <div class="admin-actions">
+          <button id="paymentsReloadBtn" type="button" class="btn-secondary">결제 내역 새로고침</button>
+        </div>
+        <p id="paymentsSummary" class="admin-status"></p>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr><th>주문ID</th><th>유저ID</th><th>금액(원)</th><th>크레딧</th><th>상태</th><th>생성시각</th></tr>
+            </thead>
+            <tbody id="paymentsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="admin-card">
+        <h2>사용자/로그인 현황</h2>
+        <div class="admin-actions">
+          <button id="usersReloadBtn" type="button" class="btn-secondary">사용자 현황 새로고침</button>
+        </div>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr><th>유저ID</th><th>유료크레딧</th><th>보너스크레딧</th><th>실결제횟수</th><th>최근결제</th><th>사진수</th><th>업데이트</th></tr>
+            </thead>
+            <tbody id="usersBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="/runtime-config.js"></script>
+  <script>
+    const runtimeConfig = window.RUNTIME_CONFIG || {};
+    window.AI_API_BASE = runtimeConfig.aiApiBase || "https://chulsan-danawa-ai.jhun8802.workers.dev";
+    window.FIREBASE_AUTH_CONFIG = {
+      enabled: Boolean(runtimeConfig.firebaseEnabled),
+      apiKey: runtimeConfig.firebaseApiKey || "",
+      authDomain: runtimeConfig.firebaseAuthDomain || "chulsan-danawa.com",
+      projectId: runtimeConfig.firebaseProjectId || "test-17133889-10c0f",
+      appId: runtimeConfig.firebaseAppId || ""
+    };
+  </script>
+  <script type="module" src="/admin.js?v=1"></script>
+</body>
+</html>

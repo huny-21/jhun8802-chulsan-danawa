@@ -34,6 +34,7 @@ Ad slots are already wired into the page with `public/ads.js`.
 This project includes a Cloudflare Worker backend:
 - Endpoints: `POST /api/ai`, `POST /api/baby-photo`
 - Worker source: `cloudflare-worker/src/index.js`
+- Baby photo prompt source: `cloudflare-worker/src/baby-photo-config.js`
 - Secret: `OPENAI_API_KEY`
 
 ### 1) Install Wrangler
@@ -56,6 +57,45 @@ wrangler secret put OPENAI_API_KEY
 wrangler deploy
 ```
 
+Optional model/prompt settings are in `cloudflare-worker/wrangler.toml`:
+- `AI_DEFAULT_MODEL`
+- `BABY_PHOTO_IMAGE_MODEL`
+- `BABY_PHOTO_ANALYSIS_MODEL`
+- `BABY_PHOTO_PROMPT_VERSION`
+- `BABY_PHOTO_ANALYSIS_PROMPT_VERSION`
+- `BABY_PHOTO_ANALYSIS_SYSTEM_PROMPT`
+- `BABY_PHOTO_ANALYSIS_INSTRUCTION_OVERRIDE`
+- `BABY_PHOTO_IMAGE_PROMPT_OVERRIDE`
+
+Admin access settings:
+- `ADMIN_EMAIL_ALLOWLIST` (comma-separated emails)
+- `ADMIN_UID_ALLOWLIST` (comma-separated Firebase UIDs)
+
+### Security Notes (Firebase API key)
+
+- Do not commit active Firebase Web API keys to Git.
+- Rotate compromised keys immediately in Google Cloud Console.
+- Apply API restrictions and HTTP referrer restrictions to the new key.
+- Keep `cloudflare-worker/wrangler.toml` value `FIREBASE_WEB_API_KEY` as placeholder in Git.
+- Put the real Firebase key only in `public/runtime-config.js` (git-ignored).
+- Use `public/runtime-config.sample.js` as template.
+
+Runtime config setup:
+
+```bash
+cp public/runtime-config.sample.js public/runtime-config.js
+```
+
+Then edit:
+- `firebaseApiKey`: rotated restricted key
+- `firebaseEnabled`: `true`
+
+Predeploy security check:
+
+```bash
+bash scripts/security-check.sh
+```
+
 ### 4) Connect frontend to Worker
 
 Open `public/index.html` and set:
@@ -69,3 +109,14 @@ window.AI_API_BASE = "https://<your-worker-subdomain>.workers.dev";
 ```bash
 firebase deploy --only hosting --project test-17133889-10c0f
 ```
+
+## Admin Console
+
+- URL: `/admin.html`
+- Frontend files: `public/admin.html`, `public/admin.js`
+- Admin APIs:
+  - `GET /api/admin/whoami`
+  - `GET /api/admin/overview`
+  - `GET/PUT /api/admin/runtime-config`
+  - `GET /api/admin/payments`
+  - `GET /api/admin/users`

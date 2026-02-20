@@ -1,3 +1,9 @@
+import {
+  BABY_PHOTO_DEFAULTS,
+  buildBabyPhotoAnalysisInstruction,
+  buildBabyPhotoImagePrompt
+} from "./baby-photo-config.js";
+
 function parseAllowedOrigins(raw) {
   return new Set(
     String(raw || "")
@@ -7,6 +13,16 @@ function parseAllowedOrigins(raw) {
   );
 }
 
+function resolveFirebaseApiKeyReferer(env) {
+  const explicit = normalizeText(env.FIREBASE_API_KEY_REFERER);
+  if (explicit) return explicit;
+  const allowed = parseAllowedOrigins(env.ALLOWED_ORIGINS);
+  for (const origin of allowed) {
+    if (typeof origin === "string" && origin.startsWith("https://")) return origin;
+  }
+  return "https://chulsan-danawa.com";
+}
+
 function isPreviewOrigin(origin) {
   return /^https:\/\/chulsan-danawa--[a-z0-9-]+\.web\.app$/i.test(origin || "");
 }
@@ -14,9 +30,13 @@ function isPreviewOrigin(origin) {
 function corsHeaders(origin, allowed) {
   const headers = {
     "Vary": "Origin",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Max-Age": "3600"
+    "Access-Control-Max-Age": "3600",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()"
   };
   if (origin && (allowed.has(origin) || isPreviewOrigin(origin))) {
     headers["Access-Control-Allow-Origin"] = origin;
@@ -36,6 +56,118 @@ function json(data, status = 200, extraHeaders = {}) {
 
 function normalizeText(value) {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function isBabyPhotoServiceDisabled(env) {
+  return normalizeText(env.BABY_PHOTO_SERVICE_DISABLED).toLowerCase() === "true";
+}
+
+function parseCsvSet(raw) {
+  return new Set(
+    String(raw || "")
+      .split(",")
+      .map((v) => normalizeText(v))
+      .filter(Boolean)
+  );
+}
+
+function parseCsvLowerSet(raw) {
+  return new Set(
+    String(raw || "")
+      .split(",")
+      .map((v) => normalizeText(v).toLowerCase())
+      .filter(Boolean)
+  );
+}
+
+const ADMIN_RUNTIME_CONFIG_KEYS = [
+  "AI_DEFAULT_MODEL",
+  "BABY_PHOTO_PROMPT_VERSION",
+  "BABY_PHOTO_IMAGE_MODEL",
+  "BABY_PHOTO_IMAGE_STYLE_PROMPT",
+  "BABY_PHOTO_IMAGE_SCENE_PROMPT",
+  "BABY_PHOTO_IMAGE_SAFETY_PROMPT",
+  "BABY_PHOTO_IMAGE_NEGATIVE_PROMPT",
+  "BABY_PHOTO_ANALYSIS_MODEL",
+  "BABY_PHOTO_ANALYSIS_PROMPT_VERSION",
+  "BABY_PHOTO_ANALYSIS_SYSTEM_PROMPT",
+  "BABY_PHOTO_ANALYSIS_INSTRUCTION_OVERRIDE",
+  "BABY_PHOTO_IMAGE_PROMPT_OVERRIDE"
+];
+
+function getEnvRuntimeConfig(env) {
+  return {
+    AI_DEFAULT_MODEL:
+      normalizeText(env.AI_DEFAULT_MODEL) || BABY_PHOTO_DEFAULTS.aiDefaultModel,
+    BABY_PHOTO_PROMPT_VERSION:
+      normalizeText(env.BABY_PHOTO_PROMPT_VERSION) ||
+      BABY_PHOTO_DEFAULTS.promptVersion,
+    BABY_PHOTO_IMAGE_MODEL:
+      normalizeText(env.BABY_PHOTO_IMAGE_MODEL) || BABY_PHOTO_DEFAULTS.imageModel,
+    BABY_PHOTO_IMAGE_STYLE_PROMPT:
+      normalizeText(env.BABY_PHOTO_IMAGE_STYLE_PROMPT) ||
+      BABY_PHOTO_DEFAULTS.imageStylePrompt,
+    BABY_PHOTO_IMAGE_SCENE_PROMPT:
+      normalizeText(env.BABY_PHOTO_IMAGE_SCENE_PROMPT) ||
+      BABY_PHOTO_DEFAULTS.imageScenePrompt,
+    BABY_PHOTO_IMAGE_SAFETY_PROMPT:
+      normalizeText(env.BABY_PHOTO_IMAGE_SAFETY_PROMPT) ||
+      BABY_PHOTO_DEFAULTS.imageSafetyPrompt,
+    BABY_PHOTO_IMAGE_NEGATIVE_PROMPT:
+      normalizeText(env.BABY_PHOTO_IMAGE_NEGATIVE_PROMPT) ||
+      BABY_PHOTO_DEFAULTS.imageNegativePrompt,
+    BABY_PHOTO_ANALYSIS_MODEL:
+      normalizeText(env.BABY_PHOTO_ANALYSIS_MODEL) ||
+      BABY_PHOTO_DEFAULTS.analysisModel,
+    BABY_PHOTO_ANALYSIS_PROMPT_VERSION:
+      normalizeText(env.BABY_PHOTO_ANALYSIS_PROMPT_VERSION) ||
+      BABY_PHOTO_DEFAULTS.analysisPromptVersion,
+    BABY_PHOTO_ANALYSIS_SYSTEM_PROMPT:
+      normalizeText(env.BABY_PHOTO_ANALYSIS_SYSTEM_PROMPT) ||
+      BABY_PHOTO_DEFAULTS.analysisSystemPrompt,
+    BABY_PHOTO_ANALYSIS_INSTRUCTION_OVERRIDE: normalizeText(
+      env.BABY_PHOTO_ANALYSIS_INSTRUCTION_OVERRIDE
+    ),
+    BABY_PHOTO_IMAGE_PROMPT_OVERRIDE: normalizeText(
+      env.BABY_PHOTO_IMAGE_PROMPT_OVERRIDE
+    )
+  };
+}
+
+function resolveBabyPhotoConfig(env, runtimeConfig = null) {
+  const runtime = runtimeConfig || getEnvRuntimeConfig(env);
+  return {
+    promptVersion: normalizeText(runtime.BABY_PHOTO_PROMPT_VERSION),
+    imageModel: normalizeText(runtime.BABY_PHOTO_IMAGE_MODEL),
+    imageStylePrompt: normalizeText(runtime.BABY_PHOTO_IMAGE_STYLE_PROMPT),
+    imageScenePrompt: normalizeText(runtime.BABY_PHOTO_IMAGE_SCENE_PROMPT),
+    imageSafetyPrompt: normalizeText(runtime.BABY_PHOTO_IMAGE_SAFETY_PROMPT),
+    imageNegativePrompt: normalizeText(runtime.BABY_PHOTO_IMAGE_NEGATIVE_PROMPT),
+    analysisModel: normalizeText(runtime.BABY_PHOTO_ANALYSIS_MODEL),
+    analysisPromptVersion: normalizeText(runtime.BABY_PHOTO_ANALYSIS_PROMPT_VERSION),
+    analysisSystemPrompt: normalizeText(runtime.BABY_PHOTO_ANALYSIS_SYSTEM_PROMPT),
+    analysisInstructionOverride: normalizeText(
+      runtime.BABY_PHOTO_ANALYSIS_INSTRUCTION_OVERRIDE
+    ),
+    imagePromptOverride: normalizeText(runtime.BABY_PHOTO_IMAGE_PROMPT_OVERRIDE)
+  };
+}
+
+function resolveDefaultAiModel(env, runtimeConfig = null) {
+  const runtime = runtimeConfig || getEnvRuntimeConfig(env);
+  return (
+    normalizeText(runtime.AI_DEFAULT_MODEL) || BABY_PHOTO_DEFAULTS.aiDefaultModel
+  );
+}
+
+function fillPromptTemplate(template, values = {}) {
+  const base = normalizeText(template);
+  if (!base) return "";
+  return base.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_, rawKey) => {
+    const key = normalizeText(rawKey);
+    if (!key) return "";
+    return normalizeText(values[key]) || "";
+  });
 }
 
 function normalizeDataUrl(value) {
@@ -112,6 +244,92 @@ function getCampaignMonthKey(value) {
 function getNowKstMonthKey() {
   const nowKst = new Date(Date.now() + 9 * 60 * 60 * 1000);
   return nowKst.toISOString().slice(0, 7);
+}
+
+let adminSchemaReady = false;
+let runtimeConfigCache = {
+  expiresAt: 0,
+  overrides: {}
+};
+
+async function ensureAdminSchema(env) {
+  if (!env?.DB || adminSchemaReady) return;
+  await env.DB
+    .prepare(
+      `CREATE TABLE IF NOT EXISTS admin_runtime_config (
+        config_key TEXT PRIMARY KEY,
+        config_value TEXT NOT NULL,
+        updated_by TEXT,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`
+    )
+    .run();
+  await env.DB
+    .prepare(
+      `CREATE TABLE IF NOT EXISTS admin_audit_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        actor_uid TEXT,
+        actor_email TEXT,
+        action TEXT NOT NULL,
+        payload TEXT,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`
+    )
+    .run();
+  adminSchemaReady = true;
+}
+
+async function appendAdminAuditLog(env, actor, action, payload = {}) {
+  if (!env?.DB) return;
+  await ensureAdminSchema(env);
+  await env.DB
+    .prepare(
+      `INSERT INTO admin_audit_logs (actor_uid, actor_email, action, payload, created_at)
+       VALUES (?1, ?2, ?3, ?4, CURRENT_TIMESTAMP)`
+    )
+    .bind(
+      normalizeText(actor?.uid) || null,
+      normalizeText(actor?.email) || null,
+      normalizeText(action) || "unknown",
+      JSON.stringify(payload || {})
+    )
+    .run();
+}
+
+async function loadRuntimeConfigOverrides(env, { forceRefresh = false } = {}) {
+  if (!env?.DB) return {};
+  const now = Date.now();
+  if (!forceRefresh && runtimeConfigCache.expiresAt > now) {
+    return runtimeConfigCache.overrides || {};
+  }
+  await ensureAdminSchema(env);
+  const placeholders = ADMIN_RUNTIME_CONFIG_KEYS.map(() => "?").join(", ");
+  const rows = await env.DB
+    .prepare(
+      `SELECT config_key, config_value
+       FROM admin_runtime_config
+       WHERE config_key IN (${placeholders})`
+    )
+    .bind(...ADMIN_RUNTIME_CONFIG_KEYS)
+    .all();
+  const list = Array.isArray(rows?.results) ? rows.results : [];
+  const overrides = {};
+  for (const row of list) {
+    const key = normalizeText(row?.config_key);
+    if (!key || !ADMIN_RUNTIME_CONFIG_KEYS.includes(key)) continue;
+    overrides[key] = normalizeText(row?.config_value);
+  }
+  runtimeConfigCache = {
+    expiresAt: now + 10_000,
+    overrides
+  };
+  return overrides;
+}
+
+async function getRuntimeConfig(env, { forceRefresh = false } = {}) {
+  const envConfig = getEnvRuntimeConfig(env);
+  const overrides = await loadRuntimeConfigOverrides(env, { forceRefresh });
+  return { ...envConfig, ...overrides };
 }
 
 let couponReservationSchemaReady = false;
@@ -516,7 +734,11 @@ function getBearerToken(req) {
 
 async function verifyFirebaseIdToken(idToken, env) {
   const projectId = normalizeText(env.FIREBASE_PROJECT_ID);
-  const webApiKey = normalizeText(env.FIREBASE_WEB_API_KEY);
+  // Server-to-server token checks do not include browser referrer headers.
+  // Prefer a dedicated unrestricted server key when configured.
+  const webApiKey =
+    normalizeText(env.FIREBASE_SERVER_API_KEY) ||
+    normalizeText(env.FIREBASE_WEB_API_KEY);
   if (!projectId) return { ok: false, reason: "FIREBASE_PROJECT_ID is not configured" };
   if (!webApiKey) return { ok: false, reason: "FIREBASE_WEB_API_KEY is not configured" };
   if (!idToken) return { ok: false, reason: "Missing Bearer token" };
@@ -525,11 +747,26 @@ async function verifyFirebaseIdToken(idToken, env) {
     `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(webApiKey)}`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Referer: resolveFirebaseApiKeyReferer(env)
+      },
       body: JSON.stringify({ idToken })
     }
   );
-  if (!res.ok) return { ok: false, reason: "Invalid Firebase ID token" };
+  if (!res.ok) {
+    let detail = "";
+    try {
+      const errBody = await res.json();
+      detail = normalizeText(errBody?.error?.message);
+    } catch (_) {
+      // ignore JSON parse errors from upstream
+    }
+    return {
+      ok: false,
+      reason: detail ? `Invalid Firebase ID token (${detail})` : "Invalid Firebase ID token"
+    };
+  }
   const data = await res.json().catch(() => ({}));
   const user = Array.isArray(data?.users) ? data.users[0] : null;
   const uid = normalizeText(user?.localId);
@@ -562,10 +799,37 @@ async function requireFirebaseUser(req, env, cors) {
   if (!verified.ok) {
     return {
       ok: false,
-      response: json({ error: "Unauthorized", detail: verified.reason }, 401, cors)
+      response: json({ error: "Unauthorized" }, 401, cors)
     };
   }
   return { ok: true, uid: verified.uid, email: verified.email };
+}
+
+function isAdminUser(user, env) {
+  const uidSet = parseCsvSet(env.ADMIN_UID_ALLOWLIST);
+  const emailSet = parseCsvLowerSet(env.ADMIN_EMAIL_ALLOWLIST);
+  if (!uidSet.size && !emailSet.size) {
+    return { ok: false, reason: "Admin allowlist is not configured" };
+  }
+  const uid = normalizeText(user?.uid);
+  const email = normalizeText(user?.email).toLowerCase();
+  if ((uid && uidSet.has(uid)) || (email && emailSet.has(email))) {
+    return { ok: true };
+  }
+  return { ok: false, reason: "Not an admin account" };
+}
+
+async function requireAdminUser(req, env, cors) {
+  const auth = await requireFirebaseUser(req, env, cors);
+  if (!auth.ok) return auth;
+  const adminCheck = isAdminUser(auth, env);
+  if (!adminCheck.ok) {
+    return {
+      ok: false,
+      response: json({ error: "Forbidden" }, 403, cors)
+    };
+  }
+  return auth;
 }
 
 async function getWallet(env, userId) {
@@ -726,10 +990,10 @@ async function savePhotoHistory(env, userId, imageDataUrl) {
 
   await env.DB
     .prepare(
-      `INSERT INTO generated_photos (user_id, r2_key, visible_until, delete_after, created_at)
-       VALUES (?1, ?2, datetime('now', '+7 days'), datetime('now', '+10 days'), CURRENT_TIMESTAMP)`
+      `INSERT INTO generated_photos (user_id, image_data_url, r2_key, visible_until, delete_after, created_at)
+       VALUES (?1, ?2, ?3, datetime('now', '+7 days'), datetime('now', '+10 days'), CURRENT_TIMESTAMP)`
     )
-    .bind(userId, r2Key)
+    .bind(userId, imageDataUrl, r2Key)
     .run();
 
   const overflow = await env.DB
@@ -759,7 +1023,7 @@ async function listPhotoHistory(env, userId) {
   await cleanupExpiredPhotoHistory(env, userId);
   const rows = await env.DB
     .prepare(
-      `SELECT id, r2_key, created_at
+      `SELECT id, image_data_url, r2_key, created_at
        FROM generated_photos
        WHERE user_id = ?1
          AND visible_until IS NOT NULL
@@ -773,15 +1037,25 @@ async function listPhotoHistory(env, userId) {
   const out = [];
   for (const row of list) {
     const key = normalizeText(row?.r2_key);
-    if (!key) continue;
-    const obj = await env.AI_PHOTO_BUCKET.get(key);
-    if (!obj) continue;
-    const bytes = new Uint8Array(await obj.arrayBuffer());
-    const contentType = normalizeText(obj.httpMetadata?.contentType) || "image/png";
+    if (key) {
+      const obj = await env.AI_PHOTO_BUCKET.get(key);
+      if (obj) {
+        const bytes = new Uint8Array(await obj.arrayBuffer());
+        const contentType = normalizeText(obj.httpMetadata?.contentType) || "image/png";
+        out.push({
+          id: row.id,
+          created_at: row.created_at,
+          image_data_url: `data:${contentType};base64,${uint8ArrayToBase64(bytes)}`
+        });
+        continue;
+      }
+    }
+    const legacyDataUrl = normalizeDataUrl(row?.image_data_url);
+    if (!legacyDataUrl) continue;
     out.push({
       id: row.id,
       created_at: row.created_at,
-      image_data_url: `data:${contentType};base64,${uint8ArrayToBase64(bytes)}`
+      image_data_url: legacyDataUrl
     });
   }
   return out;
@@ -1053,11 +1327,204 @@ async function handleAuthWhoAmI(req, env, cors) {
   return json({ ok: true, uid: auth.uid, email: auth.email || null }, 200, cors);
 }
 
+async function handleAdminWhoAmI(req, env, cors) {
+  const admin = await requireAdminUser(req, env, cors);
+  if (!admin.ok) return admin.response;
+  return json({ ok: true, uid: admin.uid, email: admin.email || null, is_admin: true }, 200, cors);
+}
+
+async function handleAdminRuntimeConfigGet(req, env, cors) {
+  const admin = await requireAdminUser(req, env, cors);
+  if (!admin.ok) return admin.response;
+  const config = await getRuntimeConfig(env, { forceRefresh: true });
+  return json(
+    {
+      ok: true,
+      config,
+      editable_keys: ADMIN_RUNTIME_CONFIG_KEYS
+    },
+    200,
+    cors
+  );
+}
+
+async function handleAdminRuntimeConfigPut(req, env, cors) {
+  if (!env.DB) {
+    return json({ error: "DB binding is not configured" }, 500, cors);
+  }
+  const admin = await requireAdminUser(req, env, cors);
+  if (!admin.ok) return admin.response;
+  const body = await req.json().catch(() => ({}));
+  const rawConfig = body?.config;
+  if (!rawConfig || typeof rawConfig !== "object") {
+    return json({ error: "`config` object is required" }, 400, cors);
+  }
+  const updates = {};
+  for (const key of ADMIN_RUNTIME_CONFIG_KEYS) {
+    if (!(key in rawConfig)) continue;
+    const value = normalizeText(rawConfig[key]);
+    if (value.length > 20_000) {
+      return json({ error: `Value too long: ${key}` }, 400, cors);
+    }
+    updates[key] = value;
+  }
+  const keys = Object.keys(updates);
+  if (!keys.length) {
+    return json({ error: "No supported config keys provided" }, 400, cors);
+  }
+
+  await ensureAdminSchema(env);
+  for (const key of keys) {
+    await env.DB
+      .prepare(
+        `INSERT INTO admin_runtime_config (config_key, config_value, updated_by, updated_at)
+         VALUES (?1, ?2, ?3, CURRENT_TIMESTAMP)
+         ON CONFLICT(config_key) DO UPDATE SET
+           config_value = excluded.config_value,
+           updated_by = excluded.updated_by,
+           updated_at = CURRENT_TIMESTAMP`
+      )
+      .bind(key, updates[key], admin.uid)
+      .run();
+  }
+  runtimeConfigCache = { expiresAt: 0, overrides: {} };
+  await appendAdminAuditLog(env, admin, "runtime_config_update", { keys });
+  const config = await getRuntimeConfig(env, { forceRefresh: true });
+  return json({ ok: true, config, updated_keys: keys }, 200, cors);
+}
+
+async function handleAdminPayments(req, env, cors) {
+  if (!env.DB) {
+    return json({ error: "DB binding is not configured" }, 500, cors);
+  }
+  const admin = await requireAdminUser(req, env, cors);
+  if (!admin.ok) return admin.response;
+  const url = new URL(req.url);
+  const limit = Math.min(200, parsePositiveInt(url.searchParams.get("limit"), 50));
+  const list = await env.DB
+    .prepare(
+      `SELECT order_id, user_id, provider, amount_krw, paid_credits, status, created_at, updated_at
+       FROM payments
+       WHERE provider = 'polar'
+         AND status = 'succeeded'
+       ORDER BY datetime(created_at) DESC, order_id DESC
+       LIMIT ?1`
+    )
+    .bind(limit)
+    .all();
+  const summary = await env.DB
+    .prepare(
+      `SELECT
+         COUNT(1) AS succeeded_count,
+         COALESCE(SUM(amount_krw), 0) AS succeeded_amount_krw,
+         COALESCE(SUM(paid_credits), 0) AS succeeded_credits
+       FROM payments
+       WHERE provider = 'polar'
+         AND status = 'succeeded'`
+    )
+    .first();
+  return json(
+    {
+      ok: true,
+      items: Array.isArray(list?.results) ? list.results : [],
+      summary: {
+        succeeded_count: Number(summary?.succeeded_count || 0),
+        succeeded_amount_krw: Number(summary?.succeeded_amount_krw || 0),
+        succeeded_credits: Number(summary?.succeeded_credits || 0)
+      }
+    },
+    200,
+    cors
+  );
+}
+
+async function handleAdminUsers(req, env, cors) {
+  if (!env.DB) {
+    return json({ error: "DB binding is not configured" }, 500, cors);
+  }
+  const admin = await requireAdminUser(req, env, cors);
+  if (!admin.ok) return admin.response;
+  const url = new URL(req.url);
+  const limit = Math.min(200, parsePositiveInt(url.searchParams.get("limit"), 50));
+  const rows = await env.DB
+    .prepare(
+      `SELECT
+         w.user_id,
+         w.paid_credits,
+         w.bonus_credits,
+         w.updated_at,
+         COALESCE((
+           SELECT COUNT(1)
+           FROM payments p
+           WHERE p.user_id = w.user_id
+             AND p.provider = 'polar'
+             AND p.status = 'succeeded'
+         ), 0) AS payment_count,
+         COALESCE((
+           SELECT MAX(created_at)
+           FROM payments p
+           WHERE p.user_id = w.user_id
+             AND p.provider = 'polar'
+             AND p.status = 'succeeded'
+         ), '') AS last_payment_at,
+         COALESCE((SELECT COUNT(1) FROM generated_photos g WHERE g.user_id = w.user_id), 0) AS photo_count
+       FROM wallets w
+       ORDER BY datetime(w.updated_at) DESC, w.user_id ASC
+       LIMIT ?1`
+    )
+    .bind(limit)
+    .all();
+  return json({ ok: true, items: Array.isArray(rows?.results) ? rows.results : [] }, 200, cors);
+}
+
+async function handleAdminOverview(req, env, cors) {
+  if (!env.DB) {
+    return json({ error: "DB binding is not configured" }, 500, cors);
+  }
+  const admin = await requireAdminUser(req, env, cors);
+  if (!admin.ok) return admin.response;
+  await ensureAdminSchema(env);
+  const config = await getRuntimeConfig(env, { forceRefresh: true });
+  const stats = await env.DB
+    .prepare(
+      `SELECT
+         (SELECT COUNT(1) FROM wallets) AS wallet_users,
+         (SELECT COUNT(1) FROM payments) AS payment_rows,
+         (SELECT COUNT(1) FROM payments WHERE status = 'succeeded') AS succeeded_payments,
+         (SELECT COUNT(1) FROM generated_photos) AS generated_photos`
+    )
+    .first();
+  const recentAudit = await env.DB
+    .prepare(
+      `SELECT actor_uid, actor_email, action, payload, created_at
+       FROM admin_audit_logs
+       ORDER BY id DESC
+       LIMIT 20`
+    )
+    .all();
+  return json(
+    {
+      ok: true,
+      runtime_config: config,
+      stats: {
+        wallet_users: Number(stats?.wallet_users || 0),
+        payment_rows: Number(stats?.payment_rows || 0),
+        succeeded_payments: Number(stats?.succeeded_payments || 0),
+        generated_photos: Number(stats?.generated_photos || 0)
+      },
+      audit_logs: Array.isArray(recentAudit?.results) ? recentAudit.results : []
+    },
+    200,
+    cors
+  );
+}
+
 async function handleAiApi(req, env, cors) {
   const body = await req.json().catch(() => ({}));
+  const runtimeConfig = await getRuntimeConfig(env);
   const message = normalizeText(body.message);
   const system = normalizeText(body.system);
-  const model = normalizeText(body.model) || "gpt-4.1-nano";
+  const model = normalizeText(body.model) || resolveDefaultAiModel(env, runtimeConfig);
   const temperature = Number.isFinite(body.temperature) ? body.temperature : 0.7;
   const maxOutputTokens = Number.isFinite(body.max_output_tokens)
     ? Math.min(Math.max(body.max_output_tokens, 64), 4096)
@@ -1116,8 +1583,146 @@ async function handleAiApi(req, env, cors) {
   );
 }
 
+async function handleNamingReport(req, env, cors) {
+  const body = await req.json().catch(() => ({}));
+  const layerWeights = Array.isArray(body.layer_weights) ? body.layer_weights : [];
+  const interviewAnswers = Array.isArray(body.interview_answers) ? body.interview_answers : [];
+  const childGender = normalizeText(body.child_gender) || "unknown";
+  const model = normalizeText(body.model) || "gpt-4.1-mini";
+  const requestContext = {
+    path: new URL(req.url).pathname,
+    cf_country: req?.cf?.country || null,
+    cf_colo: req?.cf?.colo || null
+  };
+
+  if (!layerWeights.length) {
+    return json({ error: "`layer_weights` is required" }, 400, cors);
+  }
+  if (!interviewAnswers.some((item) => normalizeText(item?.answer))) {
+    return json({ error: "At least one interview answer is required" }, 400, cors);
+  }
+
+  let usageState = null;
+  let deductionReverted = false;
+  const maybeRevertDeduction = async (reason) => {
+    if (!usageState || deductionReverted) return;
+    await revertDeduction(
+      env,
+      usageState.uid,
+      usageState.paidDelta,
+      usageState.bonusDelta,
+      `${usageState.sourceId}:${reason}`
+    );
+    deductionReverted = true;
+  };
+
+  if (env.DB) {
+    const auth = await requireFirebaseUser(req, env, cors);
+    if (!auth.ok) return auth.response;
+    const sourceId = `naming_${crypto.randomUUID()}`;
+    const deduction = await deductCreditsOrThrow(env, auth.uid, 250, sourceId);
+    if (!deduction.ok) {
+      const wallet = await getWallet(env, auth.uid);
+      return json(
+        {
+          error: "Insufficient credits",
+          required_credits: 250,
+          paid_credits: Number(wallet?.paid_credits || 0),
+          bonus_credits: Number(wallet?.bonus_credits || 0)
+        },
+        402,
+        cors
+      );
+    }
+    usageState = {
+      uid: auth.uid,
+      sourceId,
+      paidDelta: deduction.paidDelta,
+      bonusDelta: deduction.bonusDelta
+    };
+  }
+
+  try {
+    const system = [
+      "You are a Korean baby naming strategist.",
+      "Return strict JSON only.",
+      "Create exactly 5 recommendations.",
+      "Output keys:",
+      "{\"interview_summary\":\"...\",\"naming_strategy\":\"...\",\"certificate_text\":\"...\",\"top_recommendations\":[{\"name_kr\":\"...\",\"name_hanja\":\"...\",\"hanja_meaning\":\"...\",\"name_en\":\"...\",\"name_meaning\":\"...\",\"story\":\"...\",\"expert_role\":\"...\",\"expert_commentary\":\"...\",\"scores\":{\"name\":0,\"english\":0,\"hanja\":0,\"meaning\":0,\"saju\":0,\"religion\":0}}]}",
+      "Score each axis from 0 to 100.",
+      "For each recommendation, write detailed but concise Korean analysis.",
+      "expert_role and expert_commentary must reflect the highest-priority layer from layer_weights."
+    ].join(" ");
+    const message = JSON.stringify({
+      child_gender: childGender,
+      layer_weights: layerWeights,
+      interview_answers: interviewAnswers
+    });
+
+    const upstream = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model,
+        input: [
+          {
+            role: "system",
+            content: [{ type: "input_text", text: system }]
+          },
+          {
+            role: "user",
+            content: [{ type: "input_text", text: message }]
+          }
+        ],
+        temperature: 0.6,
+        max_output_tokens: 2200
+      })
+    });
+    const data = await upstream.json().catch(() => ({}));
+    if (!upstream.ok) {
+      await maybeRevertDeduction("upstream_error");
+      return json(buildOpenAiErrorPayload(data, "Naming report generation failed", requestContext), upstream.status, cors);
+    }
+
+    let walletSnapshot = null;
+    if (usageState && env.DB) {
+      walletSnapshot = await getWallet(env, usageState.uid);
+    }
+    return json(
+      {
+        ok: true,
+        text: extractResponseText(data),
+        model: data.model || model,
+        id: data.id || null,
+        required_credits: 250,
+        wallet: walletSnapshot
+          ? {
+              paid_credits: Number(walletSnapshot.paid_credits || 0),
+              bonus_credits: Number(walletSnapshot.bonus_credits || 0),
+              total_credits:
+                Number(walletSnapshot.paid_credits || 0) +
+                Number(walletSnapshot.bonus_credits || 0)
+            }
+          : null,
+        raw: data
+      },
+      200,
+      cors
+    );
+  } catch (err) {
+    await maybeRevertDeduction("unexpected_error");
+    const message = normalizeText(err?.message) || "Unexpected server error";
+    return json({ error: message }, 500, cors);
+  }
+}
+
 async function handleBabyPhoto(req, env, cors) {
   const body = await req.json().catch(() => ({}));
+  const runtimeConfig = await getRuntimeConfig(env);
+  const babyPhotoConfig = resolveBabyPhotoConfig(env, runtimeConfig);
   const motherImageDataUrl = normalizeDataUrl(body.mother_image_data_url);
   const fatherImageDataUrl = normalizeDataUrl(body.father_image_data_url);
   const ultrasoundImageDataUrls = normalizeDataUrlList(body.ultrasound_image_data_urls);
@@ -1203,17 +1808,11 @@ async function handleBabyPhoto(req, env, cors) {
   const analysisUserContent = [
     {
       type: "input_text",
-      text: [
-        "Analyze parent photos and ultrasound photos together and infer likely newborn face traits.",
-        "Focus on eyes, nose, mouth, and side profile from all references.",
-        "Default to a Korean newborn appearance baseline unless parent features clearly indicate another ethnicity.",
-        "If either parent has visible non-Korean traits, preserve and reflect those traits naturally.",
-        "Return strict JSON only with these keys:",
-        "{\"combined_features_english\":\"...\",\"eye_features_english\":\"...\",\"nose_features_english\":\"...\",\"mouth_features_english\":\"...\",\"side_profile_features_english\":\"...\"}.",
-        "Use concise phrases, no diagnosis.",
-        `Gestational weeks: ${gestationalWeeks}.`,
-        `Expected gender: ${genderLabel}.`
-      ].join(" ")
+      text:
+        fillPromptTemplate(babyPhotoConfig.analysisInstructionOverride, {
+          gestationalWeeks: String(gestationalWeeks || ""),
+          genderLabel
+        }) || buildBabyPhotoAnalysisInstruction({ gestationalWeeks, genderLabel })
     },
     { type: "input_text", text: "Mother photo:" },
     { type: "input_image", image_url: motherImageDataUrl },
@@ -1234,11 +1833,11 @@ async function handleBabyPhoto(req, env, cors) {
         "Authorization": `Bearer ${env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: "gpt-4.1-mini",
+        model: babyPhotoConfig.analysisModel,
         input: [
           {
             role: "system",
-            content: [{ type: "input_text", text: "You extract newborn facial traits from reference images for a realistic portrait prompt." }]
+            content: [{ type: "input_text", text: babyPhotoConfig.analysisSystemPrompt }]
           },
           {
             role: "user",
@@ -1260,22 +1859,29 @@ async function handleBabyPhoto(req, env, cors) {
   const combinedFeatures = normalizeText(featurePayload.combined_features_english);
   const featureSentence = buildRealisticFeatureSentence(featurePayload);
 
-  const imagePrompt = [
-    "A high-quality photorealistic portrait of a newborn baby, just a few days old.",
-    "The baby is sleeping peacefully, swaddled in a clean white newborn blanket, wearing a tiny white knit beanie.",
-    "Default appearance baseline: Korean newborn (East Asian) unless parent traits clearly suggest otherwise.",
-    "If parent photos show non-Korean ancestry traits, blend and preserve those traits naturally.",
-    "Preserve natural newborn proportions and skin texture.",
-    `Use parent resemblance cues and ultrasound cues for facial structure: ${featureSentence}.`,
-    `Combined newborn facial traits: ${combinedFeatures}.`,
-    "Bright, clean, high-key lighting with a soft white background and minimal visual clutter.",
-    "Overall tone should be bright, neat, and gentle with realistic color grading.",
-    "Close-up camera angle, shallow depth of field.",
-    "No cartoon, no 3D animation, no illustration, no stylization.",
-    `Gestational age hint: ${gestationalWeeks} weeks.`,
-    `Expected sex hint: ${genderLabel}.`,
-    "No text, no watermark."
-  ].join(" ");
+  const imagePrompt =
+    fillPromptTemplate(babyPhotoConfig.imagePromptOverride, {
+      featureSentence,
+      combinedFeatures,
+      gestationalWeeks: String(gestationalWeeks || ""),
+      genderLabel,
+      promptVersion: babyPhotoConfig.promptVersion,
+      imageStylePrompt: babyPhotoConfig.imageStylePrompt,
+      imageScenePrompt: babyPhotoConfig.imageScenePrompt,
+      imageSafetyPrompt: babyPhotoConfig.imageSafetyPrompt,
+      imageNegativePrompt: babyPhotoConfig.imageNegativePrompt
+    }) ||
+    buildBabyPhotoImagePrompt({
+      featureSentence,
+      combinedFeatures,
+      gestationalWeeks,
+      genderLabel,
+      promptVersion: babyPhotoConfig.promptVersion,
+      stylePrompt: babyPhotoConfig.imageStylePrompt,
+      scenePrompt: babyPhotoConfig.imageScenePrompt,
+      safetyPrompt: babyPhotoConfig.imageSafetyPrompt,
+      negativePrompt: babyPhotoConfig.imageNegativePrompt
+    });
 
   const imageRes = await fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
@@ -1284,7 +1890,7 @@ async function handleBabyPhoto(req, env, cors) {
       "Authorization": `Bearer ${env.OPENAI_API_KEY}`
     },
     body: JSON.stringify({
-      model: "gpt-image-1",
+      model: babyPhotoConfig.imageModel,
       prompt: imagePrompt,
       size: "1024x1024",
       quality: "medium",
@@ -1321,6 +1927,10 @@ async function handleBabyPhoto(req, env, cors) {
     {
       ok: true,
       image_data_url: imageDataUrl,
+      analysis_model_used: babyPhotoConfig.analysisModel,
+      analysis_prompt_version: babyPhotoConfig.analysisPromptVersion,
+      prompt_version: babyPhotoConfig.promptVersion,
+      model_used: babyPhotoConfig.imageModel,
       prompt_used: imagePrompt,
       combined_features_english: combinedFeatures,
       eye_features_english: featurePayload.eye_features_english,
@@ -1363,12 +1973,36 @@ export default {
       if (req.method !== "GET") return json({ error: "Method not allowed" }, 405, cors);
       return handleAuthWhoAmI(req, env, cors);
     }
+    if (url.pathname === "/api/admin/whoami") {
+      if (req.method !== "GET") return json({ error: "Method not allowed" }, 405, cors);
+      return handleAdminWhoAmI(req, env, cors);
+    }
+    if (url.pathname === "/api/admin/overview") {
+      if (req.method !== "GET") return json({ error: "Method not allowed" }, 405, cors);
+      return handleAdminOverview(req, env, cors);
+    }
+    if (url.pathname === "/api/admin/runtime-config") {
+      if (req.method === "GET") return handleAdminRuntimeConfigGet(req, env, cors);
+      if (req.method === "PUT") return handleAdminRuntimeConfigPut(req, env, cors);
+      return json({ error: "Method not allowed" }, 405, cors);
+    }
+    if (url.pathname === "/api/admin/payments") {
+      if (req.method !== "GET") return json({ error: "Method not allowed" }, 405, cors);
+      return handleAdminPayments(req, env, cors);
+    }
+    if (url.pathname === "/api/admin/users") {
+      if (req.method !== "GET") return json({ error: "Method not allowed" }, 405, cors);
+      return handleAdminUsers(req, env, cors);
+    }
     if (url.pathname === "/api/wallet") {
       if (req.method !== "GET") return json({ error: "Method not allowed" }, 405, cors);
       return handleWalletApi(req, env, cors);
     }
     if (url.pathname === "/api/baby-photo/history") {
       if (req.method !== "GET") return json({ error: "Method not allowed" }, 405, cors);
+      if (isBabyPhotoServiceDisabled(env)) {
+        return json({ error: "AI baby photo service is temporarily disabled" }, 503, cors);
+      }
       return handleBabyPhotoHistoryApi(req, env, cors);
     }
     if (url.pathname === "/api/billing/checkout") {
@@ -1387,8 +2021,18 @@ export default {
       }
       return handleAiApi(req, env, cors);
     }
+    if (url.pathname === "/api/naming-report") {
+      if (req.method !== "POST") return json({ error: "Method not allowed" }, 405, cors);
+      if (!env.OPENAI_API_KEY) {
+        return json({ error: "OPENAI_API_KEY is not configured" }, 500, cors);
+      }
+      return handleNamingReport(req, env, cors);
+    }
     if (url.pathname === "/api/baby-photo") {
       if (req.method !== "POST") return json({ error: "Method not allowed" }, 405, cors);
+      if (isBabyPhotoServiceDisabled(env)) {
+        return json({ error: "AI baby photo service is temporarily disabled" }, 503, cors);
+      }
       if (!env.OPENAI_API_KEY) {
         return json({ error: "OPENAI_API_KEY is not configured" }, 500, cors);
       }
