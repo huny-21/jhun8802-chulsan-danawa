@@ -1252,6 +1252,29 @@ input[readonly] {
     border-top: 1px dashed #dbe6ef;
 }
 
+.naming-report-includes {
+    border: 1px solid #dbe6ef;
+    border-radius: 10px;
+    background: #f9fcfb;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+}
+
+.naming-report-includes-title {
+    margin: 0 0 6px;
+    font-size: 0.86rem;
+    font-weight: 800;
+    color: #2f5c56;
+}
+
+.naming-report-includes-list {
+    margin: 0;
+    padding-left: 18px;
+    color: #334155;
+    font-size: 0.84rem;
+    line-height: 1.5;
+}
+
 #namingApplyLayersBtn {
     width: 100%;
     max-width: 360px;
