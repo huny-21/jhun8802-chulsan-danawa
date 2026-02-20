@@ -33,7 +33,7 @@
     <meta name="twitter:image" content="https://chulsan-danawa.com/og-image-20260217-3.png">
     <link rel="icon" type="image/svg+xml" href="favicon.svg?v=4">
     <link rel="shortcut icon" href="favicon.svg?v=4">
-    <link rel="stylesheet" href="style.css?v=62">
+    <link rel="stylesheet" href="style.css?v=63">
     <!-- Google Fonts: Noto Sans KR (Weights 400, 500, 700, 900) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -565,7 +565,7 @@
                     <p class="disclaimer">※ 현재는 작명소 프리뷰 단계로, 실제 추천/리포트 자동 생성 기능은 순차 오픈 예정입니다.</p>
                 </section>
                 <form id="namingLabForm" class="ai-photo-form" novalidate onsubmit="return false;">
-                    <section class="ai-step-card" aria-label="레이어 중요도 설정">
+                    <section class="ai-step-card naming-layer-step" aria-label="레이어 중요도 설정">
                         <h3><span>A</span> 레이어 중요도 설정</h3>
                         <div class="naming-preset-row" role="group" aria-label="레이어 프리셋">
                             <button type="button" class="btn-secondary" data-naming-preset="traditional">전통 균형형</button>
@@ -575,32 +575,32 @@
                             <button type="button" class="btn-secondary" data-naming-preset="ai">AI 추천</button>
                         </div>
                         <p class="readonly-hint">각 레이어 중요도를 0~100으로 설정하세요. 값이 높을수록 이름 추천에 더 크게 반영됩니다.</p>
-                        <div class="form-row">
-                            <div class="form-group">
+                        <div class="form-row naming-layer-grid">
+                            <div class="form-group naming-layer-card">
                                 <label for="layerSajuWeight">사주 <strong id="layerSajuWeightValue">70</strong></label>
                                 <input id="layerSajuWeight" data-layer-input="saju" type="range" min="0" max="100" step="5" value="70">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group naming-layer-card">
                                 <label for="layerTrendWeight">트렌드 (인기) <strong id="layerTrendWeightValue">45</strong></label>
                                 <input id="layerTrendWeight" data-layer-input="trend" type="range" min="0" max="100" step="5" value="45">
                             </div>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
+                        <div class="form-row naming-layer-grid">
+                            <div class="form-group naming-layer-card">
                                 <label for="layerStoryWeight">감성 (스토리) <strong id="layerStoryWeightValue">80</strong></label>
                                 <input id="layerStoryWeight" data-layer-input="story" type="range" min="0" max="100" step="5" value="80">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group naming-layer-card">
                                 <label for="layerGlobalWeight">글로벌 (국제) <strong id="layerGlobalWeightValue">55</strong></label>
                                 <input id="layerGlobalWeight" data-layer-input="global" type="range" min="0" max="100" step="5" value="55">
                             </div>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
+                        <div class="form-row naming-layer-grid">
+                            <div class="form-group naming-layer-card">
                                 <label for="layerEnergyWeight">에너지 (파동) <strong id="layerEnergyWeightValue">60</strong></label>
                                 <input id="layerEnergyWeight" data-layer-input="energy" type="range" min="0" max="100" step="5" value="60">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group naming-layer-card">
                                 <label for="layerReligionWeight">종교 <strong id="layerReligionWeightValue">35</strong></label>
                                 <input id="layerReligionWeight" data-layer-input="religion" type="range" min="0" max="100" step="5" value="35">
                             </div>
