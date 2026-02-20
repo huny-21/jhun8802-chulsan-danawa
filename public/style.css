@@ -3249,22 +3249,21 @@ input[readonly] {
   display: none;
 }
 
-/* Naming interview: always horizontal card flow */
+/* Naming interview: keep layout width stable with stacked questions (Q1, Q2, Q3) */
 #namingQuestionList.form-row {
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  overflow-x: auto;
+  display: grid !important;
+  grid-template-columns: 1fr;
   gap: 12px;
-  padding-bottom: 4px;
-  scroll-snap-type: x proximity;
-  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 #namingQuestionList .naming-question-card {
-  flex: 0 0 clamp(260px, 36vw, 360px);
+  width: 100%;
+  max-width: 100%;
   margin-bottom: 0;
-  scroll-snap-align: start;
-  min-height: 170px;
+  min-height: 0;
 }
 
 /* Naming lab overflow guard */
