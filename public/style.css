@@ -3231,3 +3231,40 @@ input[readonly] {
   scroll-snap-align: start;
   min-height: 170px;
 }
+
+/* Naming lab overflow guard */
+#aiServicePanel .card,
+#aiServicePanel .ai-step-card,
+#aiServicePanel .card-subsection,
+#aiServicePanel .ai-history-box,
+#aiServicePanel .form-row,
+#aiServicePanel .form-group,
+#aiServicePanel .ai-review-card,
+#aiServicePanel .naming-top-pick {
+  max-width: 100%;
+  min-width: 0;
+}
+
+#aiServicePanel .form-row {
+  flex-wrap: wrap;
+}
+
+#aiServicePanel .ai-history-grid > * {
+  min-width: 0;
+}
+
+#aiServicePanel .ai-review-text,
+#aiServicePanel .readonly-hint,
+#aiServicePanel .naming-question-input,
+#aiServicePanel .naming-question-card label {
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+#aiServicePanel .naming-seal-group {
+  align-items: flex-start;
+}
+
+#aiServicePanel .naming-seal-image {
+  max-width: min(100%, 240px);
+}
