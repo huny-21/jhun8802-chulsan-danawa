@@ -919,10 +919,6 @@ input[readonly] {
     color: #2f766d;
 }
 
-#namingHeroCtaBtn {
-    margin-top: 12px;
-}
-
 .ai-summary-card {
     border: 1px solid #E2E8F0;
     border-left: 4px solid #4A8F86;
@@ -3060,4 +3056,18 @@ input[readonly] {
 
 .hidden {
   display: none;
+}
+
+/* Naming interview: always horizontal card flow */
+#namingQuestionList.form-row {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+
+#namingQuestionList .naming-question-card {
+  flex: 0 0 min(360px, 82vw);
+  margin-bottom: 0;
 }

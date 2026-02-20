@@ -474,7 +474,6 @@
                     <h3>우리 아이 첫 이름, AI가 설계합니다</h3>
                     <p>단순 추천이 아니라 부모의 가치관과 아이의 미래상을 해석해, 이유가 분명한 이름 후보와 분석 리포트를 제공합니다.</p>
                     <p class="service-positioning-flow">① 3분 설정 → ② AI 분석 → ③ 이름 리포트 받기</p>
-                    <button type="button" id="namingHeroCtaBtn" class="btn-primary">무료로 미리보기</button>
                 </section>
                 <div class="ai-auth-box" aria-label="작명소 로그인">
                     <div class="ai-auth-actions">
@@ -558,7 +557,7 @@
                     <p class="readonly-hint">이름 후보를 단어가 아닌 ‘의미 상품’으로 제공합니다.</p>
                     <ul class="ai-guide-list">
                         <li><strong>이름 서사 생성기</strong>: 부모의 가치관과 연결된 추천 이유를 감동적인 문장으로 제시</li>
-                        <li><strong>육각형 밸런스 차트</strong>: 이름·영어·한자·이름 뜻·사주·종교 레이어를 직관적으로 시각화</li>
+                        <li><strong>육각형 밸런스 차트</strong>: 사주·트렌드·감성·글로벌·에너지·종교 레이어를 직관적으로 시각화</li>
                         <li><strong>디지털 인증서</strong>: 선택한 이름의 뜻/한자/발음 가이드를 담은 PDF 인증서 발행</li>
                     </ul>
                 </section>
@@ -614,6 +613,34 @@
                             </div>
                         </div>
                         <div class="form-row">
+                            <div class="form-group">
+                                <label for="namingSurname">성 (필수)</label>
+                                <input id="namingSurname" type="text" maxlength="2" placeholder="예: 김" value="김">
+                            </div>
+                            <div class="form-group">
+                                <label for="namingGivenNameMinLength">이름 글자수 최소</label>
+                                <select id="namingGivenNameMinLength">
+                                    <option value="2" selected>2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="namingGivenNameMaxLength">이름 글자수 최대</label>
+                                <select id="namingGivenNameMaxLength">
+                                    <option value="2" selected>2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="check-option" for="namingLinkSurname">
+                                    <input type="checkbox" id="namingLinkSurname" checked>
+                                    <span>성과 연결성 고려 (기본)</span>
+                                </label>
+                            </div>
                             <div class="form-group">
                                 <label for="namingChildGender">아이 성별 (선택)</label>
                                 <select id="namingChildGender">
@@ -688,11 +715,11 @@
                             <thead>
                                 <tr>
                                     <th>후보명</th>
-                                    <th>국문이름</th>
-                                    <th>영어</th>
-                                    <th>한자</th>
-                                    <th>이름 뜻</th>
                                     <th>사주</th>
+                                    <th>트렌드</th>
+                                    <th>감성</th>
+                                    <th>글로벌</th>
+                                    <th>에너지</th>
                                     <th>종교</th>
                                 </tr>
                             </thead>
@@ -757,6 +784,6 @@
     </script>
     <script src="ads.js?v=1"></script>
     <!-- type="module" 지정 필수 -->
-    <script type="module" src="script.js?v=74"></script>
+    <script type="module" src="script.js?v=75"></script>
 </body>
 </html>

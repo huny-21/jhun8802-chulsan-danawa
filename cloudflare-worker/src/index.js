@@ -1588,6 +1588,22 @@ async function handleNamingReport(req, env, cors) {
   const layerWeights = Array.isArray(body.layer_weights) ? body.layer_weights : [];
   const interviewAnswers = Array.isArray(body.interview_answers) ? body.interview_answers : [];
   const childGender = normalizeText(body.child_gender) || "unknown";
+  const rawConstraints = body?.naming_constraints && typeof body.naming_constraints === "object"
+    ? body.naming_constraints
+    : {};
+  const surname = normalizeText(rawConstraints.surname);
+  let minNameLength = Number(rawConstraints.given_name_min_length);
+  let maxNameLength = Number(rawConstraints.given_name_max_length);
+  if (!Number.isFinite(minNameLength)) minNameLength = 2;
+  if (!Number.isFinite(maxNameLength)) maxNameLength = 2;
+  minNameLength = Math.max(2, Math.min(4, Math.round(minNameLength)));
+  maxNameLength = Math.max(2, Math.min(4, Math.round(maxNameLength)));
+  if (minNameLength > maxNameLength) {
+    const swap = minNameLength;
+    minNameLength = maxNameLength;
+    maxNameLength = swap;
+  }
+  const considerSurnameLinkage = rawConstraints.consider_surname_linkage !== false;
   const model = normalizeText(body.model) || "gpt-4.1-mini";
   const requestContext = {
     path: new URL(req.url).pathname,
@@ -1600,6 +1616,9 @@ async function handleNamingReport(req, env, cors) {
   }
   if (!interviewAnswers.some((item) => normalizeText(item?.answer))) {
     return json({ error: "At least one interview answer is required" }, 400, cors);
+  }
+  if (!surname) {
+    return json({ error: "`naming_constraints.surname` is required" }, 400, cors);
   }
 
   let usageState = null;
@@ -1643,20 +1662,35 @@ async function handleNamingReport(req, env, cors) {
   }
 
   try {
+    const lengthRule = minNameLength === maxNameLength
+      ? `name_kr must be exactly ${minNameLength} Hangul syllables.`
+      : `name_kr must be ${minNameLength} to ${maxNameLength} Hangul syllables.`;
+    const surnameRule = considerSurnameLinkage
+      ? `Assume surname is "${surname}" and optimize linkage between surname and given name sound/flow.`
+      : `Surname is "${surname}", but linkage optimization is optional.`;
     const system = [
       "You are a Korean baby naming strategist.",
       "Return strict JSON only.",
       "Create exactly 5 recommendations.",
       "Output keys:",
-      "{\"interview_summary\":\"...\",\"naming_strategy\":\"...\",\"certificate_text\":\"...\",\"top_recommendations\":[{\"name_kr\":\"...\",\"name_hanja\":\"...\",\"hanja_meaning\":\"...\",\"name_en\":\"...\",\"name_meaning\":\"...\",\"story\":\"...\",\"expert_role\":\"...\",\"expert_commentary\":\"...\",\"scores\":{\"name\":0,\"english\":0,\"hanja\":0,\"meaning\":0,\"saju\":0,\"religion\":0}}]}",
+      "{\"interview_summary\":\"...\",\"naming_strategy\":\"...\",\"certificate_text\":\"...\",\"top_recommendations\":[{\"name_kr\":\"...\",\"name_hanja\":\"...\",\"hanja_meaning\":\"...\",\"name_en\":\"...\",\"name_meaning\":\"...\",\"story\":\"...\",\"expert_role\":\"...\",\"expert_commentary\":\"...\",\"scores\":{\"saju\":0,\"trend\":0,\"story\":0,\"global\":0,\"energy\":0,\"religion\":0}}]}",
       "Score each axis from 0 to 100.",
+      "name_kr must be given name only (exclude surname).",
+      lengthRule,
+      surnameRule,
       "For each recommendation, write detailed but concise Korean analysis.",
       "expert_role and expert_commentary must reflect the highest-priority layer from layer_weights."
     ].join(" ");
     const message = JSON.stringify({
       child_gender: childGender,
       layer_weights: layerWeights,
-      interview_answers: interviewAnswers
+      interview_answers: interviewAnswers,
+      naming_constraints: {
+        surname,
+        given_name_min_length: minNameLength,
+        given_name_max_length: maxNameLength,
+        consider_surname_linkage: considerSurnameLinkage
+      }
     });
 
     const upstream = await fetch("https://api.openai.com/v1/responses", {

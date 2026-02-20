@@ -41,7 +41,6 @@ const servicePanels = {
     calendar: document.getElementById('calendarServicePanel'),
     ai: document.getElementById('aiServicePanel')
 };
-const namingHeroCtaBtn = document.getElementById('namingHeroCtaBtn');
 const quickStartBtns = document.querySelectorAll('.quick-start-btn');
 const babyPhotoForm = document.getElementById('babyPhotoForm');
 const ultrasoundImageInput = document.getElementById('ultrasoundImageInput');
@@ -96,6 +95,10 @@ const namingCandidateList = document.getElementById('namingCandidateList');
 const namingScoreTableBody = document.getElementById('namingScoreTableBody');
 const namingCertificateText = document.getElementById('namingCertificateText');
 const namingChildGender = document.getElementById('namingChildGender');
+const namingSurnameInput = document.getElementById('namingSurname');
+const namingGivenNameMinLengthInput = document.getElementById('namingGivenNameMinLength');
+const namingGivenNameMaxLengthInput = document.getElementById('namingGivenNameMaxLength');
+const namingLinkSurnameInput = document.getElementById('namingLinkSurname');
 const namingDetailHeader = document.getElementById('namingDetailHeader');
 const namingDetailName = document.getElementById('namingDetailName');
 const namingDetailEnglish = document.getElementById('namingDetailEnglish');
@@ -126,6 +129,12 @@ let lastTrackedServiceTab = '';
 let namingQuestionState = [];
 let namingAnswerCache = {};
 let namingReportItems = [];
+let namingConstraintsState = {
+    surname: '김',
+    given_name_min_length: 2,
+    given_name_max_length: 2,
+    consider_surname_linkage: true
+};
 
 const SERVICE_GA_META = {
     benefit: { path: '/service/benefit', title: '혜택 찾기' },
@@ -457,6 +466,41 @@ function parseJsonObjectFromText(rawText) {
     }
 }
 
+function normalizeNameLength(value, fallback = 2) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.max(2, Math.min(4, Math.round(n)));
+}
+
+function collectNamingConstraints() {
+    const surname = String(namingSurnameInput?.value || '').trim();
+    let minLength = normalizeNameLength(namingGivenNameMinLengthInput?.value, 2);
+    let maxLength = normalizeNameLength(namingGivenNameMaxLengthInput?.value, 2);
+    if (minLength > maxLength) {
+        const swap = minLength;
+        minLength = maxLength;
+        maxLength = swap;
+        if (namingGivenNameMinLengthInput) namingGivenNameMinLengthInput.value = String(minLength);
+        if (namingGivenNameMaxLengthInput) namingGivenNameMaxLengthInput.value = String(maxLength);
+    }
+    return {
+        surname,
+        given_name_min_length: minLength,
+        given_name_max_length: maxLength,
+        consider_surname_linkage: namingLinkSurnameInput ? Boolean(namingLinkSurnameInput.checked) : true
+    };
+}
+
+function combineDisplayName(nameKr) {
+    const baseName = String(nameKr || '').trim();
+    if (!baseName) return '-';
+    const surname = String(namingConstraintsState?.surname || '').trim();
+    const shouldLink = Boolean(namingConstraintsState?.consider_surname_linkage);
+    if (!shouldLink || !surname) return baseName;
+    if (baseName.startsWith(surname)) return baseName;
+    return `${surname}${baseName}`;
+}
+
 function scoreCell(value) {
     const n = Number(value);
     if (!Number.isFinite(n)) return 0;
@@ -471,11 +515,11 @@ function getLayerScore(item, key) {
 function renderNamingRadar(scores = {}) {
     if (!namingLayerRadarSvg) return;
     const axes = [
-        { key: 'name', label: '이름' },
-        { key: 'english', label: '영어' },
-        { key: 'hanja', label: '한자' },
-        { key: 'meaning', label: '이름 뜻' },
         { key: 'saju', label: '사주' },
+        { key: 'trend', label: '트렌드' },
+        { key: 'story', label: '감성' },
+        { key: 'global', label: '글로벌' },
+        { key: 'energy', label: '에너지' },
         { key: 'religion', label: '종교' }
     ];
     const cx = 180;
@@ -512,8 +556,8 @@ function renderNamingRadar(scores = {}) {
 
 function renderNamingDetail(item) {
     if (!item) return;
-    if (namingDetailHeader) namingDetailHeader.textContent = `${item.name_kr || '-'} 상세 분석`;
-    if (namingDetailName) namingDetailName.textContent = `${item.name_kr || '-'} ${item.name_hanja ? `(${item.name_hanja})` : ''}`.trim();
+    if (namingDetailHeader) namingDetailHeader.textContent = `${combineDisplayName(item.name_kr || '-')} 상세 분석`;
+    if (namingDetailName) namingDetailName.textContent = `${combineDisplayName(item.name_kr || '-')} ${item.name_hanja ? `(${item.name_hanja})` : ''}`.trim();
     if (namingDetailEnglish) namingDetailEnglish.textContent = item.name_en || '-';
     if (namingDetailHanja) namingDetailHanja.textContent = item.hanja_meaning ? `${item.name_hanja || '-'}: ${item.hanja_meaning}` : (item.name_hanja || '-');
     if (namingDetailMeaning) namingDetailMeaning.textContent = item.name_meaning || item.story || '-';
@@ -530,7 +574,7 @@ function renderNamingReport(report) {
     const items = Array.isArray(report?.top_recommendations) ? report.top_recommendations : [];
     namingReportItems = items;
     namingCandidateList.innerHTML = items.map((item) => {
-        const nameKr = String(item?.name_kr || '').trim() || '이름 미정';
+        const nameKr = combineDisplayName(item?.name_kr || '');
         const nameHanja = String(item?.name_hanja || '').trim();
         const nameEn = String(item?.name_en || '').trim();
         const story = String(item?.story || '').trim();
@@ -552,14 +596,14 @@ function renderNamingReport(report) {
     });
 
     namingScoreTableBody.innerHTML = items.map((item) => {
-        const nameKr = String(item?.name_kr || '').trim() || '-';
+        const nameKr = combineDisplayName(item?.name_kr || '');
         return `<tr>
             <td>${escapeHtml(nameKr)}</td>
-            <td>${getLayerScore(item, 'name')}</td>
-            <td>${getLayerScore(item, 'english')}</td>
-            <td>${getLayerScore(item, 'hanja')}</td>
-            <td>${getLayerScore(item, 'meaning')}</td>
             <td>${getLayerScore(item, 'saju')}</td>
+            <td>${getLayerScore(item, 'trend')}</td>
+            <td>${getLayerScore(item, 'story')}</td>
+            <td>${getLayerScore(item, 'global')}</td>
+            <td>${getLayerScore(item, 'energy')}</td>
             <td>${getLayerScore(item, 'religion')}</td>
         </tr>`;
     }).join('') || '<tr><td colspan="7" class="empty-table">점수 데이터가 없습니다.</td></tr>';
@@ -568,7 +612,7 @@ function renderNamingReport(report) {
     namingCertificateText.textContent = String(report?.certificate_text || '').trim() || '인증서 문안이 없습니다.';
     const topPick = items[0] || null;
     if (topPick && namingTopPick && namingTopPickName && namingTopPickReason) {
-        const topName = String(topPick.name_kr || '').trim() || '이름 미정';
+        const topName = combineDisplayName(topPick.name_kr || '');
         const topReasonParts = [String(topPick.story || '').trim(), String(topPick.expert_commentary || '').trim()].filter(Boolean);
         namingTopPickName.textContent = topName;
         namingTopPickReason.textContent = topReasonParts.join(' ');
@@ -606,6 +650,11 @@ async function handleNamingLabSubmit(e) {
     }
     const layers = getNamingLayerWeights();
     const answers = collectNamingAnswers();
+    const constraints = collectNamingConstraints();
+    if (!constraints.surname) {
+        setNamingLabStatus('성을 입력해 주세요.', true);
+        return;
+    }
     const hasAnswer = answers.some((x) => x.answer.length >= 3);
     if (!hasAnswer) {
         setNamingLabStatus('맞춤 질문에 최소 1개 이상 답변해 주세요.', true);
@@ -624,8 +673,10 @@ async function handleNamingLabSubmit(e) {
             child_gender: String(namingChildGender?.value || 'unknown'),
             layer_weights: layers,
             interview_answers: answers,
+            naming_constraints: constraints,
             model: 'gpt-4.1-mini'
         };
+        namingConstraintsState = constraints;
         const response = await fetch(`${AI_API_BASE}/api/naming-report`, {
             method: 'POST',
             headers: {
@@ -680,6 +731,13 @@ function initNamingLab() {
         if (valueEl) valueEl.textContent = String(input.value || '0');
     });
     if (namingQuestionList) namingQuestionList.innerHTML = '';
+    const syncLengthBounds = () => {
+        const minLength = normalizeNameLength(namingGivenNameMinLengthInput?.value, 2);
+        const maxLength = normalizeNameLength(namingGivenNameMaxLengthInput?.value, 2);
+        if (minLength > maxLength && namingGivenNameMaxLengthInput) namingGivenNameMaxLengthInput.value = String(minLength);
+    };
+    namingGivenNameMinLengthInput?.addEventListener('change', syncLengthBounds);
+    namingGivenNameMaxLengthInput?.addEventListener('change', syncLengthBounds);
     namingPresetBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
             applyNamingPreset(btn.dataset.namingPreset);
@@ -2322,11 +2380,6 @@ function handleTabClick(e) {
 // ==========================================
 function initServiceTabs() {
     const availableBtns = getAvailableServiceTabBtns();
-    namingHeroCtaBtn?.addEventListener('click', () => {
-        const formTop = namingLabForm?.getBoundingClientRect?.().top ?? 0;
-        const absoluteTop = formTop + window.scrollY - 12;
-        window.scrollTo({ top: Math.max(0, absoluteTop), behavior: 'smooth' });
-    });
     availableBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
             const target = btn.dataset.serviceTab;
