@@ -1604,6 +1604,13 @@ async function handleNamingReport(req, env, cors) {
     maxNameLength = swap;
   }
   const considerSurnameLinkage = rawConstraints.consider_surname_linkage !== false;
+  const siblingConsistency = rawConstraints.sibling_consistency === true;
+  const siblingNames = Array.isArray(rawConstraints.sibling_names)
+    ? rawConstraints.sibling_names
+        .map((v) => normalizeText(v))
+        .filter(Boolean)
+        .slice(0, 5)
+    : [];
   const model = normalizeText(body.model) || "gpt-4.1-mini";
   const requestContext = {
     path: new URL(req.url).pathname,
@@ -1619,6 +1626,9 @@ async function handleNamingReport(req, env, cors) {
   }
   if (!surname) {
     return json({ error: "`naming_constraints.surname` is required" }, 400, cors);
+  }
+  if (siblingConsistency && !siblingNames.length) {
+    return json({ error: "`naming_constraints.sibling_names` is required when sibling_consistency is true" }, 400, cors);
   }
 
   let usageState = null;
@@ -1668,6 +1678,10 @@ async function handleNamingReport(req, env, cors) {
     const surnameRule = considerSurnameLinkage
       ? `Assume surname is "${surname}" and optimize linkage between surname and given name sound/flow.`
       : `Surname is "${surname}", but linkage optimization is optional.`;
+    const siblingRule =
+      siblingConsistency && siblingNames.length
+        ? `Also keep sibling naming consistency with [${siblingNames.join(", ")}] in tone/rhythm/style while avoiding near-duplicate confusion.`
+        : "Sibling naming consistency is optional unless explicitly requested.";
     const system = [
       "You are a Korean baby naming strategist.",
       "Return strict JSON only.",
@@ -1678,6 +1692,7 @@ async function handleNamingReport(req, env, cors) {
       "name_kr must be given name only (exclude surname).",
       lengthRule,
       surnameRule,
+      siblingRule,
       "For each recommendation, write detailed but concise Korean analysis.",
       "expert_role and expert_commentary must reflect the highest-priority layer from layer_weights.",
       "expert_commentary must be storytelling-focused Korean prose in 3-4 sentences.",
@@ -1695,7 +1710,9 @@ async function handleNamingReport(req, env, cors) {
         surname,
         given_name_min_length: minNameLength,
         given_name_max_length: maxNameLength,
-        consider_surname_linkage: considerSurnameLinkage
+        consider_surname_linkage: considerSurnameLinkage,
+        sibling_consistency: siblingConsistency,
+        sibling_names: siblingNames
       }
     });
 

@@ -635,6 +635,19 @@
                                 </label>
                             </div>
                             <div class="form-group">
+                                <label class="check-option" for="namingSiblingConsistency">
+                                    <input type="checkbox" id="namingSiblingConsistency">
+                                    <span>형제자매 네이밍 일관성 고려</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div id="namingSiblingNamesWrap" class="form-group hidden">
+                                <label for="namingSiblingNames">형제/자매 이름</label>
+                                <input id="namingSiblingNames" type="text" placeholder="예: 민준, 서윤 (쉼표로 구분)">
+                                <small class="readonly-hint">형제·자매 이름을 쉼표(,)로 구분해 입력해 주세요.</small>
+                            </div>
+                            <div class="form-group">
                                 <label for="namingChildGender">아이 성별 (선택)</label>
                                 <select id="namingChildGender">
                                     <option value="unknown">미정/중립</option>
@@ -782,6 +795,6 @@
     </script>
     <script src="ads.js?v=1"></script>
     <!-- type="module" 지정 필수 -->
-    <script type="module" src="script.js?v=79"></script>
+    <script type="module" src="script.js?v=80"></script>
 </body>
 </html>

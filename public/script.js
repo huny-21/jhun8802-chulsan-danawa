@@ -99,6 +99,9 @@ const namingSurnameInput = document.getElementById('namingSurname');
 const namingGivenNameMinLengthInput = document.getElementById('namingGivenNameMinLength');
 const namingGivenNameMaxLengthInput = document.getElementById('namingGivenNameMaxLength');
 const namingLinkSurnameInput = document.getElementById('namingLinkSurname');
+const namingSiblingConsistencyInput = document.getElementById('namingSiblingConsistency');
+const namingSiblingNamesWrap = document.getElementById('namingSiblingNamesWrap');
+const namingSiblingNamesInput = document.getElementById('namingSiblingNames');
 const namingDetailHeader = document.getElementById('namingDetailHeader');
 const namingDetailName = document.getElementById('namingDetailName');
 const namingDetailEnglish = document.getElementById('namingDetailEnglish');
@@ -136,7 +139,9 @@ let namingConstraintsState = {
     surname: '김',
     given_name_min_length: 2,
     given_name_max_length: 2,
-    consider_surname_linkage: true
+    consider_surname_linkage: true,
+    sibling_consistency: false,
+    sibling_names: []
 };
 
 const SERVICE_GA_META = {
@@ -497,11 +502,19 @@ function collectNamingConstraints() {
         if (namingGivenNameMinLengthInput) namingGivenNameMinLengthInput.value = String(minLength);
         if (namingGivenNameMaxLengthInput) namingGivenNameMaxLengthInput.value = String(maxLength);
     }
+    const siblingRaw = String(namingSiblingNamesInput?.value || '').trim();
+    const siblingNames = siblingRaw
+        .split(/[,\n]/)
+        .map((x) => String(x || '').trim())
+        .filter(Boolean)
+        .slice(0, 5);
     return {
         surname,
         given_name_min_length: minLength,
         given_name_max_length: maxLength,
-        consider_surname_linkage: namingLinkSurnameInput ? Boolean(namingLinkSurnameInput.checked) : true
+        consider_surname_linkage: namingLinkSurnameInput ? Boolean(namingLinkSurnameInput.checked) : true,
+        sibling_consistency: namingSiblingConsistencyInput ? Boolean(namingSiblingConsistencyInput.checked) : false,
+        sibling_names: siblingNames
     };
 }
 
@@ -724,6 +737,10 @@ async function handleNamingLabSubmit(e) {
         setNamingLabStatus('성을 입력해 주세요.', true);
         return;
     }
+    if (constraints.sibling_consistency && (!Array.isArray(constraints.sibling_names) || !constraints.sibling_names.length)) {
+        setNamingLabStatus('형제자매 일관성 옵션을 켠 경우, 형제/자매 이름을 1개 이상 입력해 주세요.', true);
+        return;
+    }
     const hasAnswer = answers.some((x) => x.answer.length >= 3);
     if (!hasAnswer) {
         setNamingLabStatus('맞춤 질문에 최소 1개 이상 답변해 주세요.', true);
@@ -805,8 +822,15 @@ function initNamingLab() {
         const maxLength = normalizeNameLength(namingGivenNameMaxLengthInput?.value, 2);
         if (minLength > maxLength && namingGivenNameMaxLengthInput) namingGivenNameMaxLengthInput.value = String(minLength);
     };
+    const syncSiblingNameInput = () => {
+        if (!namingSiblingNamesWrap || !namingSiblingConsistencyInput) return;
+        const enabled = Boolean(namingSiblingConsistencyInput.checked);
+        namingSiblingNamesWrap.classList.toggle('hidden', !enabled);
+    };
     namingGivenNameMinLengthInput?.addEventListener('change', syncLengthBounds);
     namingGivenNameMaxLengthInput?.addEventListener('change', syncLengthBounds);
+    namingSiblingConsistencyInput?.addEventListener('change', syncSiblingNameInput);
+    syncSiblingNameInput();
     namingPresetBtns.forEach((btn) => {
         btn.addEventListener('click', () => {
             applyNamingPreset(btn.dataset.namingPreset);
