@@ -1747,6 +1747,20 @@ input[readonly] {
     line-height: 1.5;
 }
 
+.naming-layer-table {
+    table-layout: auto;
+    min-width: 640px;
+    width: 100%;
+}
+
+.naming-layer-table th,
+.naming-layer-table td {
+    white-space: normal;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+}
+
 #namingQuestionList.form-row {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
