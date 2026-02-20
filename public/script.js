@@ -332,6 +332,18 @@ function setNamingLabStatus(message, isError = false) {
     namingLabStatus.style.color = isError ? '#B91C1C' : '#166534';
 }
 
+function focusChargeGuide() {
+    if (walletBox && !walletBox.classList.contains('hidden')) {
+        walletBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        walletBox.style.boxShadow = '0 0 0 3px rgba(74, 143, 134, 0.28)';
+        window.setTimeout(() => {
+            walletBox.style.boxShadow = '';
+        }, 1600);
+        return;
+    }
+    chargeCreditsBtn?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+}
+
 function escapeHtml(value) {
     return String(value || '')
         .replaceAll('&', '&amp;')
@@ -775,13 +787,19 @@ async function handleNamingLabSubmit(e) {
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok || !data?.ok || !data?.text) {
-            const parts = [];
-            if (data?.error) parts.push(String(data.error));
-            if (data?.required_credits) parts.push(`필요 쿠폰: ${creditsToCoupons(data.required_credits)}장`);
-            if (Number.isFinite(data?.paid_credits) || Number.isFinite(data?.bonus_credits)) {
-                parts.push(`현재 쿠폰: ${creditsToCoupons((data?.paid_credits || 0) + (data?.bonus_credits || 0))}장`);
+            const isInsufficient = Number(response.status) === 402 || String(data?.error || '').toLowerCase().includes('insufficient credits');
+            if (isInsufficient) {
+                const requiredCoupons = creditsToCoupons(Number(data?.required_credits || 0));
+                const currentCoupons = creditsToCoupons(Number(data?.paid_credits || 0) + Number(data?.bonus_credits || 0));
+                focusChargeGuide();
+                throw new Error([
+                    '쿠폰이 부족합니다.',
+                    `필요 쿠폰: ${requiredCoupons}장`,
+                    `현재 쿠폰: ${currentCoupons}장`,
+                    '상단 지갑 영역의 + 충전 버튼에서 쿠폰을 충전해 주세요.'
+                ].join('\n'));
             }
-            throw new Error(parts.join('\n') || '작명 리포트 생성에 실패했습니다.');
+            throw new Error('작명 리포트 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.');
         }
         const report = parseJsonObjectFromText(data.text);
         if (!report) {
