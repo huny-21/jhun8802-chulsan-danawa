@@ -1930,6 +1930,25 @@ input[readonly] {
     margin-bottom: 8px;
 }
 
+.naming-seal-group {
+    align-self: stretch;
+}
+
+.naming-seal-group #namingSealStatus {
+    margin-bottom: 8px;
+}
+
+.naming-seal-image {
+    width: 100%;
+    max-width: 260px;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
+}
+
 #namingLayerRadarSvg {
     width: 100%;
     height: auto;

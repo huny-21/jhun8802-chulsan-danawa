@@ -106,6 +106,8 @@ const namingDetailHanja = document.getElementById('namingDetailHanja');
 const namingDetailMeaning = document.getElementById('namingDetailMeaning');
 const namingDetailExpert = document.getElementById('namingDetailExpert');
 const namingLayerRadarSvg = document.getElementById('namingLayerRadarSvg');
+const namingSealStatus = document.getElementById('namingSealStatus');
+const namingSealImage = document.getElementById('namingSealImage');
 const namingTopPick = document.getElementById('namingTopPick');
 const namingTopPickName = document.getElementById('namingTopPickName');
 const namingTopPickReasonBtn = document.getElementById('namingTopPickReasonBtn');
@@ -129,6 +131,7 @@ let lastTrackedServiceTab = '';
 let namingQuestionState = [];
 let namingAnswerCache = {};
 let namingReportItems = [];
+const namingSealCache = new Map();
 let namingConstraintsState = {
     surname: '김',
     given_name_min_length: 2,
@@ -512,6 +515,56 @@ function combineDisplayName(nameKr) {
     return `${surname}${baseName}`;
 }
 
+async function generateNamingSealImage(nameText, topItem = null) {
+    const name = String(nameText || '').trim();
+    if (!namingSealStatus || !namingSealImage) return;
+    if (!name) {
+        namingSealStatus.textContent = '이름이 없어서 도장 이미지를 만들 수 없습니다.';
+        namingSealImage.classList.add('hidden');
+        namingSealImage.removeAttribute('src');
+        return;
+    }
+    if (namingSealCache.has(name)) {
+        namingSealImage.src = namingSealCache.get(name);
+        namingSealImage.classList.remove('hidden');
+        namingSealStatus.textContent = '1순위 이름 캘리그라피 도장입니다.';
+        return;
+    }
+    namingSealStatus.textContent = '1순위 이름 도장 이미지를 생성하는 중...';
+    namingSealImage.classList.add('hidden');
+    namingSealImage.removeAttribute('src');
+    if (!firebaseIdToken) {
+        namingSealStatus.textContent = '로그인 후 도장 이미지를 생성할 수 있습니다.';
+        return;
+    }
+    try {
+        const response = await fetch(`${AI_API_BASE}/api/naming-seal`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${firebaseIdToken}`
+            },
+            body: JSON.stringify({
+                display_name: name,
+                name_hanja: String(topItem?.name_hanja || '').trim(),
+                name_meaning: String(topItem?.name_meaning || '').trim(),
+                story: String(topItem?.story || '').trim()
+            })
+        });
+        const data = await response.json().catch(() => ({}));
+        const imageDataUrl = String(data?.image_data_url || '').trim();
+        if (!response.ok || !data?.ok || !imageDataUrl.startsWith('data:image/')) {
+            throw new Error(String(data?.error || '도장 이미지 생성 실패'));
+        }
+        namingSealCache.set(name, imageDataUrl);
+        namingSealImage.src = imageDataUrl;
+        namingSealImage.classList.remove('hidden');
+        namingSealStatus.textContent = '1순위 이름 캘리그라피 도장입니다.';
+    } catch (err) {
+        namingSealStatus.textContent = err instanceof Error ? err.message : '도장 이미지 생성에 실패했습니다.';
+    }
+}
+
 function scoreCell(value) {
     const n = Number(value);
     if (!Number.isFinite(n)) return 0;
@@ -629,8 +682,14 @@ function renderNamingReport(report) {
         namingTopPick.classList.remove('hidden');
         namingTopPickReason.classList.add('hidden');
         if (namingTopPickReasonBtn) namingTopPickReasonBtn.textContent = '이 이름을 추천한 이유 ▼';
+        generateNamingSealImage(topName, topPick);
     } else if (namingTopPick) {
         namingTopPick.classList.add('hidden');
+        if (namingSealStatus) namingSealStatus.textContent = '1순위 이름이 정해지면 도장 이미지를 자동 생성합니다.';
+        if (namingSealImage) {
+            namingSealImage.classList.add('hidden');
+            namingSealImage.removeAttribute('src');
+        }
     }
     renderNamingDetail(items[0] || null);
     const firstCard = namingCandidateList.querySelector('.naming-candidate-card');

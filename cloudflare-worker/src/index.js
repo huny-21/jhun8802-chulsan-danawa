@@ -1759,6 +1759,103 @@ async function handleNamingReport(req, env, cors) {
   }
 }
 
+function inferSealDesignMotifs(text) {
+  const source = String(text || "");
+  const motifs = [];
+  const pushUnique = (value) => {
+    if (!value || motifs.includes(value)) return;
+    motifs.push(value);
+  };
+  if (/(빛|해|광|명|찬)/.test(source)) pushUnique("soft sun rays");
+  if (/(달|월|은|야)/.test(source)) pushUnique("moon crescent line");
+  if (/(별|성|우주|천)/.test(source)) pushUnique("small star accents");
+  if (/(바다|물|수|해수|윤)/.test(source)) pushUnique("clean wave curve");
+  if (/(숲|나무|목|림|솔)/.test(source)) pushUnique("leaf branch stroke");
+  if (/(꽃|화|란|연|매)/.test(source)) pushUnique("minimal flower petal");
+  if (/(산|강|건|담|용기|힘)/.test(source)) pushUnique("mountain ridge line");
+  if (/(평화|온|안|사랑|자비|은혜)/.test(source)) pushUnique("balanced circular frame");
+  if (!motifs.length) {
+    pushUnique("clean circular frame");
+    pushUnique("subtle cloud curve");
+  }
+  return motifs.slice(0, 3);
+}
+
+async function handleNamingSeal(req, env, cors) {
+  const body = await req.json().catch(() => ({}));
+  const displayName = normalizeText(body.display_name);
+  const nameHanja = normalizeText(body.name_hanja);
+  const nameMeaning = normalizeText(body.name_meaning);
+  const story = normalizeText(body.story);
+  const imageModel =
+    normalizeText(env.NAMING_SEAL_IMAGE_MODEL) ||
+    normalizeText(env.BABY_PHOTO_IMAGE_MODEL) ||
+    "gpt-image-1";
+  const requestContext = {
+    path: new URL(req.url).pathname,
+    cf_country: req?.cf?.country || null,
+    cf_colo: req?.cf?.colo || null
+  };
+
+  if (!displayName) {
+    return json({ error: "`display_name` is required" }, 400, cors);
+  }
+
+  if (env.DB) {
+    const auth = await requireFirebaseUser(req, env, cors);
+    if (!auth.ok) return auth.response;
+  }
+
+  const motifs = inferSealDesignMotifs([displayName, nameHanja, nameMeaning, story].filter(Boolean).join(" "));
+  const motifText = motifs.join(", ");
+  const prompt = [
+    "Create a trendy Korean calligraphy seal artwork.",
+    `Write exact Korean name text once: "${displayName}".`,
+    "Style: premium modern seal stamp, elegant brush calligraphy, clean layout, high contrast.",
+    "Use rich red cinnabar ink and subtle handmade paper texture.",
+    `Add small decorative elements matching the name meaning: ${motifText}.`,
+    "Keep decorative elements minimal and refined.",
+    "No extra words, no English letters, no watermark, no logo, no frame text."
+  ].join(" ");
+
+  const imageRes = await fetch("https://api.openai.com/v1/images/generations", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${env.OPENAI_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: imageModel,
+      prompt,
+      size: "1024x1024",
+      quality: "medium",
+      n: 1
+    })
+  });
+
+  const imageJson = await imageRes.json().catch(() => ({}));
+  if (!imageRes.ok) {
+    return json(buildOpenAiErrorPayload(imageJson, "Failed to generate naming seal image", requestContext), imageRes.status, cors);
+  }
+
+  const b64 = imageJson?.data?.[0]?.b64_json || "";
+  if (!b64) {
+    return json({ error: "Image API returned no image payload" }, 500, cors);
+  }
+
+  return json(
+    {
+      ok: true,
+      image_data_url: `data:image/png;base64,${b64}`,
+      model_used: imageModel,
+      motifs,
+      prompt_used: prompt
+    },
+    200,
+    cors
+  );
+}
+
 async function handleBabyPhoto(req, env, cors) {
   const body = await req.json().catch(() => ({}));
   const runtimeConfig = await getRuntimeConfig(env);
@@ -2067,6 +2164,13 @@ export default {
         return json({ error: "OPENAI_API_KEY is not configured" }, 500, cors);
       }
       return handleNamingReport(req, env, cors);
+    }
+    if (url.pathname === "/api/naming-seal") {
+      if (req.method !== "POST") return json({ error: "Method not allowed" }, 405, cors);
+      if (!env.OPENAI_API_KEY) {
+        return json({ error: "OPENAI_API_KEY is not configured" }, 500, cors);
+      }
+      return handleNamingSeal(req, env, cors);
     }
     if (url.pathname === "/api/baby-photo") {
       if (req.method !== "POST") return json({ error: "Method not allowed" }, 405, cors);
