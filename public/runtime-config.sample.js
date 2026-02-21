@@ -3,7 +3,7 @@
 window.RUNTIME_CONFIG = {
   aiApiBase: "https://chulsan-danawa-ai.jhun8802.workers.dev",
   firebaseEnabled: true,
-  firebaseApiKey: "AIzaSyBlWoa9U85z6xp9Ru7SzL_0NOtufkHZnMs",
+  firebaseApiKey: "REPLACE_WITH_NEW_RESTRICTED_KEY",
   firebaseAuthDomain: "chulsan-danawa.com",
   firebaseProjectId: "test-17133889-10c0f",
   firebaseAppId: "1:229300299555:web:7b08ffa9cc4a6a25cb8e96"
