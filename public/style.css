@@ -4,7 +4,9 @@
 
 @font-face {
     font-family: "HanJeonseoB";
-    src: url("/fonts/hanJeonseoB.woff2") format("woff2");
+    src:
+        url("/fonts/hanJeonseoB.ttf") format("truetype"),
+        url("/fonts/hanJeonseoB.woff2") format("woff2");
     font-weight: 700;
     font-style: normal;
     font-display: swap;
