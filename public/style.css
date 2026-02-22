@@ -5,7 +5,7 @@
 @font-face {
     font-family: "HanJeonseoB";
     src: url("/fonts/hanJeonseoB.woff2") format("woff2");
-    font-weight: 400;
+    font-weight: 700;
     font-style: normal;
     font-display: swap;
 }
@@ -2285,23 +2285,44 @@ input[readonly] {
     display: inline-flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-evenly;
+    justify-content: center;
     gap: 0;
     width: 56px;
-    height: 82px;
-    padding: 2px 1px;
-    border: 2px solid rgba(185, 28, 28, 0.95);
-    border-radius: 2px;
-    background: rgba(255, 255, 255, 0.78);
-    box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.22);
+    height: 84px;
+    padding: 1px 0;
+    border: 3px solid rgba(185, 28, 28, 0.96);
+    border-radius: 1px;
+    background:
+        radial-gradient(circle at 25% 20%, rgba(220, 38, 38, 0.1) 0, transparent 45%),
+        radial-gradient(circle at 75% 78%, rgba(220, 38, 38, 0.08) 0, transparent 42%),
+        rgba(255, 255, 255, 0.74);
+    box-shadow:
+        inset 0 0 0 1.5px rgba(127, 29, 29, 0.22),
+        inset 0 0 12px rgba(220, 38, 38, 0.05);
 }
 
 .naming-text-seal::before {
     content: "";
     position: absolute;
     inset: 2px;
-    border: 1px solid rgba(220, 38, 38, 0.55);
-    border-radius: 1px;
+    border: 2px solid rgba(220, 38, 38, 0.64);
+    border-radius: 0;
+    pointer-events: none;
+}
+
+.naming-text-seal::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(185, 28, 28, 0.02) 0px,
+            rgba(185, 28, 28, 0.02) 1px,
+            transparent 1px,
+            transparent 4px
+        );
+    mix-blend-mode: multiply;
     pointer-events: none;
 }
 
@@ -2310,12 +2331,19 @@ input[readonly] {
     color: #B91C1C;
     font-family: "HanJeonseoB", "Gungsuh", "궁서", "Nanum Myeongjo", "Noto Serif KR", serif;
     font-weight: 700;
-    font-size: 1.08rem;
-    line-height: 0.9;
-    letter-spacing: -0.04em;
-    transform: scale(0.9, 1.15);
-    text-shadow: 0 0 0.2px rgba(127, 29, 29, 0.8);
-    -webkit-text-stroke: 0.15px rgba(153, 27, 27, 0.65);
+    font-style: normal;
+    font-synthesis: none;
+    font-size: 1.16rem;
+    line-height: 0.78;
+    letter-spacing: -0.08em;
+    transform: scale(0.95, 1.22);
+    text-shadow:
+        0 0 0.15px rgba(127, 29, 29, 0.95),
+        0.15px 0 rgba(153, 27, 27, 0.7),
+        -0.15px 0 rgba(153, 27, 27, 0.7);
+    -webkit-text-stroke: 0.22px rgba(153, 27, 27, 0.78);
+    position: relative;
+    z-index: 1;
 }
 
 .naming-text-seal-card {
@@ -2324,7 +2352,7 @@ input[readonly] {
 }
 
 .naming-text-seal-card .naming-text-seal-char {
-    font-size: 1.05rem;
+    font-size: 1.12rem;
 }
 
 .naming-detail-seal {
@@ -2343,8 +2371,39 @@ input[readonly] {
 }
 
 .naming-text-seal-detail .naming-text-seal-char {
-    font-size: 1.2rem;
-    transform: scale(0.92, 1.16);
+    font-size: 1.28rem;
+    transform: scale(0.96, 1.24);
+}
+
+.naming-text-seal.is-count-2 {
+    justify-content: space-between;
+    padding: 4px 0 3px;
+}
+
+.naming-text-seal.is-count-2 .naming-text-seal-char {
+    font-size: 1.45rem;
+    line-height: 0.72;
+    transform: scale(1, 1.28);
+}
+
+.naming-text-seal.is-count-3 {
+    justify-content: space-between;
+    padding: 2px 0 1px;
+}
+
+.naming-text-seal.is-count-3 .naming-text-seal-char {
+    font-size: 1.26rem;
+    line-height: 0.74;
+}
+
+.naming-text-seal.is-count-4 {
+    justify-content: space-between;
+    padding: 1px 0;
+}
+
+.naming-text-seal.is-count-4 .naming-text-seal-char {
+    font-size: 1.08rem;
+    line-height: 0.72;
 }
 
 @media (max-width: 720px) {
@@ -2405,6 +2464,14 @@ input[readonly] {
 
     .naming-text-seal-detail .naming-text-seal-char {
         font-size: 1rem;
+    }
+
+    .naming-text-seal.is-count-2 .naming-text-seal-char {
+        font-size: 1.2rem;
+    }
+
+    .naming-text-seal.is-count-3 .naming-text-seal-char {
+        font-size: 1.08rem;
     }
 
     .naming-top-pick,

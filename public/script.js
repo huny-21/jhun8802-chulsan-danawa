@@ -661,11 +661,12 @@ function getNamingSealChars(nameText) {
 
 function renderNamingTextSealMarkup(nameText, variant = 'card') {
     const chars = getNamingSealChars(nameText);
+    const countClass = `is-count-${Math.max(1, Math.min(4, chars.length))}`;
     const className = variant === 'detail'
         ? 'naming-text-seal naming-text-seal-detail'
         : 'naming-text-seal naming-text-seal-card';
     const charHtml = chars.map((ch) => `<span class="naming-text-seal-char">${escapeHtml(ch)}</span>`).join('');
-    return `<span class="${className}" aria-hidden="true">${charHtml}</span>`;
+    return `<span class="${className} ${countClass}" aria-hidden="true">${charHtml}</span>`;
 }
 
 function applyTextSealToElement(el, nameText, variant = 'detail') {
