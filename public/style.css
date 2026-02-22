@@ -2,6 +2,14 @@
    Trustworthy + Warm Design System
    ========================================================================== */
 
+@font-face {
+    font-family: "HanJeonseoB";
+    src: url("/fonts/hanJeonseoB.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
 :root {
     /* Brand Colors - Professional & Trustworthy */
     --brand-primary: #0F172A;       /* Slate 900 - Headings, Main Text */
@@ -1599,6 +1607,8 @@ input[readonly] {
     border: 1px solid transparent;
     position: relative;
     overflow: hidden;
+    padding-right: 84px;
+    min-height: 124px;
 }
 
 .naming-candidate-card .ai-review-meta,
@@ -1611,7 +1621,7 @@ input[readonly] {
     position: absolute;
     right: 10px;
     bottom: 8px;
-    opacity: 0.14;
+    opacity: 0.18;
     pointer-events: none;
     z-index: 0;
 }
@@ -2241,7 +2251,7 @@ input[readonly] {
     position: relative;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    padding: 14px 16px 108px;
+    padding: 14px 108px 14px 16px;
     background: linear-gradient(180deg, #fffef9 0%, #f9f6ed 100%);
     box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
 }
@@ -2271,39 +2281,50 @@ input[readonly] {
 }
 
 .naming-text-seal {
+    position: relative;
     display: inline-flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 2px;
-    width: 62px;
-    height: 88px;
-    padding: 6px 4px;
-    border: 2px solid rgba(185, 28, 28, 0.9);
-    border-radius: 4px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(254, 242, 242, 0.82));
-    box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.16);
+    justify-content: space-evenly;
+    gap: 0;
+    width: 56px;
+    height: 82px;
+    padding: 2px 1px;
+    border: 2px solid rgba(185, 28, 28, 0.95);
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.22);
+}
+
+.naming-text-seal::before {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border: 1px solid rgba(220, 38, 38, 0.55);
+    border-radius: 1px;
+    pointer-events: none;
 }
 
 .naming-text-seal-char {
     display: block;
     color: #B91C1C;
-    font-family: "Nanum Myeongjo", "Noto Serif KR", "Apple SD Gothic Neo", serif;
+    font-family: "HanJeonseoB", "Gungsuh", "궁서", "Nanum Myeongjo", "Noto Serif KR", serif;
     font-weight: 700;
-    font-size: 1.18rem;
-    line-height: 1;
-    letter-spacing: 0.02em;
-    transform: scaleY(1.04);
+    font-size: 1.08rem;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    transform: scale(0.9, 1.15);
     text-shadow: 0 0 0.2px rgba(127, 29, 29, 0.8);
+    -webkit-text-stroke: 0.15px rgba(153, 27, 27, 0.65);
 }
 
 .naming-text-seal-card {
-    width: 64px;
-    height: 94px;
+    width: 56px;
+    height: 84px;
 }
 
 .naming-text-seal-card .naming-text-seal-char {
-    font-size: 1.16rem;
+    font-size: 1.05rem;
 }
 
 .naming-detail-seal {
@@ -2316,13 +2337,14 @@ input[readonly] {
 }
 
 .naming-text-seal-detail {
-    width: 74px;
-    height: 106px;
-    opacity: 0.9;
+    width: 66px;
+    height: 100px;
+    opacity: 0.94;
 }
 
 .naming-text-seal-detail .naming-text-seal-char {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+    transform: scale(0.92, 1.16);
 }
 
 @media (max-width: 720px) {
@@ -2362,13 +2384,27 @@ input[readonly] {
         bottom: 10px;
     }
 
+    .naming-candidate-card {
+        padding-right: 76px;
+        min-height: 116px;
+    }
+
+    .naming-card-seal-wrap {
+        right: 8px;
+        bottom: 6px;
+    }
+
+    .naming-expert-paper {
+        padding: 12px 86px 12px 14px;
+    }
+
     .naming-text-seal-detail {
-        width: 62px;
-        height: 90px;
+        width: 56px;
+        height: 84px;
     }
 
     .naming-text-seal-detail .naming-text-seal-char {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
 
     .naming-top-pick,
