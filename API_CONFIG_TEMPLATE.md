@@ -19,6 +19,7 @@
 ```bash
 cd cloudflare-worker
 wrangler secret put OPENAI_API_KEY
+wrangler secret put GEMINI_API_KEY
 wrangler secret put POLAR_WEBHOOK_SECRET
 ```
 
@@ -103,6 +104,7 @@ Authorization: Bearer <firebase-id-token>
 ## 6) 배포 전 최종 점검표
 
 - `OPENAI_API_KEY` secret 등록 완료
+- `GEMINI_API_KEY` secret 등록 완료 (작명 리포트)
 - `POLAR_WEBHOOK_SECRET` secret 등록 완료 (결제 webhook 사용 시)
 - `ALLOWED_ORIGINS`에 운영/프리뷰/로컬 도메인 포함
 - D1 `DB` 바인딩 정상

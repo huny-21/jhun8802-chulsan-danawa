@@ -626,6 +626,186 @@ function extractResponseText(data) {
   return chunks.join("\n").trim();
 }
 
+function extractGeminiText(data) {
+  const candidates = Array.isArray(data?.candidates) ? data.candidates : [];
+  const chunks = [];
+  for (const candidate of candidates) {
+    const parts = Array.isArray(candidate?.content?.parts)
+      ? candidate.content.parts
+      : [];
+    for (const part of parts) {
+      if (typeof part?.text === "string") {
+        chunks.push(part.text);
+      }
+    }
+  }
+  return chunks.join("\n").trim();
+}
+
+function stripJsonCodeFence(text) {
+  const raw = normalizeText(text);
+  if (!raw) return "";
+  const fence = raw.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  return fence ? normalizeText(fence[1]) : raw;
+}
+
+function extractJsonObjectCandidate(text) {
+  const raw = String(text || "");
+  const start = raw.indexOf("{");
+  if (start < 0) return "";
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let i = start; i < raw.length; i += 1) {
+    const ch = raw[i];
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === "\\") {
+        escaped = true;
+      } else if (ch === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+    if (ch === "\"") {
+      inString = true;
+      continue;
+    }
+    if (ch === "{") {
+      depth += 1;
+      continue;
+    }
+    if (ch === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        return raw.slice(start, i + 1).trim();
+      }
+    }
+  }
+  return "";
+}
+
+function parseJsonObjectFromText(text) {
+  const candidates = [];
+  const stripped = stripJsonCodeFence(text);
+  if (stripped) candidates.push(stripped);
+  const extracted = extractJsonObjectCandidate(stripped || text);
+  if (extracted && extracted !== stripped) candidates.push(extracted);
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed;
+      }
+    } catch (_) {
+      // Continue trying the next candidate.
+    }
+  }
+  return null;
+}
+
+function validateNamingReportPayload(report, recommendationCount) {
+  if (!report || typeof report !== "object" || Array.isArray(report)) {
+    return { ok: false, reason: "Report is not a JSON object" };
+  }
+  const summary = normalizeText(report.interview_summary);
+  const strategy = normalizeText(report.naming_strategy);
+  const certificate = normalizeText(report.certificate_text);
+  const items = Array.isArray(report.top_recommendations)
+    ? report.top_recommendations
+    : [];
+  if (!summary) return { ok: false, reason: "Missing `interview_summary`" };
+  if (!strategy) return { ok: false, reason: "Missing `naming_strategy`" };
+  if (!certificate) return { ok: false, reason: "Missing `certificate_text`" };
+  if (items.length !== recommendationCount) {
+    return {
+      ok: false,
+      reason: `top_recommendations must contain exactly ${recommendationCount} items`
+    };
+  }
+  const scoreKeys = ["saju", "trend", "story", "global", "energy", "religion"];
+  for (let i = 0; i < items.length; i += 1) {
+    const item = items[i];
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      return { ok: false, reason: `Recommendation #${i + 1} is invalid` };
+    }
+    const requiredTextKeys = [
+      "name_kr",
+      "name_hanja",
+      "hanja_meaning",
+      "name_en",
+      "name_meaning",
+      "story",
+      "expert_role",
+      "expert_commentary"
+    ];
+    for (const key of requiredTextKeys) {
+      if (!normalizeText(item[key])) {
+        return { ok: false, reason: `Recommendation #${i + 1} missing \`${key}\`` };
+      }
+    }
+    const scores = item.scores;
+    if (!scores || typeof scores !== "object" || Array.isArray(scores)) {
+      return { ok: false, reason: `Recommendation #${i + 1} missing \`scores\`` };
+    }
+    for (const scoreKey of scoreKeys) {
+      const n = Number(scores[scoreKey]);
+      if (!Number.isFinite(n)) {
+        return {
+          ok: false,
+          reason: `Recommendation #${i + 1} has invalid score \`${scoreKey}\``
+        };
+      }
+    }
+  }
+  return { ok: true };
+}
+
+function hasLatinLetters(text) {
+  return /[A-Za-z]/.test(String(text || ""));
+}
+
+function validateNamingReportLanguage(report) {
+  if (!report || typeof report !== "object") {
+    return { ok: false, reason: "Report is not a JSON object" };
+  }
+  const topLevelKoreanOnlyKeys = [
+    "interview_summary",
+    "naming_strategy",
+    "certificate_text"
+  ];
+  for (const key of topLevelKoreanOnlyKeys) {
+    if (hasLatinLetters(report[key])) {
+      return { ok: false, reason: `\`${key}\` must be Korean-only text` };
+    }
+  }
+  const items = Array.isArray(report.top_recommendations)
+    ? report.top_recommendations
+    : [];
+  const itemKoreanOnlyKeys = [
+    "name_kr",
+    "name_hanja",
+    "hanja_meaning",
+    "name_meaning",
+    "story",
+    "expert_role",
+    "expert_commentary"
+  ];
+  for (let i = 0; i < items.length; i += 1) {
+    const item = items[i] || {};
+    for (const key of itemKoreanOnlyKeys) {
+      if (hasLatinLetters(item[key])) {
+        return {
+          ok: false,
+          reason: `Recommendation #${i + 1} field \`${key}\` must be Korean-only text`
+        };
+      }
+    }
+  }
+  return { ok: true };
+}
+
 function extractFeaturePayload(rawText) {
   const text = normalizeText(rawText);
   const fallback = {
@@ -692,6 +872,53 @@ function buildOpenAiErrorPayload(data, fallback, context = {}) {
   };
 }
 
+function buildGeminiErrorPayload(data, fallback, context = {}) {
+  const apiError = data?.error && typeof data.error === "object" ? data.error : null;
+  const promptFeedback =
+    data?.promptFeedback && typeof data.promptFeedback === "object"
+      ? data.promptFeedback
+      : null;
+  const firstCandidate = Array.isArray(data?.candidates) ? data.candidates[0] : null;
+  const blockReason = normalizeText(
+    promptFeedback?.blockReason || promptFeedback?.block_reason
+  );
+  const finishReason = normalizeText(
+    firstCandidate?.finishReason || firstCandidate?.finish_reason
+  );
+  const message =
+    normalizeText(apiError?.message) ||
+    (blockReason ? `Gemini request blocked: ${blockReason}` : "") ||
+    fallback ||
+    "Upstream API error";
+  const statusCode = normalizeText(apiError?.status) || null;
+  const type = normalizeText(apiError?.code) || null;
+  const lower = message.toLowerCase();
+  let errorHelp = "";
+  if (
+    lower.includes("api key") ||
+    lower.includes("permission") ||
+    lower.includes("unauthorized")
+  ) {
+    errorHelp =
+      "Gemini API 키 또는 권한 설정 이슈로 보입니다. 키 유효성, 프로젝트 결제/쿼터, API 활성화를 확인하세요.";
+  } else if (blockReason || finishReason === "SAFETY") {
+    errorHelp =
+      "Gemini 안전 정책으로 차단되었을 수 있습니다. 표현 수위를 낮추고 요청 내용을 더 중립적으로 조정해 다시 시도하세요.";
+  }
+  return {
+    error: message,
+    error_code: statusCode || blockReason || finishReason || null,
+    error_type: type,
+    error_param: null,
+    error_help: errorHelp,
+    context,
+    detail: apiError || {
+      promptFeedback,
+      candidate: firstCandidate
+    }
+  };
+}
+
 function jsonWithCookie(data, status = 200, extraHeaders = {}, setCookie = "") {
   const headers = {
     "Content-Type": "application/json; charset=utf-8",
@@ -732,57 +959,114 @@ function getBearerToken(req) {
   return auth.slice(7).trim();
 }
 
+const FIREBASE_JWKS_URL =
+  "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
+let firebaseJwksCache = { expiresAt: 0, keysByKid: new Map() };
+
+function decodeBase64UrlJson(part) {
+  const raw = normalizeText(part);
+  if (!raw) return null;
+  try {
+    const normalized = raw.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+    return JSON.parse(atob(padded));
+  } catch (_) {
+    return null;
+  }
+}
+
+function decodeBase64UrlToBytes(part) {
+  const raw = normalizeText(part);
+  if (!raw) return new Uint8Array();
+  const normalized = raw.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function parseMaxAgeSeconds(cacheControl) {
+  const text = normalizeText(cacheControl);
+  const match = text.match(/max-age=(\d+)/i);
+  const seconds = Number(match?.[1] || 0);
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : 3600;
+}
+
+async function getFirebaseJwkByKid(kid) {
+  if (!kid) return null;
+  const now = Date.now();
+  if (firebaseJwksCache.expiresAt > now && firebaseJwksCache.keysByKid.has(kid)) {
+    return firebaseJwksCache.keysByKid.get(kid) || null;
+  }
+  const res = await fetch(FIREBASE_JWKS_URL, { method: "GET" });
+  if (!res.ok) return null;
+  const body = await res.json().catch(() => ({}));
+  const keys = Array.isArray(body?.keys) ? body.keys : [];
+  const map = new Map();
+  for (const key of keys) {
+    const keyKid = normalizeText(key?.kid);
+    if (!keyKid) continue;
+    map.set(keyKid, key);
+  }
+  const ttlSeconds = parseMaxAgeSeconds(res.headers.get("Cache-Control"));
+  firebaseJwksCache = {
+    expiresAt: now + ttlSeconds * 1000,
+    keysByKid: map
+  };
+  return map.get(kid) || null;
+}
+
+async function verifyFirebaseSignature(headerPart, payloadPart, signaturePart) {
+  const header = decodeBase64UrlJson(headerPart);
+  const kid = normalizeText(header?.kid);
+  if (!kid) return { ok: false, reason: "Missing key id" };
+  const jwk = await getFirebaseJwkByKid(kid);
+  if (!jwk) return { ok: false, reason: "Signing key not found" };
+  let publicKey;
+  try {
+    publicKey = await crypto.subtle.importKey(
+      "jwk",
+      jwk,
+      {
+        name: "RSASSA-PKCS1-v1_5",
+        hash: "SHA-256"
+      },
+      false,
+      ["verify"]
+    );
+  } catch (_) {
+    return { ok: false, reason: "Signing key import failed" };
+  }
+  const data = new TextEncoder().encode(`${headerPart}.${payloadPart}`);
+  const signature = decodeBase64UrlToBytes(signaturePart);
+  const verified = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", publicKey, signature, data);
+  return verified ? { ok: true } : { ok: false, reason: "Invalid token signature" };
+}
+
 async function verifyFirebaseIdToken(idToken, env) {
   const projectId = normalizeText(env.FIREBASE_PROJECT_ID);
-  // Server-to-server token checks do not include browser referrer headers.
-  // Prefer a dedicated unrestricted server key when configured.
-  const webApiKey =
-    normalizeText(env.FIREBASE_SERVER_API_KEY) ||
-    normalizeText(env.FIREBASE_WEB_API_KEY);
   if (!projectId) return { ok: false, reason: "FIREBASE_PROJECT_ID is not configured" };
-  if (!webApiKey) return { ok: false, reason: "FIREBASE_WEB_API_KEY is not configured" };
   if (!idToken) return { ok: false, reason: "Missing Bearer token" };
 
-  const res = await fetch(
-    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${encodeURIComponent(webApiKey)}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Referer: resolveFirebaseApiKeyReferer(env)
-      },
-      body: JSON.stringify({ idToken })
-    }
-  );
-  if (!res.ok) {
-    let detail = "";
-    try {
-      const errBody = await res.json();
-      detail = normalizeText(errBody?.error?.message);
-    } catch (_) {
-      // ignore JSON parse errors from upstream
-    }
-    return {
-      ok: false,
-      reason: detail ? `Invalid Firebase ID token (${detail})` : "Invalid Firebase ID token"
-    };
-  }
-  const data = await res.json().catch(() => ({}));
-  const user = Array.isArray(data?.users) ? data.users[0] : null;
-  const uid = normalizeText(user?.localId);
-  const email = normalizeText(user?.email);
   const tokenParts = idToken.split(".");
-  if (tokenParts.length < 2) return { ok: false, reason: "Malformed token" };
-  let payload = {};
-  try {
-    const json = atob(tokenParts[1].replace(/-/g, "+").replace(/_/g, "/"));
-    payload = JSON.parse(json);
-  } catch (_) {
+  if (tokenParts.length !== 3) return { ok: false, reason: "Malformed token" };
+  const [headerPart, payloadPart, signaturePart] = tokenParts;
+  const payload = decodeBase64UrlJson(payloadPart);
+  if (!payload || typeof payload !== "object") {
     return { ok: false, reason: "Token payload parse failed" };
   }
+  const signatureCheck = await verifyFirebaseSignature(headerPart, payloadPart, signaturePart);
+  if (!signatureCheck.ok) return signatureCheck;
+
+  const uid = normalizeText(payload?.user_id || payload?.sub);
+  const email = normalizeText(payload?.email);
   const aud = normalizeText(payload?.aud);
   const iss = normalizeText(payload?.iss);
   const exp = Number(payload?.exp || 0);
+  const iat = Number(payload?.iat || 0);
   const now = Math.floor(Date.now() / 1000);
   if (!uid) return { ok: false, reason: "Token has no user_id" };
   if (aud !== projectId) return { ok: false, reason: "Token audience mismatch" };
@@ -790,6 +1074,7 @@ async function verifyFirebaseIdToken(idToken, env) {
     return { ok: false, reason: "Token issuer mismatch" };
   }
   if (!exp || exp <= now) return { ok: false, reason: "Token expired" };
+  if (iat && iat > now + 300) return { ok: false, reason: "Token issued in the future" };
   return { ok: true, uid, email };
 }
 
@@ -1137,12 +1422,20 @@ async function handleBillingCheckout(req, env, cors) {
   const body = await req.json().catch(() => ({}));
   const userId = auth.uid;
   const packageId = normalizeText(body.package_id) || "usd_credit_topup";
-  const requestedDollars = Math.floor(Number(body.dollar_amount || 1));
-  const amountUsd = Math.min(20, Math.max(1, Number.isFinite(requestedDollars) ? requestedDollars : 1));
-  const amountCents = amountUsd * 100;
-  const credits = amountUsd * 1000;
-  const amountKrw = amountUsd * 1000;
-  const requestedCoupons = Math.floor(credits / 250);
+  const couponUnitCredits = parsePositiveInt(env.COUPON_UNIT_CREDITS, 250);
+  const fallbackCouponsFromDollar =
+    Math.floor(Math.max(1, Number(body.dollar_amount || 1)) * 4);
+  const requestedCouponsRaw = Math.floor(
+    Number(body.coupon_amount || fallbackCouponsFromDollar || 1)
+  );
+  const requestedCoupons = Math.min(
+    80,
+    Math.max(1, Number.isFinite(requestedCouponsRaw) ? requestedCouponsRaw : 1)
+  );
+  const amountCents = requestedCoupons * 25;
+  const amountUsd = amountCents / 100;
+  const credits = requestedCoupons * couponUnitCredits;
+  const amountKrw = amountCents * 10;
   const campaign = await getCouponCampaignStatus(env);
   if (campaign.status === "ended") {
     return json(
@@ -1236,6 +1529,7 @@ async function handleBillingCheckout(req, env, cors) {
     amount_krw: amountKrw,
     amount_usd: amountUsd,
     amount_cents: amountCents,
+    coupon_amount: requestedCoupons,
     paid_credits: credits,
     checkout_url: checkoutUrl
   };
@@ -1588,8 +1882,8 @@ async function handleNamingReport(req, env, cors) {
   const namingPlan = normalizeText(body.naming_plan).toLowerCase();
   const planConfig =
     namingPlan === "basic"
-      ? { code: "basic", credits: 1000, recommendations: 2 }
-      : { code: "plus", credits: 2000, recommendations: 5 };
+      ? { code: "basic", credits: 250, recommendations: 1 }
+      : { code: "plus", credits: 1000, recommendations: 5 };
   const namingReportCredits = planConfig.credits;
   const recommendationCount = planConfig.recommendations;
   const layerWeights = Array.isArray(body.layer_weights) ? body.layer_weights : [];
@@ -1618,7 +1912,11 @@ async function handleNamingReport(req, env, cors) {
         .filter(Boolean)
         .slice(0, 5)
     : [];
-  const model = normalizeText(body.model) || "gpt-4.1-mini";
+  const requestedModel = normalizeText(body.model);
+  const model =
+    requestedModel.toLowerCase().startsWith("gemini-")
+      ? requestedModel
+      : normalizeText(env.NAMING_GEMINI_MODEL) || "gemini-2.5-flash";
   const requestContext = {
     path: new URL(req.url).pathname,
     cf_country: req?.cf?.country || null,
@@ -1697,13 +1995,17 @@ async function handleNamingReport(req, env, cors) {
       "{\"interview_summary\":\"...\",\"naming_strategy\":\"...\",\"certificate_text\":\"...\",\"top_recommendations\":[{\"name_kr\":\"...\",\"name_hanja\":\"...\",\"hanja_meaning\":\"...\",\"name_en\":\"...\",\"name_meaning\":\"...\",\"story\":\"...\",\"expert_role\":\"...\",\"expert_commentary\":\"...\",\"scores\":{\"saju\":0,\"trend\":0,\"story\":0,\"global\":0,\"energy\":0,\"religion\":0}}]}",
       "Score each axis from 0 to 100.",
       "name_kr must be given name only (exclude surname).",
+      "All fields except name_en must be written in natural Korean only.",
+      "Do not use English words, romanization, or mixed-language phrases in non-English fields.",
+      "name_en must be the only English field.",
       lengthRule,
       surnameRule,
       siblingRule,
       "For each recommendation, write detailed but concise Korean analysis.",
       "expert_role and expert_commentary must reflect the highest-priority layer from layer_weights.",
-      "expert_commentary must be storytelling-focused Korean prose in 3-4 sentences.",
-      "Write it like a warm narrative to parents: include why this name fits their values, the impression when the child is called, and a future scene/image.",
+      "expert_commentary must be storytelling-focused Korean prose in 4-6 sentences.",
+      "Write it as vivid future storytelling for parents: include childhood, school-age, and adult-life scenes where the name is called.",
+      "Include emotional and sensory details (voice tone, atmosphere, image) while keeping practical rationale.",
       "Use interview_answers and the selected name as core evidence.",
       "If objective support exists (e.g., pronunciation ease, naming trend, saju harmony, cultural/religious context), mention it as data-backed rationale in natural language.",
       "Do not prefix with labels like '전문가:' or '전문가 해설:'.",
@@ -1723,33 +2025,168 @@ async function handleNamingReport(req, env, cors) {
       }
     });
 
-    const upstream = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${env.OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model,
-        input: [
-          {
-            role: "system",
-            content: [{ type: "input_text", text: system }]
-          },
-          {
-            role: "user",
-            content: [{ type: "input_text", text: message }]
+    const responseSchema = {
+      type: "OBJECT",
+      required: [
+        "interview_summary",
+        "naming_strategy",
+        "certificate_text",
+        "top_recommendations"
+      ],
+      properties: {
+        interview_summary: { type: "STRING" },
+        naming_strategy: { type: "STRING" },
+        certificate_text: { type: "STRING" },
+        top_recommendations: {
+          type: "ARRAY",
+          minItems: recommendationCount,
+          maxItems: recommendationCount,
+          items: {
+            type: "OBJECT",
+            required: [
+              "name_kr",
+              "name_hanja",
+              "hanja_meaning",
+              "name_en",
+              "name_meaning",
+              "story",
+              "expert_role",
+              "expert_commentary",
+              "scores"
+            ],
+            properties: {
+              name_kr: { type: "STRING" },
+              name_hanja: { type: "STRING" },
+              hanja_meaning: { type: "STRING" },
+              name_en: { type: "STRING" },
+              name_meaning: { type: "STRING" },
+              story: { type: "STRING" },
+              expert_role: { type: "STRING" },
+              expert_commentary: { type: "STRING" },
+              scores: {
+                type: "OBJECT",
+                required: [
+                  "saju",
+                  "trend",
+                  "story",
+                  "global",
+                  "energy",
+                  "religion"
+                ],
+                properties: {
+                  saju: { type: "NUMBER" },
+                  trend: { type: "NUMBER" },
+                  story: { type: "NUMBER" },
+                  global: { type: "NUMBER" },
+                  energy: { type: "NUMBER" },
+                  religion: { type: "NUMBER" }
+                }
+              }
+            }
           }
-        ],
-        temperature: 0.6,
-        max_output_tokens: 2200
-      })
-    });
-    const data = await upstream.json().catch(() => ({}));
+        }
+      }
+    };
+
+    const requestGeminiNaming = async (systemText, userText, temperature = 0.6) => {
+      return fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{ text: systemText }]
+            },
+            contents: [
+              {
+                role: "user",
+                parts: [{ text: userText }]
+              }
+            ],
+            generationConfig: {
+              temperature,
+              maxOutputTokens: 8192,
+              responseMimeType: "application/json",
+              responseSchema
+            }
+          })
+        }
+      );
+    };
+
+    let upstream = await requestGeminiNaming(system, message, 0.6);
+    let data = await upstream.json().catch(() => ({}));
     if (!upstream.ok) {
       await maybeRevertDeduction("upstream_error");
-      return json(buildOpenAiErrorPayload(data, "Naming report generation failed", requestContext), upstream.status, cors);
+      return json(
+        buildGeminiErrorPayload(data, "Naming report generation failed", requestContext),
+        upstream.status,
+        cors
+      );
     }
+    const text = extractGeminiText(data);
+    if (!text) {
+      await maybeRevertDeduction("empty_response");
+      return json(
+        buildGeminiErrorPayload(data, "Naming report generation returned empty text", requestContext),
+        502,
+        cors
+      );
+    }
+    let parsedReport = parseJsonObjectFromText(text);
+    let validation = validateNamingReportPayload(parsedReport, recommendationCount);
+    if (!validation.ok) {
+      const repairSystem = [
+        "You convert a near-JSON naming report into strict JSON.",
+        "Return strict JSON object only. No markdown, no commentary.",
+        `Create exactly ${recommendationCount} recommendations.`,
+        "All fields except name_en must be natural Korean only.",
+        "Keep each text field concise so output remains complete and valid.",
+        "Do not omit required keys."
+      ].join(" ");
+      upstream = await requestGeminiNaming(repairSystem, text, 0.2);
+      data = await upstream.json().catch(() => ({}));
+      if (upstream.ok) {
+        const repairedText = extractGeminiText(data);
+        const repairedParsed = parseJsonObjectFromText(repairedText);
+        const repairedValidation = validateNamingReportPayload(repairedParsed, recommendationCount);
+        if (repairedValidation.ok) {
+          parsedReport = repairedParsed;
+          validation = repairedValidation;
+        }
+      }
+    }
+    if (!validation.ok) {
+      await maybeRevertDeduction("invalid_payload");
+      return json(
+        {
+          error: "Naming report format invalid",
+          detail: validation.reason,
+          context: requestContext
+        },
+        502,
+        cors
+      );
+    }
+    const languageValidation = validateNamingReportLanguage(parsedReport);
+    if (!languageValidation.ok) {
+      await maybeRevertDeduction("invalid_language");
+      return json(
+        {
+          error: "Naming report language invalid",
+          detail: languageValidation.reason,
+          context: requestContext
+        },
+        502,
+        cors
+      );
+    }
+    const normalizedText = parsedReport
+      ? JSON.stringify(parsedReport)
+      : text;
 
     let walletSnapshot = null;
     if (usageState && env.DB) {
@@ -1758,9 +2195,9 @@ async function handleNamingReport(req, env, cors) {
     return json(
       {
         ok: true,
-        text: extractResponseText(data),
-        model: data.model || model,
-        id: data.id || null,
+        text: normalizedText,
+        model: data.modelVersion || model,
+        id: data.responseId || null,
         plan: planConfig.code,
         required_credits: namingReportCredits,
         wallet: walletSnapshot
@@ -1798,10 +2235,10 @@ function inferSealDesignMotifs(text) {
   if (/(숲|나무|목|림|솔)/.test(source)) pushUnique("leaf branch stroke");
   if (/(꽃|화|란|연|매)/.test(source)) pushUnique("minimal flower petal");
   if (/(산|강|건|담|용기|힘)/.test(source)) pushUnique("mountain ridge line");
-  if (/(평화|온|안|사랑|자비|은혜)/.test(source)) pushUnique("balanced circular frame");
+  if (/(평화|온|안|사랑|자비|은혜)/.test(source)) pushUnique("balanced square frame");
   if (!motifs.length) {
-    pushUnique("clean circular frame");
-    pushUnique("subtle cloud curve");
+    pushUnique("clean square frame");
+    pushUnique("subtle geometric corner mark");
   }
   return motifs.slice(0, 3);
 }
@@ -1834,31 +2271,44 @@ async function handleNamingSeal(req, env, cors) {
   const motifs = inferSealDesignMotifs([displayName, nameHanja, nameMeaning, story].filter(Boolean).join(" "));
   const motifText = motifs.join(", ");
   const prompt = [
-    "Create a trendy Korean calligraphy seal artwork.",
+    "Create a premium Korean calligraphy name seal image for practical stamp usage.",
     `Write exact Korean name text once: "${displayName}".`,
-    "Style: premium modern seal stamp, elegant brush calligraphy, clean layout, high contrast.",
-    "Use rich red cinnabar ink and subtle handmade paper texture.",
-    `Add small decorative elements matching the name meaning: ${motifText}.`,
-    "Keep decorative elements minimal and refined.",
+    "Style: simple and refined square Korean seal (직인), modern-minimal composition.",
+    "Use a clearly visible square border frame like an official seal.",
+    "Lettering: elegant Korean brush calligraphy with clean stroke hierarchy.",
+    "Ink: rich red cinnabar tone with realistic brush pressure variation.",
+    "Background: fully transparent alpha background only; no paper texture, no panel, no shadow.",
+    `Decorate with tiny meaning-linked motifs (${motifText}) near corners or around strokes without hurting stamp legibility.`,
+    "Keep motifs very minimal and aligned to official-looking square seal aesthetics.",
     "No extra words, no English letters, no watermark, no logo, no frame text."
   ].join(" ");
 
-  const imageRes = await fetch("https://api.openai.com/v1/images/generations", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${env.OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: imageModel,
-      prompt,
-      size: "1024x1024",
-      quality: "medium",
-      n: 1
-    })
-  });
+  const requestImage = async (withTransparentBackground) =>
+    fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: imageModel,
+        prompt,
+        size: "1024x1024",
+        quality: "high",
+        n: 1,
+        ...(withTransparentBackground ? { background: "transparent" } : {})
+      })
+    });
 
-  const imageJson = await imageRes.json().catch(() => ({}));
+  let imageRes = await requestImage(true);
+  let imageJson = await imageRes.json().catch(() => ({}));
+  if (!imageRes.ok) {
+    const message = normalizeText(imageJson?.error?.message).toLowerCase();
+    if (message.includes("background")) {
+      imageRes = await requestImage(false);
+      imageJson = await imageRes.json().catch(() => ({}));
+    }
+  }
   if (!imageRes.ok) {
     return json(buildOpenAiErrorPayload(imageJson, "Failed to generate naming seal image", requestContext), imageRes.status, cors);
   }
@@ -2185,8 +2635,8 @@ export default {
     }
     if (url.pathname === "/api/naming-report") {
       if (req.method !== "POST") return json({ error: "Method not allowed" }, 405, cors);
-      if (!env.OPENAI_API_KEY) {
-        return json({ error: "OPENAI_API_KEY is not configured" }, 500, cors);
+      if (!env.GEMINI_API_KEY) {
+        return json({ error: "GEMINI_API_KEY is not configured" }, 500, cors);
       }
       return handleNamingReport(req, env, cors);
     }

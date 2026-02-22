@@ -77,6 +77,7 @@ const MAX_ULTRASOUND_FILES = 2;
 const MAX_IMAGE_SIZE_BYTES = 3 * 1024 * 1024;
 const CREDITS_PER_IMAGE = 250;
 const AI_EVENT_POPUP_SESSION_KEY = 'ai_event_popup_seen_v1';
+const SERVICE_TAB_STORAGE_KEY = 'main_service_tab_v1';
 const AI_PHOTO_DISABLED = false;
 const AI_PHOTO_HIDDEN = false;
 const namingLabForm = document.getElementById('namingLabForm');
@@ -89,9 +90,18 @@ const namingInterviewGuide = document.getElementById('namingInterviewGuide');
 const namingQuestionList = document.getElementById('namingQuestionList');
 const namingLabSubmitBtn = document.getElementById('namingLabSubmitBtn');
 const namingLabStatus = document.getElementById('namingLabStatus');
+const namingProgressNav = document.getElementById('namingProgressNav');
+const namingProgressTitle = document.getElementById('namingProgressTitle');
+const namingProgressSteps = [
+    document.getElementById('namingProgressStep1'),
+    document.getElementById('namingProgressStep2'),
+    document.getElementById('namingProgressStep3'),
+    document.getElementById('namingProgressStep4')
+].filter(Boolean);
 const namingPlanSelect = document.getElementById('namingPlanSelect');
 const namingLabResultWrap = document.getElementById('namingLabResultWrap');
 const namingLabSummary = document.getElementById('namingLabSummary');
+const namingReportMeta = document.getElementById('namingReportMeta');
 const namingCandidateList = document.getElementById('namingCandidateList');
 const namingScoreTableBody = document.getElementById('namingScoreTableBody');
 const namingCertificateText = document.getElementById('namingCertificateText');
@@ -109,13 +119,10 @@ const namingDetailEnglish = document.getElementById('namingDetailEnglish');
 const namingDetailHanja = document.getElementById('namingDetailHanja');
 const namingDetailMeaning = document.getElementById('namingDetailMeaning');
 const namingDetailExpert = document.getElementById('namingDetailExpert');
+const namingDetailSealStamp = document.getElementById('namingDetailSealStamp');
 const namingLayerRadarSvg = document.getElementById('namingLayerRadarSvg');
-const namingSealStatus = document.getElementById('namingSealStatus');
-const namingSealImage = document.getElementById('namingSealImage');
 const namingTopPick = document.getElementById('namingTopPick');
 const namingTopPickName = document.getElementById('namingTopPickName');
-const namingTopPickReasonBtn = document.getElementById('namingTopPickReasonBtn');
-const namingTopPickReason = document.getElementById('namingTopPickReason');
 const HAS_BABY_PHOTO_UI = Boolean(babyPhotoForm && ultrasoundImageInput && motherPhotoInput && fatherPhotoInput);
 const uploadFieldLabelMap = {
     motherPhotoInput: '엄마 사진',
@@ -136,6 +143,8 @@ let namingQuestionState = [];
 let namingAnswerCache = {};
 let namingReportItems = [];
 const namingSealCache = new Map();
+const namingSealPromiseCache = new Map();
+let namingSealRunId = 0;
 let namingConstraintsState = {
     surname: '김',
     given_name_min_length: 2,
@@ -221,16 +230,39 @@ const NAMING_PRESET_MAP = {
 };
 
 const NAMING_ANSWER_PLACEHOLDER = {
-    saju: '예: 화(火) 기운이 강해 수(水)·목(木) 보완을 원해요.',
-    trend: '예: 흔하지 않지만 세련된, 발음이 깔끔한 이름이 좋아요.',
-    story: '예: 따뜻하고 사람을 배려하는 아이였으면 해요.',
-    global: '예: 해외에서도 발음이 쉬운 2음절 이름을 원해요.',
-    energy: '예: 밝고 부드럽게 들리는 소리를 우선하고 싶어요.',
-    religion: '예: 은총, 평화, 사랑의 상징이 담긴 의미를 원해요.'
+    saju: '예: 화(火)가 강해 수(水)·목(木) 보완, 음양은 균형형 선호',
+    trend: '예: 너무 흔한 이름은 피하고, 세련된 2음절 톤 선호',
+    story: '예: 배려 깊고 단단한 아이로 자라길 바라는 의미를 담고 싶어요',
+    global: '예: 해외에서도 발음 쉬운 Minji/Jiwon 계열 느낌 선호',
+    energy: '예: 음향오행상 ㄱ/ㅁ의 안정감 + 밝은 모음(ㅏ/ㅗ) 톤 원해요',
+    religion: '예: 평화·은총·감사 같은 상징이 은근히 담기면 좋아요'
 };
 
 function getAvailableServiceTabBtns() {
     return Array.from(serviceTabBtns).filter((btn) => btn?.isConnected && !btn.classList.contains('hidden'));
+}
+
+function getStoredServiceTab() {
+    if (typeof window === 'undefined' || !window.localStorage) return '';
+    try {
+        const value = String(window.localStorage.getItem(SERVICE_TAB_STORAGE_KEY) || '').trim();
+        if (!value || !servicePanels[value]) return '';
+        const availableTargets = new Set(getAvailableServiceTabBtns().map((btn) => btn.dataset.serviceTab));
+        return availableTargets.has(value) ? value : '';
+    } catch (_err) {
+        return '';
+    }
+}
+
+function setStoredServiceTab(target) {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    const value = String(target || '').trim();
+    if (!value || !servicePanels[value]) return;
+    try {
+        window.localStorage.setItem(SERVICE_TAB_STORAGE_KEY, value);
+    } catch (_err) {
+        // Ignore storage failures (e.g., privacy mode).
+    }
 }
 
 function applyAiPhotoVisibility() {
@@ -330,6 +362,27 @@ function setNamingLabStatus(message, isError = false) {
     namingLabStatus.style.borderColor = isError ? '#FCA5A5' : '#86EFAC';
     namingLabStatus.style.backgroundColor = isError ? '#FEF2F2' : '#F0FDF4';
     namingLabStatus.style.color = isError ? '#B91C1C' : '#166534';
+}
+
+function setNamingProgress(step = 0, title = '') {
+    if (!namingProgressNav || !namingProgressSteps.length) return;
+    if (!step) {
+        namingProgressNav.classList.add('hidden');
+        namingProgressSteps.forEach((el) => {
+            el.classList.remove('is-active', 'is-done');
+        });
+        if (namingProgressTitle) namingProgressTitle.textContent = '';
+        return;
+    }
+    namingProgressNav.classList.remove('hidden');
+    if (namingProgressTitle) {
+        namingProgressTitle.textContent = String(title || '리포트를 준비하고 있습니다...');
+    }
+    namingProgressSteps.forEach((el, idx) => {
+        const order = idx + 1;
+        el.classList.toggle('is-done', order < step);
+        el.classList.toggle('is-active', order === step);
+    });
 }
 
 function focusChargeGuide() {
@@ -483,19 +536,59 @@ function collectNamingAnswers() {
 }
 
 function parseJsonObjectFromText(rawText) {
-    const text = String(rawText || '').trim();
-    if (!text) return null;
-    try {
-        return JSON.parse(text);
-    } catch (_err) {
-        const match = text.match(/\{[\s\S]*\}/);
-        if (!match) return null;
+    const raw = String(rawText || '').trim();
+    if (!raw) return null;
+    const stripFence = (text) => {
+        const m = text.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+        return m ? String(m[1] || '').trim() : text;
+    };
+    const extractFirstObject = (text) => {
+        const start = text.indexOf('{');
+        if (start < 0) return '';
+        let depth = 0;
+        let inString = false;
+        let escaped = false;
+        for (let i = start; i < text.length; i += 1) {
+            const ch = text[i];
+            if (inString) {
+                if (escaped) {
+                    escaped = false;
+                } else if (ch === '\\') {
+                    escaped = true;
+                } else if (ch === '"') {
+                    inString = false;
+                }
+                continue;
+            }
+            if (ch === '"') {
+                inString = true;
+                continue;
+            }
+            if (ch === '{') {
+                depth += 1;
+                continue;
+            }
+            if (ch === '}') {
+                depth -= 1;
+                if (depth === 0) return text.slice(start, i + 1).trim();
+            }
+        }
+        return '';
+    };
+    const stripped = stripFence(raw);
+    const candidates = [stripped];
+    const objOnly = extractFirstObject(stripped);
+    if (objOnly && objOnly !== stripped) candidates.push(objOnly);
+    for (const text of candidates) {
+        if (!text) continue;
         try {
-            return JSON.parse(match[0]);
-        } catch (_err2) {
-            return null;
+            const parsed = JSON.parse(text);
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+        } catch (_err) {
+            // continue
         }
     }
+    return null;
 }
 
 function normalizeNameLength(value, fallback = 2) {
@@ -541,53 +634,174 @@ function combineDisplayName(nameKr) {
     return `${surname}${baseName}`;
 }
 
-async function generateNamingSealImage(nameText, topItem = null) {
+function hasHanja(text) {
+    return /[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF]/.test(String(text || ''));
+}
+
+function combineDisplayHanja(nameHanja) {
+    const baseHanja = String(nameHanja || '').trim();
+    if (!baseHanja) return '';
+    const surname = String(namingConstraintsState?.surname || '').trim();
+    const shouldLink = Boolean(namingConstraintsState?.consider_surname_linkage);
+    if (!shouldLink || !surname) return baseHanja;
+    if (!hasHanja(surname)) return baseHanja;
+    if (baseHanja.startsWith(surname)) return baseHanja;
+    return `${surname}${baseHanja}`;
+}
+
+async function requestNamingSealImage(nameText, topItem = null) {
     const name = String(nameText || '').trim();
-    if (!namingSealStatus || !namingSealImage) return;
-    if (!name) {
-        namingSealStatus.textContent = '이름이 없어서 도장 이미지를 만들 수 없습니다.';
-        namingSealImage.classList.add('hidden');
-        namingSealImage.removeAttribute('src');
-        return;
+    if (!name || !firebaseIdToken) return '';
+    if (namingSealCache.has(name)) return namingSealCache.get(name);
+    if (namingSealPromiseCache.has(name)) {
+        return namingSealPromiseCache.get(name);
     }
-    if (namingSealCache.has(name)) {
-        namingSealImage.src = namingSealCache.get(name);
-        namingSealImage.classList.remove('hidden');
-        namingSealStatus.textContent = '1순위 이름 캘리그라피 도장입니다.';
-        return;
-    }
-    namingSealStatus.textContent = '1순위 이름 도장 이미지를 생성하는 중...';
-    namingSealImage.classList.add('hidden');
-    namingSealImage.removeAttribute('src');
-    if (!firebaseIdToken) {
-        namingSealStatus.textContent = '로그인 후 도장 이미지를 생성할 수 있습니다.';
-        return;
-    }
-    try {
-        const response = await fetch(`${AI_API_BASE}/api/naming-seal`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${firebaseIdToken}`
-            },
-            body: JSON.stringify({
-                display_name: name,
-                name_hanja: String(topItem?.name_hanja || '').trim(),
-                name_meaning: String(topItem?.name_meaning || '').trim(),
-                story: String(topItem?.story || '').trim()
-            })
-        });
-        const data = await response.json().catch(() => ({}));
-        const imageDataUrl = String(data?.image_data_url || '').trim();
-        if (!response.ok || !data?.ok || !imageDataUrl.startsWith('data:image/')) {
-            throw new Error(String(data?.error || '도장 이미지 생성 실패'));
+    const pending = (async () => {
+        try {
+            const response = await fetch(`${AI_API_BASE}/api/naming-seal`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${firebaseIdToken}`
+                },
+                body: JSON.stringify({
+                    display_name: name,
+                    name_hanja: combineDisplayHanja(topItem?.name_hanja || ''),
+                    name_meaning: String(topItem?.name_meaning || '').trim(),
+                    story: String(topItem?.story || '').trim()
+                })
+            });
+            const data = await response.json().catch(() => ({}));
+            const imageDataUrl = String(data?.image_data_url || '').trim();
+            if (!response.ok || !data?.ok || !imageDataUrl.startsWith('data:image/')) {
+                throw new Error(String(data?.error || '도장 이미지 생성 실패'));
+            }
+            namingSealCache.set(name, imageDataUrl);
+            return imageDataUrl;
+        } catch (_err) {
+            return '';
+        } finally {
+            namingSealPromiseCache.delete(name);
         }
-        namingSealCache.set(name, imageDataUrl);
-        namingSealImage.src = imageDataUrl;
-        namingSealImage.classList.remove('hidden');
-        namingSealStatus.textContent = '1순위 이름 캘리그라피 도장입니다.';
-    } catch (err) {
-        namingSealStatus.textContent = err instanceof Error ? err.message : '도장 이미지 생성에 실패했습니다.';
+    })();
+    namingSealPromiseCache.set(name, pending);
+    return pending;
+}
+
+function updateCandidateSealStatus(idx, status = 'pending', message = '') {
+    if (!namingCandidateList) return;
+    const card = namingCandidateList.querySelector(`.naming-candidate-card[data-candidate-idx="${idx}"]`);
+    if (!card) return;
+    const badge = card.querySelector('[data-seal-badge]');
+    const retryBtn = card.querySelector('[data-seal-retry]');
+    if (badge) {
+        if (status === 'ready') badge.textContent = '';
+        else if (status === 'failed') badge.textContent = message || '도장 생성 실패';
+        else badge.textContent = message || '';
+    }
+    if (retryBtn) {
+        retryBtn.classList.toggle('hidden', status !== 'failed');
+    }
+    card.classList.toggle('seal-failed', status === 'failed');
+}
+
+async function retryCandidateSeal(idx) {
+    const item = namingReportItems[idx];
+    if (!item) return;
+    const name = combineDisplayName(item?.name_kr || '');
+    if (!name || name === '-') return;
+    updateCandidateSealStatus(idx, 'pending', '도장 재생성 중...');
+    const imageDataUrl = await requestNamingSealImage(name, item);
+    if (!imageDataUrl) {
+        updateCandidateSealStatus(idx, 'failed', '재시도 필요');
+        return;
+    }
+    applySealToCandidateCard(idx, imageDataUrl);
+    updateCandidateSealStatus(idx, 'ready');
+    const selected = namingCandidateList?.querySelector('.naming-candidate-card.is-selected');
+    if (selected && Number(selected.getAttribute('data-candidate-idx')) === idx) {
+        renderNamingDetail(item);
+    }
+}
+
+async function hydrateNamingCandidateSeals(items = [], runId = 0) {
+    const total = Array.isArray(items) ? items.length : 0;
+    if (!total) return { total: 0, failed: 0 };
+    const CONCURRENCY = 2;
+    let done = 0;
+    let failed = 0;
+    const hydrateOne = async (item, idx) => {
+        const name = combineDisplayName(item?.name_kr || '');
+        if (!name || name === '-') {
+            done += 1;
+            return;
+        }
+        updateCandidateSealStatus(idx, 'pending', '도장 생성 중...');
+        let imageDataUrl = await requestNamingSealImage(name, item);
+        if (!imageDataUrl) {
+            namingSealCache.delete(name);
+            namingSealPromiseCache.delete(name);
+            imageDataUrl = await requestNamingSealImage(name, item);
+        }
+        done += 1;
+        if (runId === namingSealRunId) {
+            setNamingProgress(3, `후보 도장 생성 중 (${done}/${total})`);
+        }
+        if (!imageDataUrl) {
+            failed += 1;
+            updateCandidateSealStatus(idx, 'failed', '재시도 필요');
+            return;
+        }
+        applySealToCandidateCard(idx, imageDataUrl);
+        updateCandidateSealStatus(idx, 'ready');
+    };
+    const queue = [...items.map((item, idx) => ({ item, idx }))];
+    const workers = Array.from({ length: Math.min(CONCURRENCY, queue.length) }, async () => {
+        while (queue.length) {
+            const job = queue.shift();
+            if (!job) return;
+            await hydrateOne(job.item, job.idx);
+        }
+    });
+    await Promise.allSettled(workers);
+    return { total, failed };
+}
+
+function startNamingSealHydration(items = [], runId = 0) {
+    hydrateNamingCandidateSeals(items, runId)
+        .then(({ total, failed }) => {
+            if (runId !== namingSealRunId) return;
+            setNamingProgress(0, '');
+            if (!total) {
+                setNamingLabStatus('작명 리포트 생성이 완료되었습니다.');
+                return;
+            }
+            if (failed > 0) {
+                setNamingLabStatus('작명 리포트 생성은 완료되었지만 일부 도장 생성에 실패했습니다.', true);
+            } else {
+                setNamingLabStatus('작명 리포트 생성이 완료되었습니다.');
+            }
+        })
+        .catch(() => {
+            if (runId !== namingSealRunId) return;
+            setNamingProgress(0, '');
+            setNamingLabStatus('리포트는 표시되었지만 도장 생성 중 일부 오류가 발생했습니다.', true);
+        });
+}
+
+function applySealToCandidateCard(idx, imageDataUrl) {
+    if (!namingCandidateList) return;
+    const card = namingCandidateList.querySelector(`.naming-candidate-card[data-candidate-idx="${idx}"]`);
+    if (!card) return;
+    const dataUrl = String(imageDataUrl || '').trim();
+    if (!dataUrl.startsWith('data:image/')) return;
+    const escapedUrl = dataUrl.replace(/"/g, '\\"');
+    card.style.setProperty('--naming-seal-url', `url("${escapedUrl}")`);
+    card.classList.add('has-seal-bg');
+    const sealPreview = card.querySelector('[data-seal-preview]');
+    if (sealPreview && sealPreview.tagName === 'IMG') {
+        sealPreview.setAttribute('src', dataUrl);
+        sealPreview.classList.add('is-ready');
     }
 }
 
@@ -645,35 +859,59 @@ function renderNamingRadar(scores = {}) {
 }
 
 function renderNamingDetail(item) {
-    if (!item) return;
+    if (!item) {
+        if (namingDetailSealStamp) {
+            namingDetailSealStamp.classList.add('hidden');
+            namingDetailSealStamp.removeAttribute('src');
+        }
+        return;
+    }
     if (namingDetailHeader) namingDetailHeader.textContent = `${combineDisplayName(item.name_kr || '-')} 상세 분석`;
-    if (namingDetailName) namingDetailName.textContent = `${combineDisplayName(item.name_kr || '-')} ${item.name_hanja ? `(${item.name_hanja})` : ''}`.trim();
+    const displayHanja = combineDisplayHanja(item?.name_hanja || '');
+    if (namingDetailName) namingDetailName.textContent = `${combineDisplayName(item.name_kr || '-')} ${displayHanja ? `(${displayHanja})` : ''}`.trim();
     if (namingDetailEnglish) namingDetailEnglish.textContent = item.name_en || '-';
-    if (namingDetailHanja) namingDetailHanja.textContent = item.hanja_meaning ? `${item.name_hanja || '-'}: ${item.hanja_meaning}` : (item.name_hanja || '-');
+    if (namingDetailHanja) namingDetailHanja.textContent = item.hanja_meaning ? `${displayHanja || '-'}: ${item.hanja_meaning}` : (displayHanja || '-');
     if (namingDetailMeaning) namingDetailMeaning.textContent = item.name_meaning || item.story || '-';
     if (namingDetailExpert) {
         const c = String(item.expert_commentary || '').trim();
         namingDetailExpert.textContent = c || '-';
     }
     renderNamingRadar(item.scores || {});
+    const detailName = combineDisplayName(item?.name_kr || '');
+    requestNamingSealImage(detailName, item).then((imageDataUrl) => {
+        if (!namingDetailSealStamp) return;
+        if (!imageDataUrl) {
+            namingDetailSealStamp.classList.add('hidden');
+            namingDetailSealStamp.removeAttribute('src');
+            return;
+        }
+        namingDetailSealStamp.src = imageDataUrl;
+        namingDetailSealStamp.classList.remove('hidden');
+    });
 }
 
 function renderNamingReport(report) {
     if (!namingLabResultWrap || !namingCandidateList || !namingScoreTableBody || !namingCertificateText || !namingLabSummary) return;
     const items = Array.isArray(report?.top_recommendations) ? report.top_recommendations : [];
     namingReportItems = items;
-    namingCandidateList.innerHTML = items.map((item) => {
+    namingCandidateList.innerHTML = items.map((item, idx) => {
         const nameKr = combineDisplayName(item?.name_kr || '');
-        const nameHanja = String(item?.name_hanja || '').trim();
+        const nameHanja = combineDisplayHanja(item?.name_hanja || '');
         const nameEn = String(item?.name_en || '').trim();
         const story = String(item?.story || '').trim();
         return `
-            <article class="ai-review-card naming-candidate-card" data-candidate-idx="${items.indexOf(item)}">
+            <article class="ai-review-card naming-candidate-card" data-candidate-idx="${idx}">
                 <p class="ai-review-meta"><strong>${escapeHtml(nameKr)}</strong>${nameHanja ? ` · ${escapeHtml(nameHanja)}` : ''}${nameEn ? ` · ${escapeHtml(nameEn)}` : ''}</p>
                 <p class="ai-review-text">${escapeHtml(story || '추천 스토리 준비 중')}</p>
             </article>
         `;
     }).join('') || '<p class="readonly-hint">추천 결과가 비어 있습니다. 답변을 더 구체적으로 작성해 다시 시도해 주세요.</p>';
+
+    items.forEach((item, idx) => {
+        const name = combineDisplayName(item?.name_kr || '');
+        const cachedSeal = namingSealCache.get(name);
+        if (cachedSeal) applySealToCandidateCard(idx, cachedSeal);
+    });
 
     namingCandidateList.querySelectorAll('.naming-candidate-card').forEach((el) => {
         el.addEventListener('click', () => {
@@ -681,6 +919,14 @@ function renderNamingReport(report) {
             el.classList.add('is-selected');
             const idx = Number(el.getAttribute('data-candidate-idx'));
             renderNamingDetail(namingReportItems[idx] || null);
+        });
+    });
+    namingCandidateList.querySelectorAll('[data-seal-retry]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = Number(btn.getAttribute('data-candidate-idx'));
+            if (!Number.isFinite(idx)) return;
+            retryCandidateSeal(idx);
         });
     });
 
@@ -698,28 +944,35 @@ function renderNamingReport(report) {
     }).join('') || '<tr><td colspan="7" class="empty-table">점수 데이터가 없습니다.</td></tr>';
 
     namingLabSummary.textContent = String(report?.interview_summary || report?.naming_strategy || '').trim() || '인터뷰 요약이 없습니다.';
+    if (namingReportMeta) {
+        const generatedAt = new Date();
+        const hh = String(generatedAt.getHours()).padStart(2, '0');
+        const mm = String(generatedAt.getMinutes()).padStart(2, '0');
+        namingReportMeta.innerHTML = [
+            `<span class="naming-report-chip">분석 리포트</span>`,
+            `<span class="naming-report-chip">${items.length}개 이름 후보</span>`,
+            `<span class="naming-report-chip">${hh}:${mm} 생성</span>`
+        ].join('');
+        namingReportMeta.classList.remove('hidden');
+    }
     namingCertificateText.textContent = String(report?.certificate_text || '').trim() || '인증서 문안이 없습니다.';
     const topPick = items[0] || null;
-    if (topPick && namingTopPick && namingTopPickName && namingTopPickReason) {
+    if (topPick && namingTopPick && namingTopPickName) {
         const topName = combineDisplayName(topPick.name_kr || '');
-        const topReasonParts = [String(topPick.story || '').trim(), String(topPick.expert_commentary || '').trim()].filter(Boolean);
         namingTopPickName.textContent = topName;
-        namingTopPickReason.textContent = topReasonParts.join(' ');
         namingTopPick.classList.remove('hidden');
-        namingTopPickReason.classList.add('hidden');
-        if (namingTopPickReasonBtn) namingTopPickReasonBtn.textContent = '이 이름을 추천한 이유 ▼';
-        generateNamingSealImage(topName, topPick);
     } else if (namingTopPick) {
         namingTopPick.classList.add('hidden');
-        if (namingSealStatus) namingSealStatus.textContent = '1순위 이름이 정해지면 도장 이미지를 자동 생성합니다.';
-        if (namingSealImage) {
-            namingSealImage.classList.add('hidden');
-            namingSealImage.removeAttribute('src');
-        }
     }
     renderNamingDetail(items[0] || null);
     const firstCard = namingCandidateList.querySelector('.naming-candidate-card');
     if (firstCard) firstCard.classList.add('is-selected');
+    if (topPick) {
+        const firstName = combineDisplayName(topPick?.name_kr || '');
+        requestNamingSealImage(firstName, topPick).then((imageDataUrl) => {
+            if (imageDataUrl) applySealToCandidateCard(0, imageDataUrl);
+        });
+    }
     namingLabResultWrap.classList.remove('hidden');
 }
 
@@ -730,7 +983,16 @@ function renderNamingFallbackText(rawText) {
     namingCandidateList.innerHTML = `<article class="ai-review-card"><p class="ai-review-text">${escapeHtml(text || '결과 텍스트가 없습니다.')}</p></article>`;
     namingScoreTableBody.innerHTML = '<tr><td colspan="7" class="empty-table">점수형 JSON이 아니어서 표는 비워두었습니다.</td></tr>';
     namingCertificateText.textContent = text || '인증서 문안을 추출하지 못했습니다.';
+    if (namingReportMeta) {
+        namingReportMeta.classList.add('hidden');
+        namingReportMeta.textContent = '';
+    }
     namingLabResultWrap.classList.remove('hidden');
+}
+
+function hasVisibleNamingReport() {
+    if (!namingLabResultWrap || namingLabResultWrap.classList.contains('hidden')) return false;
+    return Array.isArray(namingReportItems) && namingReportItems.length > 0;
 }
 
 async function handleNamingLabSubmit(e) {
@@ -765,7 +1027,10 @@ async function handleNamingLabSubmit(e) {
         namingLabSubmitBtn.disabled = true;
         namingLabSubmitBtn.textContent = '리포트 생성 중...';
     }
-    setNamingLabStatus('레이어와 답변을 분석해 이름 후보를 만들고 있습니다.');
+    const runId = Date.now();
+    namingSealRunId = runId;
+    setNamingProgress(1, '인터뷰 답변을 분석하고 있습니다...');
+    setNamingLabStatus('리포트를 생성하고 있습니다.');
 
     try {
         const payload = {
@@ -774,7 +1039,7 @@ async function handleNamingLabSubmit(e) {
             interview_answers: answers,
             naming_constraints: constraints,
             naming_plan: String(namingPlanSelect?.value || 'plus'),
-            model: 'gpt-4.1-mini'
+            model: 'gemini-2.5-flash'
         };
         namingConstraintsState = constraints;
         const response = await fetch(`${AI_API_BASE}/api/naming-report`, {
@@ -786,6 +1051,7 @@ async function handleNamingLabSubmit(e) {
             body: JSON.stringify(payload)
         });
         const data = await response.json().catch(() => ({}));
+        setNamingProgress(2, '이름 후보와 해설을 정리하고 있습니다...');
         if (!response.ok || !data?.ok || !data?.text) {
             const isInsufficient = Number(response.status) === 402 || String(data?.error || '').toLowerCase().includes('insufficient credits');
             if (isInsufficient) {
@@ -799,18 +1065,30 @@ async function handleNamingLabSubmit(e) {
                     '상단 지갑 영역의 + 충전 버튼에서 쿠폰을 충전해 주세요.'
                 ].join('\n'));
             }
-            throw new Error('작명 리포트 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+            const detail = String(data?.detail || '').trim();
+            const error = String(data?.error || '').trim();
+            throw new Error(detail ? `${error || '작명 리포트 생성 실패'}: ${detail}` : (error || '작명 리포트 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.'));
         }
         const report = parseJsonObjectFromText(data.text);
         if (!report) {
+            setNamingProgress(0, '');
+            if (hasVisibleNamingReport()) {
+                setNamingLabStatus('새 리포트 변환에 실패해 기존 리포트를 유지했습니다. 잠시 후 다시 시도해 주세요.', true);
+                return;
+            }
             renderNamingFallbackText(data.text);
-            setNamingLabStatus('리포트는 생성되었으나 JSON 형식이 아니어서 텍스트 결과로 표시했습니다.');
+            setNamingLabStatus('리포트는 생성되었으나 JSON 형식이 아니어서 텍스트 결과로 표시했습니다.', true);
             return;
         }
+        const reportItems = Array.isArray(report?.top_recommendations) ? report.top_recommendations : [];
+        setNamingProgress(4, '리포트를 표시하고 후보별 도장 생성을 시작합니다...');
         renderNamingReport(report);
-        setNamingLabStatus('작명 리포트 생성이 완료되었습니다.');
+        setNamingProgress(3, `후보 도장 생성 중 (0/${reportItems.length})`);
+        startNamingSealHydration(reportItems, runId);
+        setNamingLabStatus('리포트 표시 완료. 후보별 도장을 생성하고 있습니다.');
         await fetchWallet();
     } catch (err) {
+        setNamingProgress(0, '');
         setNamingLabStatus(err instanceof Error ? err.message : '리포트 생성 실패', true);
     } finally {
         if (namingLabSubmitBtn) {
@@ -858,13 +1136,6 @@ function initNamingLab() {
     });
     namingApplyLayersBtn?.addEventListener('click', applyNamingLayerConfig);
     window.applyNamingLayerConfig = applyNamingLayerConfig;
-    if (namingTopPickReasonBtn && namingTopPickReason) {
-        namingTopPickReasonBtn.addEventListener('click', () => {
-            const hidden = namingTopPickReason.classList.contains('hidden');
-            namingTopPickReason.classList.toggle('hidden', !hidden);
-            namingTopPickReasonBtn.textContent = hidden ? '이 이름을 추천한 이유 ▲' : '이 이름을 추천한 이유 ▼';
-        });
-    }
     namingLabForm.addEventListener('submit', handleNamingLabSubmit);
     namingLabSubmitBtn?.addEventListener('click', handleNamingLabSubmit);
 }
@@ -1277,9 +1548,9 @@ async function startCreditCheckout() {
         if (firebaseUser) {
             firebaseIdToken = await firebaseUser.getIdToken(true);
         }
-        const selectedDollars = Math.max(1, Math.min(20, Number(chargeDollarInput?.value || 1) || 1));
+        const selectedCoupons = Math.max(1, Math.min(20, Number(chargeDollarInput?.value || 1) || 1));
         if (chargeCreditsBtn) chargeCreditsBtn.disabled = true;
-        setWalletStatus(`$${selectedDollars} 결제 페이지를 준비 중입니다...`);
+        setWalletStatus(`쿠폰 ${selectedCoupons}장 결제 페이지를 준비 중입니다...`);
         const response = await fetch(`${AI_API_BASE}/api/billing/checkout`, {
             method: 'POST',
             headers: {
@@ -1288,7 +1559,7 @@ async function startCreditCheckout() {
             },
             body: JSON.stringify({
                 package_id: 'usd_credit_topup',
-                dollar_amount: selectedDollars
+                coupon_amount: selectedCoupons
             })
         });
         const data = await response.json().catch(() => ({}));
@@ -2500,14 +2771,21 @@ function initServiceTabs() {
         });
         btn.addEventListener('keydown', (e) => handleArrowNavigation(e, availableBtns, true));
     });
-    const activeBtn = availableBtns.find((btn) => btn.classList.contains('active')) || availableBtns[0];
-    const initialTarget = activeBtn?.dataset?.serviceTab;
-    if (initialTarget) {
-        trackServicePageView(initialTarget, 'initial_load');
+    const storedTarget = getStoredServiceTab();
+    if (storedTarget) {
+        switchServiceTab(storedTarget, { trackSource: 'initial_load', persist: false });
+        return;
     }
+    const activeBtn = availableBtns.find((btn) => btn.classList.contains('active')) || availableBtns[0];
+    const initialTarget = activeBtn?.dataset?.serviceTab || 'benefit';
+    switchServiceTab(initialTarget, { trackSource: 'initial_load', persist: false });
 }
 
-function switchServiceTab(target) {
+function switchServiceTab(target, options = {}) {
+    const trackSource = typeof options.trackSource === 'string' && options.trackSource
+        ? options.trackSource
+        : 'service_tab';
+    const persist = options.persist !== false;
     if (AI_PHOTO_HIDDEN && target === 'ai') target = 'benefit';
     if (!servicePanels[target]) target = 'benefit';
 
@@ -2540,7 +2818,8 @@ function switchServiceTab(target) {
     } else {
         hideAiEventPopup(false);
     }
-    trackServicePageView(target, 'service_tab');
+    if (persist) setStoredServiceTab(target);
+    trackServicePageView(target, trackSource);
 }
 
 // ==========================================

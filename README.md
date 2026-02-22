@@ -35,7 +35,7 @@ This project includes a Cloudflare Worker backend:
 - Endpoints: `POST /api/ai`, `POST /api/baby-photo`
 - Worker source: `cloudflare-worker/src/index.js`
 - Baby photo prompt source: `cloudflare-worker/src/baby-photo-config.js`
-- Secret: `OPENAI_API_KEY`
+- Secrets: `OPENAI_API_KEY` (general/baby-photo), `GEMINI_API_KEY` (naming-report)
 
 ### 1) Install Wrangler
 
@@ -44,11 +44,12 @@ npm i -g wrangler
 wrangler login
 ```
 
-### 2) Set OpenAI key as Worker secret
+### 2) Set Worker secrets
 
 ```bash
 cd cloudflare-worker
 wrangler secret put OPENAI_API_KEY
+wrangler secret put GEMINI_API_KEY
 ```
 
 ### 3) Deploy Worker
