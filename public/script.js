@@ -651,46 +651,30 @@ function combineDisplayHanja(nameHanja) {
     return `${surname}${baseHanja}`;
 }
 
-async function requestNamingSealImage(nameText, topItem = null) {
-    const name = String(nameText || '').trim();
-    if (!name || !firebaseIdToken) return '';
-    if (namingSealCache.has(name)) return namingSealCache.get(name);
-    if (namingSealPromiseCache.has(name)) {
-        return namingSealPromiseCache.get(name);
-    }
-    const pending = (async () => {
-        try {
-            const response = await fetch(`${AI_API_BASE}/api/naming-seal`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${firebaseIdToken}`
-                },
-                body: JSON.stringify({
-                    display_name: name,
-                    name_hanja: combineDisplayHanja(topItem?.name_hanja || ''),
-                    name_meaning: String(topItem?.name_meaning || '').trim(),
-                    story: String(topItem?.story || '').trim()
-                })
-            });
-            const data = await response.json().catch(() => ({}));
-            const imageDataUrl = String(data?.image_data_url || '').trim();
-            if (!response.ok || !data?.ok || !imageDataUrl.startsWith('data:image/')) {
-                throw new Error(String(data?.error || '도장 이미지 생성 실패'));
-            }
-            namingSealCache.set(name, imageDataUrl);
-            return imageDataUrl;
-        } catch (_err) {
-            return '';
-        } finally {
-            namingSealPromiseCache.delete(name);
-        }
-    })();
-    namingSealPromiseCache.set(name, pending);
-    return pending;
+function getNamingSealChars(nameText) {
+    const raw = String(nameText || '')
+        .replace(/\s+/g, '')
+        .trim();
+    if (!raw || raw === '-') return ['성', '명'];
+    return Array.from(raw).slice(0, 4);
 }
 
-function updateCandidateSealStatus(idx, status = 'pending', message = '') {
+function renderNamingTextSealMarkup(nameText, variant = 'card') {
+    const chars = getNamingSealChars(nameText);
+    const className = variant === 'detail'
+        ? 'naming-text-seal naming-text-seal-detail'
+        : 'naming-text-seal naming-text-seal-card';
+    const charHtml = chars.map((ch) => `<span class="naming-text-seal-char">${escapeHtml(ch)}</span>`).join('');
+    return `<span class="${className}" aria-hidden="true">${charHtml}</span>`;
+}
+
+function applyTextSealToElement(el, nameText, variant = 'detail') {
+    if (!el) return;
+    el.innerHTML = renderNamingTextSealMarkup(nameText, variant);
+    el.classList.remove('hidden');
+}
+
+function updateCandidateSealStatus(idx, status = 'ready', message = '') {
     if (!namingCandidateList) return;
     const card = namingCandidateList.querySelector(`.naming-candidate-card[data-candidate-idx="${idx}"]`);
     if (!card) return;
@@ -698,7 +682,7 @@ function updateCandidateSealStatus(idx, status = 'pending', message = '') {
     const retryBtn = card.querySelector('[data-seal-retry]');
     if (badge) {
         if (status === 'ready') badge.textContent = '';
-        else if (status === 'failed') badge.textContent = message || '도장 생성 실패';
+        else if (status === 'failed') badge.textContent = message || '도장 표시 실패';
         else badge.textContent = message || '';
     }
     if (retryBtn) {
@@ -712,13 +696,8 @@ async function retryCandidateSeal(idx) {
     if (!item) return;
     const name = combineDisplayName(item?.name_kr || '');
     if (!name || name === '-') return;
-    updateCandidateSealStatus(idx, 'pending', '도장 재생성 중...');
-    const imageDataUrl = await requestNamingSealImage(name, item);
-    if (!imageDataUrl) {
-        updateCandidateSealStatus(idx, 'failed', '재시도 필요');
-        return;
-    }
-    applySealToCandidateCard(idx, imageDataUrl);
+    updateCandidateSealStatus(idx, 'pending', '도장 표시 갱신 중...');
+    applySealToCandidateCard(idx, name);
     updateCandidateSealStatus(idx, 'ready');
     const selected = namingCandidateList?.querySelector('.naming-candidate-card.is-selected');
     if (selected && Number(selected.getAttribute('data-candidate-idx')) === idx) {
@@ -729,44 +708,18 @@ async function retryCandidateSeal(idx) {
 async function hydrateNamingCandidateSeals(items = [], runId = 0) {
     const total = Array.isArray(items) ? items.length : 0;
     if (!total) return { total: 0, failed: 0 };
-    const CONCURRENCY = 2;
     let done = 0;
-    let failed = 0;
-    const hydrateOne = async (item, idx) => {
+    for (const [idx, item] of items.entries()) {
         const name = combineDisplayName(item?.name_kr || '');
-        if (!name || name === '-') {
-            done += 1;
-            return;
-        }
-        updateCandidateSealStatus(idx, 'pending', '도장 생성 중...');
-        let imageDataUrl = await requestNamingSealImage(name, item);
-        if (!imageDataUrl) {
-            namingSealCache.delete(name);
-            namingSealPromiseCache.delete(name);
-            imageDataUrl = await requestNamingSealImage(name, item);
-        }
+        updateCandidateSealStatus(idx, 'pending', '도장 표시 중...');
+        if (name && name !== '-') applySealToCandidateCard(idx, name);
         done += 1;
         if (runId === namingSealRunId) {
-            setNamingProgress(3, `후보 도장 생성 중 (${done}/${total})`);
+            setNamingProgress(3, `후보 도장 표시 중 (${done}/${total})`);
         }
-        if (!imageDataUrl) {
-            failed += 1;
-            updateCandidateSealStatus(idx, 'failed', '재시도 필요');
-            return;
-        }
-        applySealToCandidateCard(idx, imageDataUrl);
         updateCandidateSealStatus(idx, 'ready');
-    };
-    const queue = [...items.map((item, idx) => ({ item, idx }))];
-    const workers = Array.from({ length: Math.min(CONCURRENCY, queue.length) }, async () => {
-        while (queue.length) {
-            const job = queue.shift();
-            if (!job) return;
-            await hydrateOne(job.item, job.idx);
-        }
-    });
-    await Promise.allSettled(workers);
-    return { total, failed };
+    }
+    return { total, failed: 0 };
 }
 
 function startNamingSealHydration(items = [], runId = 0) {
@@ -779,7 +732,7 @@ function startNamingSealHydration(items = [], runId = 0) {
                 return;
             }
             if (failed > 0) {
-                setNamingLabStatus('작명 리포트 생성은 완료되었지만 일부 도장 생성에 실패했습니다.', true);
+                setNamingLabStatus('작명 리포트 생성은 완료되었지만 일부 도장 표시에 실패했습니다.', true);
             } else {
                 setNamingLabStatus('작명 리포트 생성이 완료되었습니다.');
             }
@@ -787,23 +740,17 @@ function startNamingSealHydration(items = [], runId = 0) {
         .catch(() => {
             if (runId !== namingSealRunId) return;
             setNamingProgress(0, '');
-            setNamingLabStatus('리포트는 표시되었지만 도장 생성 중 일부 오류가 발생했습니다.', true);
+            setNamingLabStatus('리포트는 표시되었지만 도장 표시 중 일부 오류가 발생했습니다.', true);
         });
 }
 
-function applySealToCandidateCard(idx, imageDataUrl) {
+function applySealToCandidateCard(idx, sealNameText) {
     if (!namingCandidateList) return;
     const card = namingCandidateList.querySelector(`.naming-candidate-card[data-candidate-idx="${idx}"]`);
     if (!card) return;
-    const dataUrl = String(imageDataUrl || '').trim();
-    if (!dataUrl.startsWith('data:image/')) return;
-    const escapedUrl = dataUrl.replace(/"/g, '\\"');
-    card.style.setProperty('--naming-seal-url', `url("${escapedUrl}")`);
-    card.classList.add('has-seal-bg');
-    const sealPreview = card.querySelector('[data-seal-preview]');
-    if (sealPreview && sealPreview.tagName === 'IMG') {
-        sealPreview.setAttribute('src', dataUrl);
-        sealPreview.classList.add('is-ready');
+    const sealPreview = card.querySelector('[data-seal-text]');
+    if (sealPreview) {
+        applyTextSealToElement(sealPreview, sealNameText, 'card');
     }
 }
 
@@ -864,7 +811,7 @@ function renderNamingDetail(item) {
     if (!item) {
         if (namingDetailSealStamp) {
             namingDetailSealStamp.classList.add('hidden');
-            namingDetailSealStamp.removeAttribute('src');
+            namingDetailSealStamp.innerHTML = '';
         }
         return;
     }
@@ -880,16 +827,9 @@ function renderNamingDetail(item) {
     }
     renderNamingRadar(item.scores || {});
     const detailName = combineDisplayName(item?.name_kr || '');
-    requestNamingSealImage(detailName, item).then((imageDataUrl) => {
-        if (!namingDetailSealStamp) return;
-        if (!imageDataUrl) {
-            namingDetailSealStamp.classList.add('hidden');
-            namingDetailSealStamp.removeAttribute('src');
-            return;
-        }
-        namingDetailSealStamp.src = imageDataUrl;
-        namingDetailSealStamp.classList.remove('hidden');
-    });
+    if (namingDetailSealStamp) {
+        applyTextSealToElement(namingDetailSealStamp, detailName, 'detail');
+    }
 }
 
 function renderNamingReport(report) {
@@ -903,6 +843,7 @@ function renderNamingReport(report) {
         const story = String(item?.story || '').trim();
         return `
             <article class="ai-review-card naming-candidate-card" data-candidate-idx="${idx}">
+                <div class="naming-card-seal-wrap" data-seal-text></div>
                 <p class="ai-review-meta"><strong>${escapeHtml(nameKr)}</strong>${nameHanja ? ` · ${escapeHtml(nameHanja)}` : ''}${nameEn ? ` · ${escapeHtml(nameEn)}` : ''}</p>
                 <p class="ai-review-text">${escapeHtml(story || '추천 스토리 준비 중')}</p>
             </article>
@@ -911,8 +852,7 @@ function renderNamingReport(report) {
 
     items.forEach((item, idx) => {
         const name = combineDisplayName(item?.name_kr || '');
-        const cachedSeal = namingSealCache.get(name);
-        if (cachedSeal) applySealToCandidateCard(idx, cachedSeal);
+        if (name && name !== '-') applySealToCandidateCard(idx, name);
     });
 
     namingCandidateList.querySelectorAll('.naming-candidate-card').forEach((el) => {
@@ -969,12 +909,6 @@ function renderNamingReport(report) {
     renderNamingDetail(items[0] || null);
     const firstCard = namingCandidateList.querySelector('.naming-candidate-card');
     if (firstCard) firstCard.classList.add('is-selected');
-    if (topPick) {
-        const firstName = combineDisplayName(topPick?.name_kr || '');
-        requestNamingSealImage(firstName, topPick).then((imageDataUrl) => {
-            if (imageDataUrl) applySealToCandidateCard(0, imageDataUrl);
-        });
-    }
     namingLabResultWrap.classList.remove('hidden');
 }
 
@@ -1083,11 +1017,11 @@ async function handleNamingLabSubmit(e) {
             return;
         }
         const reportItems = Array.isArray(report?.top_recommendations) ? report.top_recommendations : [];
-        setNamingProgress(4, '리포트를 표시하고 후보별 도장 생성을 시작합니다...');
+        setNamingProgress(4, '리포트를 표시하고 후보별 도장을 배치합니다...');
         renderNamingReport(report);
-        setNamingProgress(3, `후보 도장 생성 중 (0/${reportItems.length})`);
+        setNamingProgress(3, `후보 도장 표시 중 (0/${reportItems.length})`);
         startNamingSealHydration(reportItems, runId);
-        setNamingLabStatus('리포트 표시 완료. 후보별 도장을 생성하고 있습니다.');
+        setNamingLabStatus('리포트 표시 완료. 후보별 도장을 배치하고 있습니다.');
         await fetchWallet();
     } catch (err) {
         setNamingProgress(0, '');

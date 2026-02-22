@@ -1601,22 +1601,19 @@ input[readonly] {
     overflow: hidden;
 }
 
-.naming-candidate-card.has-seal-bg::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image: var(--naming-seal-url);
-    background-repeat: no-repeat;
-    background-position: right 10px bottom 8px;
-    background-size: 92px 92px;
-    opacity: 0.12;
-    pointer-events: none;
-}
-
 .naming-candidate-card .ai-review-meta,
 .naming-candidate-card .ai-review-text {
     position: relative;
     z-index: 1;
+}
+
+.naming-card-seal-wrap {
+    position: absolute;
+    right: 10px;
+    bottom: 8px;
+    opacity: 0.14;
+    pointer-events: none;
+    z-index: 0;
 }
 
 .naming-candidate-card.is-selected {
@@ -2273,18 +2270,59 @@ input[readonly] {
     word-break: keep-all;
 }
 
+.naming-text-seal {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    width: 62px;
+    height: 88px;
+    padding: 6px 4px;
+    border: 2px solid rgba(185, 28, 28, 0.9);
+    border-radius: 4px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(254, 242, 242, 0.82));
+    box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.16);
+}
+
+.naming-text-seal-char {
+    display: block;
+    color: #B91C1C;
+    font-family: "Nanum Myeongjo", "Noto Serif KR", "Apple SD Gothic Neo", serif;
+    font-weight: 700;
+    font-size: 1.18rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    transform: scaleY(1.04);
+    text-shadow: 0 0 0.2px rgba(127, 29, 29, 0.8);
+}
+
+.naming-text-seal-card {
+    width: 64px;
+    height: 94px;
+}
+
+.naming-text-seal-card .naming-text-seal-char {
+    font-size: 1.16rem;
+}
+
 .naming-detail-seal {
     position: absolute;
     right: 16px;
     bottom: 14px;
-    width: 92px;
-    height: 92px;
-    object-fit: contain;
-    opacity: 0.9;
-    filter: saturate(1.05) contrast(1.05);
     z-index: 2;
-    background: rgba(255, 255, 255, 0.56);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 8px;
+}
+
+.naming-text-seal-detail {
+    width: 74px;
+    height: 106px;
+    opacity: 0.9;
+}
+
+.naming-text-seal-detail .naming-text-seal-char {
+    font-size: 1.3rem;
 }
 
 @media (max-width: 720px) {
@@ -2320,10 +2358,17 @@ input[readonly] {
     }
 
     .naming-detail-seal {
-        width: 80px;
-        height: 80px;
         right: 12px;
         bottom: 10px;
+    }
+
+    .naming-text-seal-detail {
+        width: 62px;
+        height: 90px;
+    }
+
+    .naming-text-seal-detail .naming-text-seal-char {
+        font-size: 1.1rem;
     }
 
     .naming-top-pick,
