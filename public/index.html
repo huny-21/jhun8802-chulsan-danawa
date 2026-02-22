@@ -91,29 +91,9 @@
 
     <!-- 메인 콘텐츠 -->
     <main class="container main-content">
-        <section class="card" aria-label="사이트 안내 및 검수 기준">
-            <h2>출산·육아 지원 정보 안내 기준</h2>
-            <p>출산 혜택 다나와는 출산지원금·육아휴직 급여 정보를 단순 요약하지 않고, 실제 신청 과정에서 자주 발생하는 누락 포인트를 함께 안내하기 위해 운영됩니다. 메인 계산기 결과는 입력값 기반 추정치이며, 최종 지급 결과는 신청 시점 법령·고시·관할 기관 심사에 따라 달라질 수 있습니다.</p>
-            <p>본 사이트는 정책 안내, 계산 도구, 일정 점검(달력), 신청 전 체크리스트를 한 화면에서 연결해 "무엇을 먼저 확인해야 하는지"를 빠르게 판단할 수 있도록 설계했습니다. 특히 출산 예정일, 통상임금, 사용 구간(분할 여부)처럼 실제 지급액에 영향을 주는 입력 항목은 가이드와 예시를 함께 제공해 해석 오류를 줄이는 데 초점을 두고 있습니다.</p>
-            <div class="notice">
-                <strong>작성·검수 정보</strong><br>
-                작성: 출산 혜택 다나와 콘텐츠팀<br>
-                검수: 정책 데이터 검토 프로세스(공식 공고 원문 대조 후 반영)<br>
-                최종 업데이트: 2026년 2월 22일
-            </div>
-            <div class="source-links">
-                공식 출처:
-                <a href="https://www.work24.go.kr" target="_blank" rel="noopener noreferrer">고용24</a> ·
-                <a href="https://www.moel.go.kr" target="_blank" rel="noopener noreferrer">고용노동부</a> ·
-                <a href="https://www.ei.go.kr" target="_blank" rel="noopener noreferrer">고용보험</a> ·
-                <a href="https://www.childcare.go.kr" target="_blank" rel="noopener noreferrer">아이사랑</a> ·
-                <a href="https://www.gov.kr" target="_blank" rel="noopener noreferrer">정부24</a>
-            </div>
-        </section>
-
         <section class="service-tabs-wrap card">
             <h2>서비스 선택</h2>
-            <p id="serviceFlowStatus" class="service-flow-status service-flow-status-unlinked">지금 필요한 기능을 아래 탭에서 바로 선택하세요. 혜택 조회 후 계산기·달력 연동이 자동 적용됩니다.</p>
+            <p id="serviceFlowStatus" class="service-flow-status service-flow-status-unlinked">지금 필요한 기능을 아래 탭에서 선택하세요. 상세 제도 기준은 관련 제도 페이지에서 확인할 수 있습니다.</p>
             <div id="serviceTabs" class="service-tabs" role="tablist" aria-label="메인 서비스">
                 <button id="service-tab-benefit" class="service-tab active" type="button" role="tab" aria-selected="true" aria-controls="benefitServicePanel" tabindex="0" data-service-tab="benefit">우리동네 혜택찾기</button>
                 <button id="service-tab-calculator" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="calculatorServicePanel" tabindex="-1" data-service-tab="calculator">육아휴직 급여 계산기</button>
@@ -121,93 +101,16 @@
                 <button id="service-tab-ai" class="service-tab" type="button" role="tab" aria-selected="false" aria-controls="aiServicePanel" tabindex="-1" data-service-tab="ai">우리 아이 첫 이름 연구소</button>
             </div>
         </section>
-        <section class="card" aria-label="신청 실패 사례와 점검 항목">
-            <h2>신청 실패가 잦은 사례</h2>
-            <ul class="check-list">
-                <li>출산휴가/육아휴직 시작일을 실제 사용일과 다르게 입력해 월별 추정액이 크게 틀어지는 경우</li>
-                <li>통상임금 포함 수당을 회사 기준과 다르게 입력해 상한·하한 계산이 어긋나는 경우</li>
-                <li>지자체 지원금의 거주기간·신청기한 조건을 놓쳐 대상에서 제외되는 경우</li>
-            </ul>
-            <h3>신청 전 최종 점검 항목</h3>
-            <ul class="check-list">
-                <li>사용 구간(분할 포함)과 실제 제출 예정 일정이 일치하는지 확인</li>
-                <li>회사 급여 규정상 통상임금 포함 항목(기본급/고정수당) 재확인</li>
-                <li>신청 시점 기준 최신 공고(고용24·지자체 공지)로 조건/상한 변경 여부 확인</li>
-            </ul>
-        </section>
-        <section class="card" aria-label="심사 관점 품질 신호 점검표">
-            <h2>콘텐츠 품질 신호 점검표 (2026년 2월 22일)</h2>
-            <p>계산형 서비스 승인 사례를 기준으로, 실제 심사에서 자주 확인되는 항목을 현재 사이트 상태로 점검한 결과입니다.</p>
-            <div class="table-wrap quality-table-wrap">
-                <table class="quality-table" aria-label="품질 신호 점검표">
-                    <thead>
-                        <tr>
-                            <th>핵심 항목</th>
-                            <th>현재 반영 상태</th>
-                            <th>근거</th>
-                            <th>점검 주기</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>도구형 원본 콘텐츠</td>
-                            <td>혜택조회 + 급여계산 + 달력 + 이름연구소 제공</td>
-                            <td>메인 탭 4종 실사용 기능 운영</td>
-                            <td>기능 배포 시마다</td>
-                        </tr>
-                        <tr>
-                            <td>정책 근거 명시</td>
-                            <td>공식 기관 링크와 검수 기준 공개</td>
-                            <td>홈·정책·가이드 페이지 출처 표기</td>
-                            <td>주 1회 원문 재확인</td>
-                        </tr>
-                        <tr>
-                            <td>운영 신뢰 정보</td>
-                            <td>운영자/문의/약관/개인정보/제보 경로 공개</td>
-                            <td>푸터 고정 링크 + 문의 페이지</td>
-                            <td>분기 1회 검토</td>
-                        </tr>
-                        <tr>
-                            <td>기술 SEO 기본</td>
-                            <td>robots/sitemap/ads.txt + canonical 적용</td>
-                            <td>배포 파일 공개 운영</td>
-                            <td>배포 시 자동 점검</td>
-                        </tr>
-                        <tr>
-                            <td>광고 UX 안전성</td>
-                            <td>하단 단일 광고 영역 우선 배치</td>
-                            <td>결과 UI 가림 없는 배치 유지</td>
-                            <td>모바일 QA마다</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <p class="readonly-hint">※ 위 점검표는 승인 보장을 의미하지 않으며, 정책·트래픽·콘텐츠 품질·계정 이력 등 복합 요인의 사전 점검용입니다.</p>
-        </section>
-
-        <section class="card" aria-label="핵심 페이지 바로가기">
-            <h2>핵심 페이지 바로가기</h2>
-            <div class="quick-link-grid">
-                <a class="quick-link-card" href="/guide/how-to-use">
-                    <strong>사용 가이드</strong>
-                    <span>입력 순서와 계산 전 체크포인트 확인</span>
-                </a>
-                <a class="quick-link-card" href="/policy">
-                    <strong>관련 제도</strong>
-                    <span>공식 원문 대조표와 기준금액 확인</span>
-                </a>
-                <a class="quick-link-card" href="/faq">
-                    <strong>FAQ</strong>
-                    <span>신청 실패·입력 오류 사례 모음</span>
-                </a>
-                <a class="quick-link-card" href="/contact">
-                    <strong>문의·제보</strong>
-                    <span>오류 신고와 수정 요청 접수</span>
-                </a>
-            </div>
-        </section>
 
         <section id="benefitServicePanel" class="service-panel active" role="tabpanel" aria-labelledby="service-tab-benefit">
+            <section class="card service-brief-card" aria-label="우리동네 혜택 서비스 안내">
+                <h2>우리동네 혜택찾기 안내</h2>
+                <p>지역과 출산예정일을 입력하면 정부 공통 혜택과 지자체 혜택을 나눠 확인할 수 있습니다.</p>
+                <div class="service-brief-links">
+                    <a href="/policy">관련 제도 자세히 보기</a>
+                    <a href="/guide/how-to-use">사용 가이드 보기</a>
+                </div>
+            </section>
             <section class="search-section card">
                 <h2>우리동네 혜택 찾기</h2>
                 <form id="benefitForm" novalidate>
@@ -303,6 +206,14 @@
         </section>
 
         <section id="calculatorServicePanel" class="service-panel" role="tabpanel" aria-labelledby="service-tab-calculator" hidden>
+            <section class="card service-brief-card" aria-label="육아휴직 급여 서비스 안내">
+                <h2>육아휴직 급여 계산기 안내</h2>
+                <p>통상임금·휴직구간을 입력해 월별 예상 급여를 계산합니다. 상한·하한·6+6 요건은 관련 제도에서 최신 기준을 확인하세요.</p>
+                <div class="service-brief-links">
+                    <a href="/policy">관련 제도 자세히 보기</a>
+                    <a href="/guide/parental-leave-pay">계산 가이드 보기</a>
+                </div>
+            </section>
             <section class="card">
                 <h2>육아휴직 급여 계산기</h2>
                 <form id="leavePlannerForm" novalidate>
@@ -510,6 +421,14 @@
         </section>
 
         <section id="calendarServicePanel" class="service-panel" role="tabpanel" aria-labelledby="service-tab-calendar" hidden>
+            <section class="card service-brief-card" aria-label="육아휴직 기간 서비스 안내">
+                <h2>육아휴직 기간(달력) 안내</h2>
+                <p>출산휴가·육아휴직 기간을 달력에서 시각적으로 조정하고, 구간 공백과 복직 시점을 점검할 수 있습니다.</p>
+                <div class="service-brief-links">
+                    <a href="/policy">관련 제도 자세히 보기</a>
+                    <a href="/guide/how-to-use">사용 가이드 보기</a>
+                </div>
+            </section>
             <section class="card">
                 <h2>육아휴직 달력</h2>
                 <p class="calendar-help">아래에서 출산휴가/육아휴직 날짜를 선택하면 달력에 즉시 반영됩니다. 계산기 입력값도 기본으로 자동 적용됩니다.</p>

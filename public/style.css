@@ -237,6 +237,41 @@ textarea {
     display: block;
 }
 
+.service-brief-card {
+    margin-bottom: 16px;
+}
+
+.service-brief-card h2 {
+    margin-bottom: 10px;
+}
+
+.service-brief-card p {
+    margin: 0;
+    color: var(--neutral-text);
+}
+
+.service-brief-links {
+    margin-top: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.service-brief-links a {
+    text-decoration: none;
+    color: var(--brand-accent);
+    border: 1px solid var(--neutral-border);
+    border-radius: 999px;
+    padding: 8px 12px;
+    background: #fff;
+    font-size: 0.85rem;
+}
+
+.service-brief-links a:hover {
+    background: var(--brand-highlight);
+    border-color: #bfd4ea;
+}
+
 /* Form Styles */
 .form-row {
     display: flex;
