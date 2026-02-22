@@ -705,7 +705,22 @@ function parseJsonObjectFromText(text) {
   return null;
 }
 
-function validateNamingReportPayload(report, recommendationCount) {
+function countHangulSyllables(text) {
+  const chars = Array.from(String(text || ""));
+  let count = 0;
+  for (const ch of chars) {
+    if (/[\uAC00-\uD7A3]/.test(ch)) count += 1;
+  }
+  return count;
+}
+
+function validateNamingReportPayload(report, recommendationCount, options = {}) {
+  const minNameLength = Number.isFinite(Number(options.minNameLength))
+    ? Math.max(1, Math.floor(Number(options.minNameLength)))
+    : null;
+  const maxNameLength = Number.isFinite(Number(options.maxNameLength))
+    ? Math.max(1, Math.floor(Number(options.maxNameLength)))
+    : null;
   if (!report || typeof report !== "object" || Array.isArray(report)) {
     return { ok: false, reason: "Report is not a JSON object" };
   }
@@ -743,6 +758,19 @@ function validateNamingReportPayload(report, recommendationCount) {
     for (const key of requiredTextKeys) {
       if (!normalizeText(item[key])) {
         return { ok: false, reason: `Recommendation #${i + 1} missing \`${key}\`` };
+      }
+    }
+    if (minNameLength && maxNameLength) {
+      const nameKr = normalizeText(item.name_kr);
+      const syllableCount = countHangulSyllables(nameKr);
+      if (syllableCount < minNameLength || syllableCount > maxNameLength) {
+        const lengthRule = minNameLength === maxNameLength
+          ? `${minNameLength}`
+          : `${minNameLength}-${maxNameLength}`;
+        return {
+          ok: false,
+          reason: `Recommendation #${i + 1} \`name_kr\` Hangul syllable count must be ${lengthRule} (got ${syllableCount})`
+        };
       }
     }
     const scores = item.scores;
@@ -789,8 +817,7 @@ function validateNamingReportLanguage(report) {
     "hanja_meaning",
     "name_meaning",
     "story",
-    "expert_role",
-    "expert_commentary"
+    "expert_role"
   ];
   for (let i = 0; i < items.length; i += 1) {
     const item = items[i] || {};
@@ -1998,6 +2025,9 @@ async function handleNamingReport(req, env, cors) {
       siblingConsistency && siblingNames.length
         ? `Also keep sibling naming consistency with [${siblingNames.join(", ")}] in tone/rhythm/style while avoiding near-duplicate confusion.`
         : "Sibling naming consistency is optional unless explicitly requested.";
+    const lengthConstraintKorean = minNameLength === maxNameLength
+      ? `이름(이름자)은 반드시 한글 ${minNameLength}글자여야 합니다.`
+      : `이름(이름자)은 반드시 한글 ${minNameLength}~${maxNameLength}글자여야 합니다.`;
     const system = [
       "You are a Korean baby naming strategist.",
       "Return strict JSON only.",
@@ -2010,6 +2040,7 @@ async function handleNamingReport(req, env, cors) {
       "Do not use English words, romanization, or mixed-language phrases in non-English fields.",
       "name_en must be the only English field.",
       lengthRule,
+      `Korean given-name syllable count is mandatory and must never be violated: ${minNameLength}-${maxNameLength}.`,
       surnameRule,
       siblingRule,
       "For each recommendation, write detailed but concise Korean analysis.",
@@ -2024,6 +2055,13 @@ async function handleNamingReport(req, env, cors) {
     ].join(" ");
     const message = JSON.stringify({
       child_gender: childGender,
+      recommendation_count: recommendationCount,
+      given_name_length_rule: {
+        min_hangul_syllables: minNameLength,
+        max_hangul_syllables: maxNameLength,
+        must_follow_strictly: true,
+        note_ko: lengthConstraintKorean
+      },
       layer_weights: layerWeights,
       interview_answers: interviewAnswers,
       naming_constraints: {
@@ -2148,12 +2186,16 @@ async function handleNamingReport(req, env, cors) {
       );
     }
     let parsedReport = parseJsonObjectFromText(text);
-    let validation = validateNamingReportPayload(parsedReport, recommendationCount);
+    let validation = validateNamingReportPayload(parsedReport, recommendationCount, {
+      minNameLength: minNameLength,
+      maxNameLength: maxNameLength
+    });
     if (!validation.ok) {
       const repairSystem = [
         "You convert a near-JSON naming report into strict JSON.",
         "Return strict JSON object only. No markdown, no commentary.",
         `Create exactly ${recommendationCount} recommendations.`,
+        `Every name_kr must satisfy Hangul given-name length ${minNameLength}${minNameLength === maxNameLength ? "" : `-${maxNameLength}`}.`,
         "All fields except name_en must be natural Korean only.",
         "Keep each text field concise so output remains complete and valid.",
         "Do not omit required keys."
@@ -2163,7 +2205,10 @@ async function handleNamingReport(req, env, cors) {
       if (upstream.ok) {
         const repairedText = extractGeminiText(data);
         const repairedParsed = parseJsonObjectFromText(repairedText);
-        const repairedValidation = validateNamingReportPayload(repairedParsed, recommendationCount);
+        const repairedValidation = validateNamingReportPayload(repairedParsed, recommendationCount, {
+          minNameLength: minNameLength,
+          maxNameLength: maxNameLength
+        });
         if (repairedValidation.ok) {
           parsedReport = repairedParsed;
           validation = repairedValidation;
