@@ -1423,16 +1423,17 @@ async function handleBillingCheckout(req, env, cors) {
   const userId = auth.uid;
   const packageId = normalizeText(body.package_id) || "usd_credit_topup";
   const couponUnitCredits = parsePositiveInt(env.COUPON_UNIT_CREDITS, 250);
-  const fallbackCouponsFromDollar =
-    Math.floor(Math.max(1, Number(body.dollar_amount || 1)) * 4);
-  const requestedCouponsRaw = Math.floor(
-    Number(body.coupon_amount || fallbackCouponsFromDollar || 1)
+  const COUPONS_PER_DOLLAR = 5;
+  const legacyCouponAmount = Math.floor(Number(body.coupon_amount || 0));
+  const requestedDollarsRaw = Number.isFinite(Number(body.dollar_amount))
+    ? Math.floor(Number(body.dollar_amount))
+    : (legacyCouponAmount > 0 ? Math.ceil(legacyCouponAmount / COUPONS_PER_DOLLAR) : 1);
+  const requestedDollars = Math.min(
+    20,
+    Math.max(1, Number.isFinite(requestedDollarsRaw) ? requestedDollarsRaw : 1)
   );
-  const requestedCoupons = Math.min(
-    80,
-    Math.max(1, Number.isFinite(requestedCouponsRaw) ? requestedCouponsRaw : 1)
-  );
-  const amountCents = requestedCoupons * 25;
+  const requestedCoupons = requestedDollars * COUPONS_PER_DOLLAR;
+  const amountCents = requestedDollars * 100;
   const amountUsd = amountCents / 100;
   const credits = requestedCoupons * couponUnitCredits;
   const amountKrw = amountCents * 10;
@@ -1529,6 +1530,7 @@ async function handleBillingCheckout(req, env, cors) {
     amount_krw: amountKrw,
     amount_usd: amountUsd,
     amount_cents: amountCents,
+    dollar_amount: requestedDollars,
     coupon_amount: requestedCoupons,
     paid_credits: credits,
     checkout_url: checkoutUrl
@@ -1879,13 +1881,22 @@ async function handleAiApi(req, env, cors) {
 
 async function handleNamingReport(req, env, cors) {
   const body = await req.json().catch(() => ({}));
-  const namingPlan = normalizeText(body.naming_plan).toLowerCase();
-  const planConfig =
-    namingPlan === "basic"
-      ? { code: "basic", credits: 250, recommendations: 1 }
-      : { code: "plus", credits: 1000, recommendations: 5 };
-  const namingReportCredits = planConfig.credits;
-  const recommendationCount = planConfig.recommendations;
+  const legacyNamingPlan = normalizeText(body.naming_plan).toLowerCase();
+  const legacyCouponAmount =
+    legacyNamingPlan === "basic"
+      ? 1
+      : legacyNamingPlan === "plus"
+        ? 5
+        : 0;
+  const namingCouponAmountRaw = Math.floor(
+    Number(body.naming_coupon_amount || legacyCouponAmount || 5)
+  );
+  const namingCouponAmount = Math.max(
+    1,
+    Math.min(5, Number.isFinite(namingCouponAmountRaw) ? namingCouponAmountRaw : 5)
+  );
+  const namingReportCredits = namingCouponAmount * 250;
+  const recommendationCount = namingCouponAmount;
   const layerWeights = Array.isArray(body.layer_weights) ? body.layer_weights : [];
   const interviewAnswers = Array.isArray(body.interview_answers) ? body.interview_answers : [];
   const childGender = normalizeText(body.child_gender) || "unknown";
@@ -2198,7 +2209,8 @@ async function handleNamingReport(req, env, cors) {
         text: normalizedText,
         model: data.modelVersion || model,
         id: data.responseId || null,
-        plan: planConfig.code,
+        coupon_amount: namingCouponAmount,
+        recommendation_count: recommendationCount,
         required_credits: namingReportCredits,
         wallet: walletSnapshot
           ? {

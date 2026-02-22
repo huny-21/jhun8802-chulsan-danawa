@@ -540,27 +540,28 @@
                         <div class="wallet-charge-config">
                             <label for="chargeDollarInput">충전</label>
                             <select id="chargeDollarInput">
-                                <option value="1">1장</option>
-                                <option value="2">2장</option>
-                                <option value="3">3장</option>
-                                <option value="4">4장</option>
-                                <option value="5">5장</option>
-                                <option value="6">6장</option>
-                                <option value="7">7장</option>
-                                <option value="8">8장</option>
-                                <option value="9">9장</option>
-                                <option value="10">10장</option>
-                                <option value="11">11장</option>
-                                <option value="12">12장</option>
-                                <option value="13">13장</option>
-                                <option value="14">14장</option>
-                                <option value="15">15장</option>
-                                <option value="16">16장</option>
-                                <option value="17">17장</option>
-                                <option value="18">18장</option>
-                                <option value="19">19장</option>
-                                <option value="20">20장</option>
+                                <option value="1">$1</option>
+                                <option value="2">$2</option>
+                                <option value="3">$3</option>
+                                <option value="4">$4</option>
+                                <option value="5">$5</option>
+                                <option value="6">$6</option>
+                                <option value="7">$7</option>
+                                <option value="8">$8</option>
+                                <option value="9">$9</option>
+                                <option value="10">$10</option>
+                                <option value="11">$11</option>
+                                <option value="12">$12</option>
+                                <option value="13">$13</option>
+                                <option value="14">$14</option>
+                                <option value="15">$15</option>
+                                <option value="16">$16</option>
+                                <option value="17">$17</option>
+                                <option value="18">$18</option>
+                                <option value="19">$19</option>
+                                <option value="20">$20</option>
                             </select>
+                            <span id="chargeCouponPreview" class="readonly-hint wallet-charge-preview">쿠폰 5장 지급</span>
                         </div>
                         <button type="button" id="chargeCreditsBtn" class="btn-secondary wallet-charge-btn">충전</button>
                     </div>
@@ -762,15 +763,18 @@
                         <h3><span>C</span> 이름 분석 리포트 생성</h3>
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="namingPlanSelect">리포트 플랜</label>
+                                <label for="namingPlanSelect">쿠폰 사용량 (추천 개수와 동일)</label>
                                 <select id="namingPlanSelect">
-                                    <option value="basic">Basic · 쿠폰 1장 · 이름 추천 1개</option>
-                                    <option value="plus" selected>Plus · 쿠폰 4장 · 이름 추천 5개</option>
+                                    <option value="1">쿠폰 1장 사용 · 이름 추천 1개</option>
+                                    <option value="2">쿠폰 2장 사용 · 이름 추천 2개</option>
+                                    <option value="3">쿠폰 3장 사용 · 이름 추천 3개</option>
+                                    <option value="4">쿠폰 4장 사용 · 이름 추천 4개</option>
+                                    <option value="5" selected>쿠폰 5장 사용 · 이름 추천 5개</option>
                                 </select>
                             </div>
                         </div>
                         <button type="button" id="namingLabSubmitBtn" class="btn-primary ai-generate-btn">AI 작명 리포트 생성하기</button>
-                        <p class="readonly-hint">Basic: 쿠폰 1장 · 이름 추천 1개 / Plus: 쿠폰 4장 · 이름 추천 5개</p>
+                        <p class="readonly-hint">쿠폰 1장당 이름 추천 1개가 생성됩니다. (예: 3장 사용 시 3개 추천)</p>
                     </section>
                 </form>
                 <section id="namingLabResultWrap" class="ai-history-box hidden" aria-label="작명소 결과">

@@ -73,9 +73,11 @@ const walletStatus = document.getElementById('walletStatus');
 const chargeCreditsBtn = document.getElementById('chargeCreditsBtn');
 const refreshWalletBtn = document.getElementById('refreshWalletBtn');
 const chargeDollarInput = document.getElementById('chargeDollarInput');
+const chargeCouponPreview = document.getElementById('chargeCouponPreview');
 const MAX_ULTRASOUND_FILES = 2;
 const MAX_IMAGE_SIZE_BYTES = 3 * 1024 * 1024;
 const CREDITS_PER_IMAGE = 250;
+const COUPONS_PER_DOLLAR = 5;
 const AI_EVENT_POPUP_SESSION_KEY = 'ai_event_popup_seen_v1';
 const SERVICE_TAB_STORAGE_KEY = 'main_service_tab_v1';
 const AI_PHOTO_DISABLED = false;
@@ -1038,7 +1040,7 @@ async function handleNamingLabSubmit(e) {
             layer_weights: layers,
             interview_answers: answers,
             naming_constraints: constraints,
-            naming_plan: String(namingPlanSelect?.value || 'plus'),
+            naming_coupon_amount: Math.max(1, Math.min(5, Number(namingPlanSelect?.value || 5) || 5)),
             model: 'gemini-2.5-flash'
         };
         namingConstraintsState = constraints;
@@ -1353,6 +1355,17 @@ function setWalletStatus(message, isError = false) {
     walletStatus.style.color = isError ? '#B91C1C' : '';
 }
 
+function getSelectedChargeDollars() {
+    return Math.max(1, Math.min(20, Number(chargeDollarInput?.value || 1) || 1));
+}
+
+function updateChargeCouponPreview() {
+    if (!chargeCouponPreview) return;
+    const dollars = getSelectedChargeDollars();
+    const coupons = dollars * COUPONS_PER_DOLLAR;
+    chargeCouponPreview.textContent = `쿠폰 ${coupons}장 지급`;
+}
+
 function applyCouponCampaignUi(campaign) {
     const ended = campaign?.status === 'ended';
     const soldOut = Boolean(campaign?.sold_out);
@@ -1364,6 +1377,9 @@ function applyCouponCampaignUi(campaign) {
     }
     if (chargeDollarInput) {
         chargeDollarInput.disabled = soldOut;
+    }
+    if (chargeCouponPreview) {
+        chargeCouponPreview.style.opacity = soldOut ? '0.6' : '';
     }
     if (refreshWalletBtn) {
         refreshWalletBtn.disabled = false;
@@ -1548,9 +1564,10 @@ async function startCreditCheckout() {
         if (firebaseUser) {
             firebaseIdToken = await firebaseUser.getIdToken(true);
         }
-        const selectedCoupons = Math.max(1, Math.min(20, Number(chargeDollarInput?.value || 1) || 1));
+        const selectedDollars = getSelectedChargeDollars();
+        const selectedCoupons = selectedDollars * COUPONS_PER_DOLLAR;
         if (chargeCreditsBtn) chargeCreditsBtn.disabled = true;
-        setWalletStatus(`쿠폰 ${selectedCoupons}장 결제 페이지를 준비 중입니다...`);
+        setWalletStatus(`$${selectedDollars} 결제 페이지를 준비 중입니다. (쿠폰 ${selectedCoupons}장 지급)`);
         const response = await fetch(`${AI_API_BASE}/api/billing/checkout`, {
             method: 'POST',
             headers: {
@@ -1559,7 +1576,7 @@ async function startCreditCheckout() {
             },
             body: JSON.stringify({
                 package_id: 'usd_credit_topup',
-                coupon_amount: selectedCoupons
+                dollar_amount: selectedDollars
             })
         });
         const data = await response.json().catch(() => ({}));
@@ -1671,9 +1688,14 @@ function initAuth() {
     if (chargeCreditsBtn) {
         chargeCreditsBtn.addEventListener('click', startCreditCheckout);
     }
+    if (chargeDollarInput) {
+        chargeDollarInput.addEventListener('change', updateChargeCouponPreview);
+        chargeDollarInput.addEventListener('input', updateChargeCouponPreview);
+    }
     if (refreshWalletBtn) {
         refreshWalletBtn.addEventListener('click', fetchWallet);
     }
+    updateChargeCouponPreview();
 
     onAuthStateChanged(firebaseAuth, async (user) => {
         firebaseUser = user || null;

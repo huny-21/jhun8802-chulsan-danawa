@@ -46,6 +46,14 @@ const configInputs = {
   BABY_PHOTO_IMAGE_PROMPT_OVERRIDE: document.getElementById("cfgImagePromptOverride")
 };
 
+const CREDITS_PER_COUPON = 250;
+
+function toCouponCount(credits) {
+  const value = Number(credits || 0);
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  return Math.floor(value / CREDITS_PER_COUPON);
+}
+
 let firebaseAuth = null;
 let firebaseUser = null;
 let firebaseIdToken = "";
@@ -136,7 +144,7 @@ function renderPayments(data = {}) {
     <td>${escapeHtml(item.order_id)}</td>
     <td>${escapeHtml(item.user_id)}</td>
     <td>${escapeHtml(item.amount_krw)}</td>
-    <td>${escapeHtml(item.paid_credits)}</td>
+    <td>${escapeHtml(toCouponCount(item.paid_credits))}</td>
     <td>${escapeHtml(item.status)}</td>
     <td>${escapeHtml(item.created_at)}</td>
   </tr>`);
@@ -152,8 +160,8 @@ function renderUsers(data = {}) {
   const items = Array.isArray(data?.items) ? data.items : [];
   const rows = items.map((item) => `<tr>
     <td>${escapeHtml(item.user_id)}</td>
-    <td>${escapeHtml(item.paid_credits)}</td>
-    <td>${escapeHtml(item.bonus_credits)}</td>
+    <td>${escapeHtml(toCouponCount(item.paid_credits))}</td>
+    <td>${escapeHtml(toCouponCount(item.bonus_credits))}</td>
     <td>${escapeHtml(item.payment_count)}</td>
     <td>${escapeHtml(item.last_payment_at)}</td>
     <td>${escapeHtml(item.photo_count)}</td>

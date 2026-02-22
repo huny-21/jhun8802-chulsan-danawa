@@ -1451,6 +1451,12 @@ input[readonly] {
     font-size: 0.9rem;
 }
 
+.wallet-charge-preview {
+    margin-left: 4px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+}
+
 .wallet-refresh-btn {
     min-height: 38px;
     padding: 0 10px;
@@ -1911,6 +1917,11 @@ input[readonly] {
         padding: 4px 6px;
         font-size: 0.72rem;
         min-height: 28px;
+    }
+
+    .wallet-charge-preview {
+        margin-left: 2px;
+        font-size: 0.62rem;
     }
 
     .wallet-refresh-btn {
