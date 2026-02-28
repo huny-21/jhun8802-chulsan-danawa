@@ -1896,42 +1896,72 @@ input[readonly] {
         flex-direction: column;
     }
 
-    .wallet-charge-config {
-        margin-left: 0;
-        width: auto;
-        flex-wrap: nowrap;
-        gap: 2px;
-        flex: 0 0 auto;
+    .wallet-box {
+        top: 8px;
+        padding: 10px;
+    }
+
+    .wallet-toolbar {
+        flex-wrap: wrap;
+        align-items: stretch;
+        gap: 6px;
     }
 
     .wallet-balance {
-        width: auto;
-        white-space: nowrap;
-        flex: 0 0 auto;
+        width: 100%;
+        white-space: normal;
+        flex: 1 0 100%;
+        overflow: visible;
+        text-overflow: unset;
+        padding: 8px 10px;
+        font-size: 0.8rem;
+        line-height: 1.45;
+        border-radius: 12px;
+    }
+
+    .wallet-refresh-btn {
+        flex: 0 0 44px;
+        min-height: 40px;
+        padding: 0;
+    }
+
+    .wallet-charge-config {
+        margin-left: 0;
         min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding: 3px 7px;
-        font-size: 0.72rem;
+        flex: 1 1 0;
+        flex-wrap: wrap;
+        gap: 4px 6px;
+        align-items: center;
     }
 
     .wallet-charge-config label {
-        font-size: 0.66rem;
+        font-size: 0.72rem;
         white-space: nowrap;
     }
 
     .wallet-charge-config select {
-        min-width: 92px;
-        width: 92px;
-        flex: 0 0 auto;
-        padding: 4px 6px;
-        font-size: 0.72rem;
-        min-height: 28px;
+        min-width: 0;
+        width: 100%;
+        flex: 1 1 110px;
+        padding: 7px 8px;
+        font-size: 0.82rem;
+        min-height: 40px;
     }
 
     .wallet-charge-preview {
-        margin-left: 2px;
-        font-size: 0.62rem;
+        margin-left: 0;
+        font-size: 0.7rem;
+        white-space: normal;
+        line-height: 1.35;
+        flex: 1 0 100%;
+    }
+
+    .wallet-charge-btn {
+        flex: 0 0 auto;
+        min-width: 68px;
+        min-height: 40px;
+        padding: 0 12px;
+        font-size: 0.82rem;
     }
 
     .wallet-refresh-btn {

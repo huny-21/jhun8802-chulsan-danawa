@@ -1327,6 +1327,17 @@ function applyCouponCampaignUi(campaign) {
         setWalletStatus('쿠폰이 모두 소진되었습니다. 2월 한정 50장 쿠폰이 마감되어 충전/결제가 비활성화되었습니다.', true);
         return;
     }
+    const loginGrants = Array.isArray(walletState?.login_coupon_grants)
+        ? walletState.login_coupon_grants.filter((grant) => Boolean(grant?.issued_now))
+        : [];
+    const grantedCoupons = loginGrants.reduce((sum, grant) => {
+        const coupons = Number(grant?.coupons || 0);
+        return sum + (Number.isFinite(coupons) && coupons > 0 ? coupons : 0);
+    }, 0);
+    if (grantedCoupons > 0) {
+        setWalletStatus(`로그인 보너스 쿠폰 ${grantedCoupons}장이 지급되었습니다. 내 쿠폰 ${Number(walletState?.can_generate_images || 0)}장`);
+        return;
+    }
     const welcomeIssuedNow = Boolean(walletState?.welcome_coupon?.issued_now);
     if (welcomeIssuedNow) {
         setWalletStatus(`첫 로그인 쿠폰 1장이 지급되었습니다. 내 쿠폰 ${Number(walletState?.can_generate_images || 0)}장`);

@@ -95,6 +95,15 @@ const ADMIN_RUNTIME_CONFIG_KEYS = [
   "BABY_PHOTO_IMAGE_PROMPT_OVERRIDE"
 ];
 
+const LOGIN_COUPON_GRANTS = [
+  {
+    email: "dmstjs0607@gmail.com",
+    coupons: 50,
+    entryType: "special_login_bonus",
+    sourceId: "special_login_bonus_dmstjs0607_50_coupons"
+  }
+];
+
 function getEnvRuntimeConfig(env) {
   return {
     AI_DEFAULT_MODEL:
@@ -1211,6 +1220,49 @@ async function addCredits(env, userId, paidAmount, bonusAmount, entryType, sourc
   return getWallet(env, userId);
 }
 
+async function issueLoginCouponGrants(env, userId, email) {
+  const normalizedEmail = normalizeText(email).toLowerCase();
+  if (!normalizedEmail) return [];
+
+  const couponUnitCredits = parsePositiveInt(env.COUPON_UNIT_CREDITS, 250);
+  const issued = [];
+  for (const grant of LOGIN_COUPON_GRANTS) {
+    if (normalizedEmail !== grant.email) continue;
+    const sourceId = normalizeText(grant.sourceId);
+    if (!sourceId) continue;
+    const existing = await env.DB
+      .prepare(
+        `SELECT id
+         FROM credit_ledger
+         WHERE user_id = ?1
+           AND entry_type = ?2
+           AND source_id = ?3
+         LIMIT 1`
+      )
+      .bind(userId, grant.entryType, sourceId)
+      .first();
+    if (existing) continue;
+    try {
+      await addCredits(
+        env,
+        userId,
+        0,
+        Math.max(0, Number(grant.coupons || 0)) * couponUnitCredits,
+        grant.entryType,
+        sourceId
+      );
+      issued.push({
+        email: grant.email,
+        coupons: Math.max(0, Number(grant.coupons || 0)),
+        issued_now: true
+      });
+    } catch (_) {
+      // Ignore grant errors to keep wallet API stable.
+    }
+  }
+  return issued;
+}
+
 async function deductCreditsOrThrow(env, userId, amount, sourceId) {
   const before = await getWallet(env, userId);
   const paidBefore = Number(before?.paid_credits || 0);
@@ -1380,6 +1432,7 @@ async function handleWalletApi(req, env, cors) {
   const auth = await requireFirebaseUser(req, env, cors);
   if (!auth.ok) return auth.response;
   const userId = auth.uid;
+  const loginCouponGrants = await issueLoginCouponGrants(env, userId, auth.email);
   const welcomeStatusBefore = await getWelcomeCouponStatus(env);
   let welcomeCouponIssued = false;
   if (!welcomeStatusBefore.sold_out) {
@@ -1419,6 +1472,7 @@ async function handleWalletApi(req, env, cors) {
     image_unit_cost: 250,
     can_generate_images: Math.floor(total / 250),
     coupon_campaign: campaign,
+    login_coupon_grants: loginCouponGrants,
     welcome_coupon: {
       ...welcomeCampaign,
       issued_now: welcomeCouponIssued
