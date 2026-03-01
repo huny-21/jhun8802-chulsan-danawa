@@ -1862,16 +1862,19 @@ input[readonly] {
 
     .wallet-toolbar {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 30px auto auto;
-        gap: 4px;
-        align-items: center;
-        flex-wrap: nowrap;
-        overflow: hidden;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "status refresh"
+            "config charge";
+        gap: 8px;
+        align-items: stretch;
+        overflow: visible;
     }
 
     .ai-auth-actions {
         flex-wrap: wrap;
         align-items: stretch;
+        gap: 8px;
     }
 
     #aiAuthStatus {
@@ -1902,79 +1905,75 @@ input[readonly] {
     }
 
     .wallet-toolbar {
-        flex-wrap: wrap;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+            "status refresh"
+            "config charge";
+        gap: 8px;
         align-items: stretch;
-        gap: 6px;
     }
 
     .wallet-balance {
+        grid-area: status;
         width: 100%;
         white-space: normal;
-        flex: 1 0 100%;
         overflow: visible;
         text-overflow: unset;
-        padding: 8px 10px;
-        font-size: 0.8rem;
+        min-width: 0;
+        padding: 10px 12px;
+        font-size: 0.82rem;
         line-height: 1.45;
         border-radius: 12px;
     }
 
     .wallet-refresh-btn {
-        flex: 0 0 44px;
-        min-height: 40px;
-        padding: 0;
+        grid-area: refresh;
+        align-self: stretch;
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0 10px;
     }
 
     .wallet-charge-config {
+        grid-area: config;
         margin-left: 0;
         min-width: 0;
-        flex: 1 1 0;
+        width: 100%;
         flex-wrap: wrap;
-        gap: 4px 6px;
+        gap: 6px 8px;
         align-items: center;
     }
 
     .wallet-charge-config label {
-        font-size: 0.72rem;
+        width: 100%;
+        font-size: 0.74rem;
         white-space: nowrap;
     }
 
     .wallet-charge-config select {
         min-width: 0;
         width: 100%;
-        flex: 1 1 110px;
-        padding: 7px 8px;
-        font-size: 0.82rem;
-        min-height: 40px;
+        flex: 1 1 100%;
+        padding: 9px 10px;
+        font-size: 0.84rem;
+        min-height: 44px;
     }
 
     .wallet-charge-preview {
         margin-left: 0;
-        font-size: 0.7rem;
+        font-size: 0.72rem;
         white-space: normal;
         line-height: 1.35;
         flex: 1 0 100%;
     }
 
     .wallet-charge-btn {
-        flex: 0 0 auto;
-        min-width: 68px;
-        min-height: 40px;
-        padding: 0 12px;
+        grid-area: charge;
+        align-self: stretch;
+        min-width: 72px;
+        min-height: 44px;
+        padding: 0 14px;
         font-size: 0.82rem;
-    }
-
-    .wallet-refresh-btn {
-        min-height: 28px;
-        min-width: 30px;
-        padding: 3px 6px;
-        font-size: 0.74rem;
-    }
-
-    .wallet-charge-btn {
-        min-height: 28px;
-        padding: 3px 7px;
-        font-size: 0.7rem;
         flex: 0 0 auto;
     }
 
@@ -2497,7 +2496,6 @@ input[readonly] {
         font-size: 0.82rem;
     }
 
-    .wallet-refresh-btn,
     .btn-icon-toggle {
         min-height: 34px;
         min-width: 34px;
