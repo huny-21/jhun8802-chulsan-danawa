@@ -975,7 +975,7 @@ async function handleNamingLabSubmit(e) {
             layer_weights: layers,
             interview_answers: answers,
             naming_constraints: constraints,
-            naming_coupon_amount: Math.max(1, Math.min(5, Number(namingPlanSelect?.value || 5) || 5)),
+            naming_coupon_amount: Math.max(1, Math.min(10, Number(namingPlanSelect?.value || 10) || 10)),
             model: 'gemini-2.5-flash'
         };
         namingConstraintsState = constraints;
@@ -1302,13 +1302,10 @@ function updateChargeCouponPreview() {
 }
 
 function applyCouponCampaignUi(campaign) {
-    const ended = campaign?.status === 'ended';
     const soldOut = Boolean(campaign?.sold_out);
     if (chargeCreditsBtn) {
         chargeCreditsBtn.disabled = soldOut;
-        chargeCreditsBtn.title = ended
-            ? '2월 한정 쿠폰 이벤트가 종료되었습니다.'
-            : soldOut ? '2월 한정 쿠폰이 모두 소진되었습니다.' : '';
+        chargeCreditsBtn.title = soldOut ? '준비된 쿠폰이 모두 소진되었습니다.' : '';
     }
     if (chargeDollarInput) {
         chargeDollarInput.disabled = soldOut;
@@ -1319,12 +1316,8 @@ function applyCouponCampaignUi(campaign) {
     if (refreshWalletBtn) {
         refreshWalletBtn.disabled = false;
     }
-    if (ended) {
-        setWalletStatus('이벤트 기간이 종료되었습니다. 2월 한정 쿠폰 이벤트가 마감되어 충전/결제가 비활성화되었습니다.', true);
-        return;
-    }
     if (soldOut) {
-        setWalletStatus('쿠폰이 모두 소진되었습니다. 2월 한정 50장 쿠폰이 마감되어 충전/결제가 비활성화되었습니다.', true);
+        setWalletStatus('쿠폰이 모두 소진되었습니다. 준비된 수량이 모두 사용되어 충전/결제가 비활성화되었습니다.', true);
         return;
     }
     const loginGrants = Array.isArray(walletState?.login_coupon_grants)

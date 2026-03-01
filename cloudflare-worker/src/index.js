@@ -485,40 +485,39 @@ async function getCampaignReservationByOrder(env, orderId) {
 async function getCouponCampaignStatus(env) {
   if (!env?.DB) {
     return {
-      active: false,
-      label: "2월 한정 쿠폰",
+      active: true,
+      label: "쿠폰",
       max_coupons: 50,
       issued_coupons: 0,
       remaining_coupons: 50,
       sold_out: false,
-      window_start: "2026-02-01 00:00:00",
-      window_end: "2026-03-01 00:00:00"
+      status: "open",
+      window_start: null,
+      window_end: null
     };
   }
-  const label = normalizeText(env.COUPON_CAMPAIGN_LABEL) || "2월 한정 쿠폰";
+  const label = normalizeText(env.COUPON_CAMPAIGN_LABEL) || "쿠폰";
   const maxCoupons = parsePositiveInt(env.COUPON_CAMPAIGN_MAX_COUPONS, 50);
   const campaignKey = getCampaignMonthKey(env.COUPON_CAMPAIGN_MONTH);
-  const monthStart = getCampaignMonthStart(env.COUPON_CAMPAIGN_MONTH);
-  const isOpenNow = getNowKstMonthKey() === campaignKey;
   await cleanupExpiredCouponReservations(env, campaignKey);
   const stats = await getCampaignReservationStats(env, campaignKey);
   const issuedCoupons = stats.consumedCoupons;
   const reservedCoupons = stats.reservedCoupons;
   const usedCoupons = issuedCoupons + reservedCoupons;
   const remainingCoupons = Math.max(0, maxCoupons - usedCoupons);
-  const soldOutOrClosed = !isOpenNow || remainingCoupons <= 0;
+  const soldOut = remainingCoupons <= 0;
   return {
-    active: isOpenNow,
+    active: !soldOut,
     label,
     campaign_key: campaignKey,
     max_coupons: maxCoupons,
     issued_coupons: issuedCoupons,
     reserved_coupons: reservedCoupons,
     remaining_coupons: remainingCoupons,
-    sold_out: soldOutOrClosed,
-    status: !isOpenNow ? "ended" : remainingCoupons <= 0 ? "sold_out" : "open",
-    window_start: monthStart,
-    window_end: "auto:+1month"
+    sold_out: soldOut,
+    status: soldOut ? "sold_out" : "open",
+    window_start: null,
+    window_end: null
   };
 }
 
@@ -1519,22 +1518,11 @@ async function handleBillingCheckout(req, env, cors) {
   const credits = requestedCoupons * couponUnitCredits;
   const amountKrw = amountCents * 10;
   const campaign = await getCouponCampaignStatus(env);
-  if (campaign.status === "ended") {
-    return json(
-      {
-        error: "이벤트 기간이 종료되었습니다.",
-        detail: "2월 한정 쿠폰 이벤트가 종료되어 충전/결제가 비활성화되었습니다.",
-        coupon_campaign: campaign
-      },
-      409,
-      cors
-    );
-  }
   if (campaign.sold_out) {
     return json(
       {
         error: "쿠폰이 모두 소진되었습니다.",
-        detail: "2월 한정 50장 쿠폰이 모두 발급되어 충전/결제가 비활성화되었습니다.",
+        detail: "준비된 쿠폰이 모두 소진되어 충전/결제가 비활성화되었습니다.",
         coupon_campaign: campaign
       },
       409,
@@ -1970,11 +1958,11 @@ async function handleNamingReport(req, env, cors) {
         ? 5
         : 0;
   const namingCouponAmountRaw = Math.floor(
-    Number(body.naming_coupon_amount || legacyCouponAmount || 5)
+    Number(body.naming_coupon_amount || legacyCouponAmount || 10)
   );
   const namingCouponAmount = Math.max(
     1,
-    Math.min(5, Number.isFinite(namingCouponAmountRaw) ? namingCouponAmountRaw : 5)
+    Math.min(10, Number.isFinite(namingCouponAmountRaw) ? namingCouponAmountRaw : 10)
   );
   const namingReportCredits = namingCouponAmount * 250;
   const recommendationCount = namingCouponAmount;
